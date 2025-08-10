@@ -1,0 +1,57 @@
+# MEDISYNC - Sistema Integral de Gestión Médica
+# Dependencias requeridas y opcionales
+
+# ===== DEPENDENCIAS REQUERIDAS =====
+# Estas son necesarias para el funcionamiento básico del sistema
+
+# Base de datos (incluido con Python)
+# sqlite3
+
+# Interfaz gráfica (incluido con Python) 
+# tkinter
+
+# Utilidades del sistema (incluido con Python)
+# os, sys, datetime, hashlib, json, subprocess, threading
+
+# ===== DEPENDENCIAS OPCIONALES =====
+# Estas mejoran la funcionalidad pero no son críticas
+
+# Calendar widget mejorado para fechas
+tkcalendar>=1.6.1
+
+# Generación de PDFs para reportes
+reportlab>=3.6.0
+
+# Procesamiento de imágenes
+Pillow>=10.0.0
+
+# Variables de entorno (opcional)
+python-dotenv>=1.0.0
+
+# Interfaz moderna (alternativa a tkinter)
+customtkinter>=5.2.0
+
+# Testing framework (para desarrollo)
+pytest>=7.0.0
+
+# ===== DEPENDENCIAS DE DESARROLLO =====
+# Solo para desarrolladores
+
+# Code formatting
+black>=22.0.0
+
+# Code linting  
+flake8>=5.0.0
+
+# Type checking
+mypy>=1.0.0
+
+# ===== INSTALACIÓN =====
+# Para instalar dependencias opcionales:
+# pip install -r requirements.txt
+#
+# Para instalación mínima (solo dependencias críticas):
+# pip install tkcalendar reportlab
+#
+# NOTA: Python 3.7+ requerido
+# tkinter, sqlite3 y otras utilidades vienen incluidas con Python

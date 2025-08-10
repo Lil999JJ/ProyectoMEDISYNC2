@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run MEDISYNC",
+			"type": "shell",
+			"command": "python MEDISYNC.py",
+			"group": "build",
+			"isBackground": true
+		}
+	]
+}
