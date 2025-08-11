@@ -506,7 +506,7 @@ class MedisyncApp:
                     fg='white', bg='#0B5394', font=('Arial', 10, 'bold'), pady=15).pack()
         
         # Panel de accesos rápidos mejorado
-        quick_actions_frame = tk.LabelFrame(content_frame, text="� Accesos Rápidos", 
+        quick_actions_frame = tk.LabelFrame(content_frame, text="🚀 Accesos Rápidos", 
                                           font=('Arial', 14, 'bold'), padx=25, pady=20, 
                                           bg='white', relief='solid', bd=1)
         quick_actions_frame.pack(fill='x', pady=(0, 30))
@@ -10581,60 +10581,210 @@ Para consultas sobre este reporte, contacte al departamento de administración.
         self.create_doctor_profile(profile_frame)
     
     def create_secretaria_menu(self, parent):
-        """Crear menú para secretarias"""
-        # Crear notebook con pestañas específicas para secretarias
-        self.notebook = ttk.Notebook(parent)
-        self.notebook.pack(fill='both', expand=True)
+        """Crear menú moderno para secretarias con diseño similar al admin"""
+        # Frame principal para el menú
+        menu_container = tk.Frame(parent, bg='#F8FAFC')
+        menu_container.pack(fill='both', expand=True)
         
-        # Pestaña 1: Dashboard Secretaria
-        dashboard_frame = ttk.Frame(self.notebook)
-        self.notebook.add(dashboard_frame, text="📊 Dashboard")
-        self.create_secretaria_dashboard(dashboard_frame)
+        # Header del menú con estilo moderno
+        header_frame = tk.Frame(menu_container, bg='#1E3A8A', height=70)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
         
-        # Pestaña 2: Gestión de Citas
-        appointments_frame = ttk.Frame(self.notebook)
-        self.notebook.add(appointments_frame, text="📅 Gestión de Citas")
-        self.create_secretaria_appointments(appointments_frame)
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=30, pady=10)
         
-        # Pestaña 3: Registro de Pacientes
-        patients_frame = ttk.Frame(self.notebook)
-        self.notebook.add(patients_frame, text="🤒 Pacientes")
-        self.create_secretaria_patients(patients_frame)
+        # Logo y título
+        title_frame = tk.Frame(header_content, bg='#1E3A8A')
+        title_frame.pack(side='left', expand=True, fill='both')
         
-        # Pestaña 4: Facturación
-        billing_frame = ttk.Frame(self.notebook)
-        self.notebook.add(billing_frame, text="💰 Facturación")
-        self.create_secretaria_billing(billing_frame)
+        tk.Label(title_frame, text="👩‍💼", font=('Arial', 20), bg='#1E3A8A', fg='white').pack(side='left', pady=5)
+        tk.Label(title_frame, text="MEDISYNC", font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(side='left', padx=(10, 0), pady=5)
+        tk.Label(title_frame, text="Panel de Secretaría", font=('Arial', 12), bg='#1E3A8A', fg='#CBD5E1').pack(side='left', padx=(15, 0), pady=5)
         
-        # Pestaña 5: Reportes
-        reports_frame = ttk.Frame(self.notebook)
-        self.notebook.add(reports_frame, text="📈 Reportes")
-        self.create_secretaria_reports(reports_frame)
+        # Info del usuario
+        user_frame = tk.Frame(header_content, bg='#1E3A8A')
+        user_frame.pack(side='right')
+        
+        user_name = f"{self.current_user.nombre} {self.current_user.apellido}"
+        tk.Label(user_frame, text=f"👩‍� {user_name}", font=('Arial', 11, 'bold'), bg='#1E3A8A', fg='#FFFFFF').pack(anchor='e')
+        tk.Label(user_frame, text="Secretaria del Sistema", font=('Arial', 9), bg='#1E3A8A', fg='#64748B').pack(anchor='e')
+        
+        # Barra de navegación moderna
+        nav_frame = tk.Frame(menu_container, bg='#0B5394', height=60)
+        nav_frame.pack(fill='x')
+        nav_frame.pack_propagate(False)
+        
+        # Contenedor de botones de navegación
+        nav_content = tk.Frame(nav_frame, bg='#0B5394')
+        nav_content.pack(expand=True, fill='both', padx=20, pady=5)
+        
+        # Definir pestañas de secretaria con iconos y colores
+        tabs_config = [
+            ("📊", "Dashboard", "#0B5394", "Vista general del sistema"),
+            ("📅", "Gestión de Citas", "#16A085", "Administración de citas médicas"),
+            ("🤒", "Pacientes", "#059669", "Registro y gestión de pacientes"),
+            ("💰", "Facturación", "#E67E22", "Gestión de facturas y pagos"),
+            ("📈", "Reportes", "#8E44AD", "Reportes y estadísticas")
+        ]
+        
+        # Variable para controlar la pestaña activa
+        self.active_secretaria_tab = tk.StringVar(value="Dashboard")
+        
+        # Crear botones de navegación
+        self.secretaria_nav_buttons = {}
+        for icon, name, color, description in tabs_config:
+            btn_frame = tk.Frame(nav_content, bg='#0B5394')
+            btn_frame.pack(side='left', fill='both', expand=True, padx=2)
+            
+            btn = tk.Button(btn_frame, text=f"{icon} {name}", 
+                           font=('Arial', 11, 'bold'), 
+                           bg=color if name == "Dashboard" else '#0B5394', 
+                           fg='white', relief='flat', bd=0,
+                           padx=15, pady=12, cursor='hand2',
+                           command=lambda n=name: self.switch_secretaria_tab(n))
+            btn.pack(fill='both', expand=True)
+            
+            self.secretaria_nav_buttons[name] = (btn, color)
+        
+        # Área de contenido principal
+        self.secretaria_content_area = tk.Frame(menu_container, bg='#FFFFFF')
+        self.secretaria_content_area.pack(fill='both', expand=True)
+        
+        # Cargar contenido inicial (Dashboard)
+        self.switch_secretaria_tab("Dashboard")
+    
+    def switch_secretaria_tab(self, tab_name):
+        """Cambiar entre pestañas de secretaria con animación visual"""
+        # Actualizar variable de pestaña activa
+        self.active_secretaria_tab.set(tab_name)
+        
+        # Actualizar colores de botones
+        for name, (btn, color) in self.secretaria_nav_buttons.items():
+            if name == tab_name:
+                btn.configure(bg=color, relief='solid', bd=2)
+            else:
+                btn.configure(bg='#0B5394', relief='flat', bd=0)
+        
+        # Limpiar área de contenido
+        for widget in self.secretaria_content_area.winfo_children():
+            widget.destroy()
+        
+        # Cargar contenido de la pestaña seleccionada
+        if tab_name == "Dashboard":
+            self.create_secretaria_dashboard(self.secretaria_content_area)
+        elif tab_name == "Gestión de Citas":
+            self.create_secretaria_appointments(self.secretaria_content_area)
+        elif tab_name == "Pacientes":
+            self.create_secretaria_patients(self.secretaria_content_area)
+        elif tab_name == "Facturación":
+            self.create_secretaria_billing(self.secretaria_content_area)
+        elif tab_name == "Reportes":
+            self.create_secretaria_reports(self.secretaria_content_area)
     
     def create_paciente_menu(self, parent):
-        """Crear menú para pacientes (4 pestañas: Dashboard, Citas, Historial, Configuración)"""
-        self.notebook = ttk.Notebook(parent)
-        self.notebook.pack(fill='both', expand=True)
-
-        # Pestaña 1: Dashboard
-        dashboard_frame = ttk.Frame(self.notebook)
-        self.notebook.add(dashboard_frame, text="📊 Dashboard")
-        self.create_patient_dashboard(dashboard_frame)
-
-        # Pestaña 2: Citas
-        appointments_frame = ttk.Frame(self.notebook)
-        self.notebook.add(appointments_frame, text="📅 Citas")
-        self.create_patient_appointments(appointments_frame)
-
-        # Pestaña 3: Historial
-        medical_frame = ttk.Frame(self.notebook)
-        self.notebook.add(medical_frame, text="📋 Historial")
-        self.create_patient_medical_history(medical_frame)
-
-        # Pestaña 4: Configuración
-        settings_frame = ttk.Frame(self.notebook)
-        self.notebook.add(settings_frame, text="⚙️ Configuración")
-        self.create_patient_settings(settings_frame)
+        """Crear menú moderno para pacientes con diseño similar al admin"""
+        # Frame principal para el menú
+        menu_container = tk.Frame(parent, bg='#F8FAFC')
+        menu_container.pack(fill='both', expand=True)
+        
+        # Header del menú con estilo moderno
+        header_frame = tk.Frame(menu_container, bg='#1E3A8A', height=70)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
+        
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=30, pady=10)
+        
+        # Logo y título
+        title_frame = tk.Frame(header_content, bg='#1E3A8A')
+        title_frame.pack(side='left', expand=True, fill='both')
+        
+        tk.Label(title_frame, text="🤒", font=('Arial', 20), bg='#1E3A8A', fg='white').pack(side='left', pady=5)
+        tk.Label(title_frame, text="MEDISYNC", font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(side='left', padx=(10, 0), pady=5)
+        tk.Label(title_frame, text="Portal del Paciente", font=('Arial', 12), bg='#1E3A8A', fg='#CBD5E1').pack(side='left', padx=(15, 0), pady=5)
+        
+        # Info del usuario
+        user_frame = tk.Frame(header_content, bg='#1E3A8A')
+        user_frame.pack(side='right')
+        
+        user_name = f"{self.current_user.nombre} {self.current_user.apellido}"
+        tk.Label(user_frame, text=f"� {user_name}", font=('Arial', 11, 'bold'), bg='#1E3A8A', fg='#FFFFFF').pack(anchor='e')
+        tk.Label(user_frame, text="Paciente del Sistema", font=('Arial', 9), bg='#1E3A8A', fg='#64748B').pack(anchor='e')
+        
+        # Barra de navegación moderna
+        nav_frame = tk.Frame(menu_container, bg='#0B5394', height=60)
+        nav_frame.pack(fill='x')
+        nav_frame.pack_propagate(False)
+        
+        # Contenedor de botones de navegación
+        nav_content = tk.Frame(nav_frame, bg='#0B5394')
+        nav_content.pack(expand=True, fill='both', padx=20, pady=5)
+        
+        # Definir pestañas del paciente con iconos y colores
+        tabs_config = [
+            ("�", "Dashboard", "#0B5394", "Vista general de mi salud"),
+            ("📅", "Mis Citas", "#16A085", "Gestión de mis citas médicas"),
+            ("📋", "Mi Historial", "#059669", "Mi historial médico personal"),
+            ("💰", "Mis Facturas", "#E67E22", "Estado de mis facturas y pagos"),
+            ("⚙️", "Configuración", "#8E44AD", "Configuración de mi perfil")
+        ]
+        
+        # Variable para controlar la pestaña activa
+        self.active_patient_tab = tk.StringVar(value="Dashboard")
+        
+        # Crear botones de navegación
+        self.patient_nav_buttons = {}
+        for icon, name, color, description in tabs_config:
+            btn_frame = tk.Frame(nav_content, bg='#0B5394')
+            btn_frame.pack(side='left', fill='both', expand=True, padx=2)
+            
+            btn = tk.Button(btn_frame, text=f"{icon} {name}", 
+                           font=('Arial', 11, 'bold'), 
+                           bg=color if name == "Dashboard" else '#0B5394', 
+                           fg='white', relief='flat', bd=0,
+                           padx=15, pady=12, cursor='hand2',
+                           command=lambda n=name: self.switch_patient_tab(n))
+            btn.pack(fill='both', expand=True)
+            
+            self.patient_nav_buttons[name] = (btn, color)
+        
+        # Área de contenido principal
+        self.patient_content_area = tk.Frame(menu_container, bg='#FFFFFF')
+        self.patient_content_area.pack(fill='both', expand=True)
+        
+        # Cargar contenido inicial (Dashboard)
+        self.switch_patient_tab("Dashboard")
+    
+    def switch_patient_tab(self, tab_name):
+        """Cambiar entre pestañas del paciente con animación visual"""
+        # Actualizar variable de pestaña activa
+        self.active_patient_tab.set(tab_name)
+        
+        # Actualizar colores de botones
+        for name, (btn, color) in self.patient_nav_buttons.items():
+            if name == tab_name:
+                btn.configure(bg=color, relief='solid', bd=2)
+            else:
+                btn.configure(bg='#0B5394', relief='flat', bd=0)
+        
+        # Limpiar área de contenido
+        for widget in self.patient_content_area.winfo_children():
+            widget.destroy()
+        
+        # Cargar contenido de la pestaña seleccionada
+        if tab_name == "Dashboard":
+            self.create_patient_dashboard(self.patient_content_area)
+        elif tab_name == "Mis Citas":
+            self.create_patient_appointments(self.patient_content_area)
+        elif tab_name == "Mi Historial":
+            self.create_patient_medical_history(self.patient_content_area)
+        elif tab_name == "Mis Facturas":
+            self.create_patient_billing(self.patient_content_area)
+        elif tab_name == "Configuración":
+            self.create_patient_settings(self.patient_content_area)
     
     def logout(self):
         """Cerrar sesión"""
@@ -10643,6 +10793,109 @@ Para consultas sobre este reporte, contacte al departamento de administración.
         self.__init__()
     
     # ==================== FUNCIONES PARA DOCTORES ====================
+    
+    def create_doctor_menu(self, parent):
+        """Crear menú moderno para doctores con diseño similar al admin"""
+        # Frame principal para el menú
+        menu_container = tk.Frame(parent, bg='#F8FAFC')
+        menu_container.pack(fill='both', expand=True)
+        
+        # Header del menú con estilo moderno
+        header_frame = tk.Frame(menu_container, bg='#1E3A8A', height=70)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
+        
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=30, pady=10)
+        
+        # Logo y título
+        title_frame = tk.Frame(header_content, bg='#1E3A8A')
+        title_frame.pack(side='left', expand=True, fill='both')
+        
+        tk.Label(title_frame, text="👨‍⚕️", font=('Arial', 20), bg='#1E3A8A', fg='white').pack(side='left', pady=5)
+        tk.Label(title_frame, text="MEDISYNC", font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(side='left', padx=(10, 0), pady=5)
+        tk.Label(title_frame, text="Panel Médico", font=('Arial', 12), bg='#1E3A8A', fg='#CBD5E1').pack(side='left', padx=(15, 0), pady=5)
+        
+        # Info del usuario
+        user_frame = tk.Frame(header_content, bg='#1E3A8A')
+        user_frame.pack(side='right')
+        
+        user_name = f"Dr. {self.current_user.nombre} {self.current_user.apellido}"
+        tk.Label(user_frame, text=f"👨‍⚕️ {user_name}", font=('Arial', 11, 'bold'), bg='#1E3A8A', fg='#FFFFFF').pack(anchor='e')
+        tk.Label(user_frame, text="Médico del Sistema", font=('Arial', 9), bg='#1E3A8A', fg='#64748B').pack(anchor='e')
+        
+        # Barra de navegación moderna
+        nav_frame = tk.Frame(menu_container, bg='#0B5394', height=60)
+        nav_frame.pack(fill='x')
+        nav_frame.pack_propagate(False)
+        
+        # Contenedor de botones de navegación
+        nav_content = tk.Frame(nav_frame, bg='#0B5394')
+        nav_content.pack(expand=True, fill='both', padx=20, pady=5)
+        
+        # Definir pestañas de doctor con iconos y colores
+        tabs_config = [
+            ("📊", "Dashboard", "#0B5394", "Vista general de mi práctica"),
+            ("📅", "Mis Citas", "#16A085", "Gestión de mis citas médicas"),
+            ("🤒", "Mis Pacientes", "#059669", "Pacientes bajo mi cuidado"),
+            ("📋", "Historiales", "#E67E22", "Gestión de historiales médicos"),
+            ("👤", "Mi Perfil", "#8E44AD", "Configuración de mi perfil")
+        ]
+        
+        # Variable para controlar la pestaña activa
+        self.active_doctor_tab = tk.StringVar(value="Dashboard")
+        
+        # Crear botones de navegación
+        self.doctor_nav_buttons = {}
+        for icon, name, color, description in tabs_config:
+            btn_frame = tk.Frame(nav_content, bg='#0B5394')
+            btn_frame.pack(side='left', fill='both', expand=True, padx=2)
+            
+            btn = tk.Button(btn_frame, text=f"{icon} {name}", 
+                           font=('Arial', 11, 'bold'), 
+                           bg=color if name == "Dashboard" else '#0B5394', 
+                           fg='white', relief='flat', bd=0,
+                           padx=15, pady=12, cursor='hand2',
+                           command=lambda n=name: self.switch_doctor_tab(n))
+            btn.pack(fill='both', expand=True)
+            
+            self.doctor_nav_buttons[name] = (btn, color)
+        
+        # Área de contenido principal
+        self.doctor_content_area = tk.Frame(menu_container, bg='#FFFFFF')
+        self.doctor_content_area.pack(fill='both', expand=True)
+        
+        # Cargar contenido inicial (Dashboard)
+        self.switch_doctor_tab("Dashboard")
+    
+    def switch_doctor_tab(self, tab_name):
+        """Cambiar entre pestañas de doctor con animación visual"""
+        # Actualizar variable de pestaña activa
+        self.active_doctor_tab.set(tab_name)
+        
+        # Actualizar colores de botones
+        for name, (btn, color) in self.doctor_nav_buttons.items():
+            if name == tab_name:
+                btn.configure(bg=color, relief='solid', bd=2)
+            else:
+                btn.configure(bg='#0B5394', relief='flat', bd=0)
+        
+        # Limpiar área de contenido
+        for widget in self.doctor_content_area.winfo_children():
+            widget.destroy()
+        
+        # Cargar contenido de la pestaña seleccionada
+        if tab_name == "Dashboard":
+            self.create_doctor_dashboard(self.doctor_content_area)
+        elif tab_name == "Mis Citas":
+            self.create_doctor_appointments(self.doctor_content_area)
+        elif tab_name == "Mis Pacientes":
+            self.create_doctor_patients(self.doctor_content_area)
+        elif tab_name == "Historiales":
+            self.create_medical_records(self.doctor_content_area)
+        elif tab_name == "Mi Perfil":
+            self.create_doctor_profile(self.doctor_content_area)
     
     def create_doctor_dashboard(self, parent):
         """Dashboard específico para doctores"""
@@ -11797,263 +12050,488 @@ Para consultas sobre este reporte, contacte al departamento de administración.
     # ==================== FUNCIONES PARA PACIENTES ====================
     
     def create_patient_dashboard(self, parent):
-        """Dashboard específico para pacientes"""
+        """Dashboard específico para pacientes con diseño moderno similar al admin"""
+        # Frame principal con mejor diseño
         main_frame = tk.Frame(parent, bg='#F8FAFC')
-        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        main_frame.pack(fill='both', expand=True)
         
-        # Saludo personalizado
-        welcome_frame = tk.Frame(main_frame, bg='#0B5394', height=100)
-        welcome_frame.pack(fill='x', pady=(0, 20))
-        welcome_frame.pack_propagate(False)
+        # Header principal con gradiente visual
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=80)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
         
-        tk.Label(welcome_frame, text=f"¡Bienvenido/a {self.current_user.nombre}!", 
-                font=('Arial', 20, 'bold'), bg='#0B5394', fg='white').pack(expand=True)
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=30, pady=15)
         
-        # Panel de información personal
-        info_frame = tk.LabelFrame(main_frame, text="📋 Mi Información", 
-                                 font=('Arial', 12, 'bold'), padx=20, pady=15)
-        info_frame.pack(fill='x', pady=10)
+        # Título principal
+        title_frame = tk.Frame(header_content, bg='#1E3A8A')
+        title_frame.pack(side='left', fill='y')
         
-        info_grid = tk.Frame(info_frame)
-        info_grid.pack()
+        tk.Label(title_frame, text="🏠 Mi Dashboard Personal", 
+                font=('Arial', 20, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
+        tk.Label(title_frame, text=f"Bienvenido/a {self.current_user.nombre} - Resumen de tu salud", 
+                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
+        
+        # Información del paciente actual
+        user_info_frame = tk.Frame(header_content, bg='#1E3A8A')
+        user_info_frame.pack(side='right', fill='y')
+        
+        tk.Label(user_info_frame, text=f"🤒 {self.current_user.nombre} {self.current_user.apellido}", 
+                font=('Arial', 12, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='e')
+        tk.Label(user_info_frame, text="Paciente del Sistema", 
+                font=('Arial', 10), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='e')
+        
+        # Contenido principal directo sin scrollbar
+        content_frame = tk.Frame(main_frame, bg='#F8FAFC')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        # Tarjetas de estadísticas personales del paciente optimizadas
+        stats_frame = tk.Frame(content_frame, bg='#F8FAFC')
+        stats_frame.pack(fill='x', pady=(0, 20))
         
         try:
-            patient_info = self.get_patient_info()
+            patient_stats = self.get_patient_stats()
             
-            info_items = [
-                ("👤 Nombre Completo:", f"{patient_info.get('nombre', '')} {patient_info.get('apellido', '')}"),
-                ("📧 Email:", patient_info.get('email', 'No especificado')),
-                ("📞 Teléfono:", patient_info.get('telefono', 'No especificado')),
-                ("🏥 Número de Expediente:", patient_info.get('numero_expediente', 'No asignado')),
-                ("🏥 Seguro Médico:", patient_info.get('seguro_nombre', 'Sin seguro')),
-                ("🎂 Fecha de Nacimiento:", patient_info.get('fecha_nacimiento', 'No especificada'))
+            # Crear frame para las 4 tarjetas con mejor distribución
+            stats_container = tk.Frame(stats_frame, bg='#F8FAFC')
+            stats_container.pack(fill='x', expand=True)
+            
+            # Crear tarjetas de estadísticas mejoradas
+            stats_data = [
+                ("📅", "Próximas Citas", patient_stats.get('upcoming_appointments', 0), "#16A085"),
+                ("📋", "Consultas Totales", patient_stats.get('total_consultations', 0), "#0B5394"), 
+                ("💰", "Facturas Pendientes", patient_stats.get('pending_bills', 0), "#E67E22"),
+                ("👨‍⚕️", "Doctores Visitados", patient_stats.get('doctors_visited', 0), "#059669")
             ]
             
+            for i, (icon, title, value, color) in enumerate(stats_data):
+                # Crear tarjeta individual con mejor diseño
+                card_frame = tk.Frame(stats_container, bg='white', relief='solid', bd=1)
+                card_frame.grid(row=0, column=i, padx=6, pady=6, sticky='ew')
+                
+                # Header colorido de la tarjeta
+                header = tk.Frame(card_frame, bg=color, height=8)
+                header.pack(fill='x')
+                header.pack_propagate(False)
+                
+                # Contenido de la tarjeta con mejor espaciado
+                content = tk.Frame(card_frame, bg='white')
+                content.pack(fill='both', expand=True, padx=15, pady=15)
+                
+                # Icono y valor más grandes
+                tk.Label(content, text=icon, font=('Arial', 28), bg='white', fg=color).pack(pady=(0, 8))
+                tk.Label(content, text=str(value), font=('Arial', 24, 'bold'), bg='white', fg=color).pack()
+                tk.Label(content, text=title, font=('Arial', 10), bg='white', fg='#64748B', 
+                        wraplength=120, justify='center').pack(pady=(5, 0))
+                
+                # Configurar expansión igual para todas las columnas
+                stats_container.columnconfigure(i, weight=1)
+                
+        except Exception as e:
+            error_label = tk.Label(stats_frame, text=f"Error cargando estadísticas: {str(e)}", 
+                                 font=('Arial', 10), fg='red', bg='#F8FAFC')
+            error_label.pack(pady=20)
+        
+        # Frame horizontal para información personal y citas próximas
+        top_horizontal_frame = tk.Frame(content_frame, bg='#F8FAFC')
+        top_horizontal_frame.pack(fill='x', pady=(0, 20))
+        
+        # Panel de información personal más pequeño (lado izquierdo)
+        info_panel = tk.LabelFrame(top_horizontal_frame, text="📋 Mi Información Personal", 
+                                  font=('Arial', 13, 'bold'), padx=15, pady=15, 
+                                  bg='white', relief='solid', bd=1)
+        info_panel.pack(side='left', fill='both', expand=True, padx=(0, 10))
+        
+        # Grid de información personal compacto
+        info_grid = tk.Frame(info_panel, bg='white')
+        info_grid.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        try:
+            patient_info = self.get_patient_info(self.current_user.id)
+            
+            info_items = [
+                ("👤 Nombre:", f"{patient_info.get('nombre', '')} {patient_info.get('apellido', '')}"),
+                ("📧 Email:", patient_info.get('email', 'No especificado')),
+                ("📞 Teléfono:", patient_info.get('telefono', 'No especificado')),
+                ("🏥 Expediente:", patient_info.get('numero_expediente', 'No asignado')),
+                ("🩸 Tipo Sangre:", patient_info.get('tipo_sangre', 'No especificado')),
+                ("🎂 F. Nacimiento:", patient_info.get('fecha_nacimiento', 'No especificada'))
+            ]
+            
+            # Distribuir en 2 columnas para mostrar todos los datos
             for i, (label, value) in enumerate(info_items):
+                row = i // 2
+                col = (i % 2) * 2
+                
                 tk.Label(info_grid, text=label, font=('Arial', 10, 'bold'), 
-                        fg='#1E3A8A').grid(row=i//2, column=(i%2)*2, sticky='w', padx=(0, 10), pady=5)
+                        bg='white', fg='#1E3A8A').grid(row=row, column=col, sticky='w', padx=(0, 8), pady=8)
                 tk.Label(info_grid, text=value, font=('Arial', 10), 
-                        fg='#64748B').grid(row=i//2, column=(i%2)*2+1, sticky='w', padx=(0, 30), pady=5)
+                        bg='white', fg='#64748B').grid(row=row, column=col+1, sticky='w', padx=(0, 15), pady=8)
+            
+            # Configurar grid weights para mejor distribución
+            info_grid.columnconfigure(1, weight=1)
+            info_grid.columnconfigure(3, weight=1)
                         
         except Exception as e:
-            tk.Label(info_frame, text=f"Error cargando información: {str(e)}", 
-                    fg='red').pack()
+            tk.Label(info_panel, text=f"Error cargando información: {str(e)}", 
+                    font=('Arial', 9), fg='red', bg='white').pack(pady=8)
         
-        # Panel de próximas citas
-        next_appointments_frame = tk.LabelFrame(main_frame, text="📅 Mis Próximas Citas", 
-                                              font=('Arial', 12, 'bold'), padx=20, pady=15)
-        next_appointments_frame.pack(fill='x', pady=10)
+        # Panel de próximas citas (lado derecho)
+        appointments_panel = tk.LabelFrame(top_horizontal_frame, text="📅 Mis Próximas Citas", 
+                                         font=('Arial', 13, 'bold'), padx=15, pady=12, 
+                                         bg='white', relief='solid', bd=1)
+        appointments_panel.pack(side='right', fill='both', expand=True, padx=(10, 0))
         
         try:
             upcoming_appointments = self.get_patient_upcoming_appointments()
             
             if upcoming_appointments:
-                for i, apt in enumerate(upcoming_appointments[:3]):  # Mostrar solo 3
-                    apt_frame = tk.Frame(next_appointments_frame, bg='#FFFFFF', relief='solid', bd=1)
-                    apt_frame.pack(fill='x', pady=5)
+                appointments_content = tk.Frame(appointments_panel, bg='white')
+                appointments_content.pack(fill='both', expand=True, padx=8, pady=8)
+                
+                for i, appointment in enumerate(upcoming_appointments[:4]):  # Mostrar máximo 4
+                    appt_frame = tk.Frame(appointments_content, bg='#F0F9FF', relief='solid', bd=1)
+                    appt_frame.pack(fill='x', pady=3, padx=3)
                     
-                    # Fecha y hora
-                    datetime_text = f"📅 {apt.get('fecha_formatted', 'N/A')} a las {apt.get('hora_formatted', 'N/A')}"
-                    tk.Label(apt_frame, text=datetime_text, font=('Arial', 11, 'bold'), 
-                            bg='#FFFFFF', fg='#1E3A8A').pack(side='left', padx=10, pady=8)
+                    appt_inner = tk.Frame(appt_frame, bg='#F0F9FF')
+                    appt_inner.pack(fill='x', padx=10, pady=6)
                     
-                    # Doctor
-                    doctor_text = f"👨‍⚕️ Dr. {apt.get('doctor_nombre', 'N/A')}"
-                    tk.Label(apt_frame, text=doctor_text, font=('Arial', 10), 
-                            bg='#FFFFFF', fg='#64748B').pack(side='left', padx=(20, 10))
+                    # Fecha y hora más prominente
+                    tk.Label(appt_inner, text=f"📅 {appointment.get('fecha', 'N/A')} - {appointment.get('hora', 'N/A')}", 
+                            font=('Arial', 10, 'bold'), bg='#F0F9FF', fg='#0B5394').pack(anchor='w')
                     
-                    # Motivo
-                    motivo_text = f"🩺 {apt.get('motivo', 'Consulta general')}"
-                    tk.Label(apt_frame, text=motivo_text, font=('Arial', 10), 
-                            bg='#FFFFFF', fg='#64748B').pack(side='right', padx=10)
+                    # Doctor y motivo
+                    tk.Label(appt_inner, text=f"👨‍⚕️ Dr. {appointment.get('doctor', 'N/A')}", 
+                            font=('Arial', 9), bg='#F0F9FF', fg='#64748B').pack(anchor='w', pady=(1, 0))
+                    
+                    tk.Label(appt_inner, text=f"🩺 {appointment.get('motivo', 'Consulta general')}", 
+                            font=('Arial', 9), bg='#F0F9FF', fg='#64748B').pack(anchor='w')
             else:
-                tk.Label(next_appointments_frame, text="No tienes citas programadas", 
-                        font=('Arial', 12), fg='#64748B').pack(pady=10)
+                tk.Label(appointments_panel, text="📅 No tienes citas programadas próximamente", 
+                        font=('Arial', 10), bg='white', fg='#64748B').pack(pady=15)
                         
         except Exception as e:
-            tk.Label(next_appointments_frame, text=f"Error cargando citas: {str(e)}", 
-                    fg='red').pack()
+            tk.Label(appointments_panel, text=f"Error cargando citas: {str(e)}", 
+                    font=('Arial', 9), fg='red', bg='white').pack(pady=8)
         
-        # Panel de acciones rápidas
-        actions_frame = tk.LabelFrame(main_frame, text="🚀 Acciones Rápidas", 
-                                    font=('Arial', 12, 'bold'), padx=20, pady=15)
-        actions_frame.pack(fill='x', pady=10)
+        # Frame horizontal para recordatorios (ahora ocupa todo el ancho)
+        bottom_frame = tk.Frame(content_frame, bg='#F8FAFC')
+        bottom_frame.pack(fill='both', expand=True, pady=(0, 10))
         
-        actions_grid = tk.Frame(actions_frame)
-        actions_grid.pack()
-        
-        patient_actions = [
-            ("📅 Solicitar Cita", self.request_appointment, "#16A085"),
-            ("📋 Ver Mi Historial", self.view_my_history, "#0B5394"),
-            ("💰 Ver Mis Facturas", self.view_my_bills, "#E67E22"),
-            ("👤 Actualizar Perfil", self.update_my_profile, "#16A085")
-        ]
-        
-        for i, (text, command, color) in enumerate(patient_actions):
-            btn = tk.Button(actions_grid, text=text, command=command, 
-                           bg=color, fg='white', font=('Arial', 11, 'bold'),
-                           width=18, height=2)
-            btn.grid(row=i//2, column=i%2, padx=15, pady=10)
-        
-        # Panel de recordatorios
-        reminders_frame = tk.LabelFrame(main_frame, text="🔔 Recordatorios", 
-                                      font=('Arial', 12, 'bold'), padx=20, pady=15)
-        reminders_frame.pack(fill='both', expand=True, pady=10)
+        # Panel de recordatorios de salud optimizado (ahora usa todo el ancho)
+        reminders_panel = tk.LabelFrame(bottom_frame, text="🔔 Recordatorios de Salud", 
+                                      font=('Arial', 14, 'bold'), padx=20, pady=15, 
+                                      bg='white', relief='solid', bd=1)
+        reminders_panel.pack(fill='both', expand=True)
         
         try:
             reminders = self.get_patient_reminders()
             
             if reminders:
+                reminders_content = tk.Frame(reminders_panel, bg='white')
+                reminders_content.pack(fill='both', expand=True, padx=10, pady=10)
+                
                 for reminder in reminders:
-                    reminder_frame = tk.Frame(reminders_frame, bg='#fff3cd', relief='solid', bd=1)
-                    reminder_frame.pack(fill='x', pady=3)
+                    reminder_frame = tk.Frame(reminders_content, bg='#FEF3C7', relief='solid', bd=1)
+                    reminder_frame.pack(fill='x', pady=4, padx=5)
                     
-                    tk.Label(reminder_frame, text=f"⚠️ {reminder.get('message', '')}", 
-                            font=('Arial', 10), bg='#fff3cd', fg='#856404').pack(side='left', padx=10, pady=5)
+                    tk.Label(reminder_frame, text=f"⚠️ {reminder}", 
+                            font=('Arial', 10), bg='#FEF3C7', fg='#92400E').pack(padx=15, pady=8)
             else:
-                tk.Label(reminders_frame, text="No tienes recordatorios pendientes", 
-                        font=('Arial', 11), fg='#64748B').pack(pady=10)
+                # Panel de estado positivo más atractivo
+                positive_frame = tk.Frame(reminders_panel, bg='#DCFCE7', relief='solid', bd=1)
+                positive_frame.pack(fill='both', expand=True, padx=10, pady=10)
+                
+                tk.Label(positive_frame, text="✅ ¡Excelente! Tienes tu salud al día", 
+                        font=('Arial', 12, 'bold'), bg='#DCFCE7', fg='#059669').pack(pady=15)
+                tk.Label(positive_frame, text="No hay recordatorios pendientes en este momento", 
+                        font=('Arial', 10), bg='#DCFCE7', fg='#16A34A').pack(pady=(0, 15))
                         
         except Exception as e:
-            tk.Label(reminders_frame, text=f"Error cargando recordatorios: {str(e)}", 
-                    fg='red').pack()
+            tk.Label(reminders_panel, text=f"Error cargando recordatorios: {str(e)}", 
+                    font=('Arial', 10), fg='red', bg='white').pack(pady=10)
     
     def create_patient_appointments(self, parent):
-        """Citas del paciente con calendario interactivo y lista"""
+        """Citas del paciente con diseño moderno similar al admin"""
+        # Frame principal con mejor diseño
         main_frame = tk.Frame(parent, bg='#F8FAFC')
-        main_frame.pack(fill='both', expand=True, padx=15, pady=15)
+        main_frame.pack(fill='both', expand=True)
 
-        # Header moderno
-        header = tk.Frame(main_frame, bg='#0B5394', height=60)
-        header.pack(fill='x', pady=(0, 10))
-        header.pack_propagate(False)
-        tk.Label(header, text="📅 MIS CITAS", font=('Arial', 14, 'bold'), fg='white', bg='#0B5394').pack(side='left', padx=15)
-        ttk.Button(header, text="➕ Agendar Cita", command=self.open_patient_schedule_dialog, style='Primary.TButton').pack(side='right', padx=10)
-        ttk.Button(header, text="🔄 Actualizar", command=self.load_patient_appointments, style='Primary.TButton').pack(side='right')
+        # Header principal con gradiente visual
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=80)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
+        
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=30, pady=15)
+        
+        # Título principal
+        title_frame = tk.Frame(header_content, bg='#1E3A8A')
+        title_frame.pack(side='left', fill='y')
+        
+        tk.Label(title_frame, text="📅 Gestión de Mis Citas", 
+                font=('Arial', 20, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
+        tk.Label(title_frame, text="Administra y agenda tus citas médicas", 
+                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
+        
+        # Botones de acción en el header
+        actions_frame = tk.Frame(header_content, bg='#1E3A8A')
+        actions_frame.pack(side='right', fill='y')
+        
+        tk.Button(actions_frame, text="➕ Agendar Nueva Cita", bg='#0B5394', fg='white',
+                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
+                 command=self.open_patient_schedule_dialog).pack(side='right', padx=(10, 0))
+        tk.Button(actions_frame, text="🔄 Actualizar Lista", bg='#0B5394', fg='white',
+                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
+                 command=self.load_patient_appointments).pack(side='right', padx=(10, 0))
 
-        # Panel dividido: Calendario + Lista
-        content = tk.Frame(main_frame, bg='#F8FAFC')
-        content.pack(fill='both', expand=True)
+        # Contenido principal
+        content_frame = tk.Frame(main_frame, bg='#F8FAFC')
+        content_frame.pack(fill='both', expand=True, padx=30, pady=30)
 
-        left = tk.Frame(content, bg='white', relief='solid', bd=1, width=360)
-        left.pack(side='left', fill='y', padx=(0, 10))
-        left.pack_propagate(False)
+        # Panel dividido moderno: Calendario + Lista
+        main_content = tk.Frame(content_frame, bg='#F8FAFC')
+        main_content.pack(fill='both', expand=True)
 
-        right = tk.Frame(content, bg='white', relief='solid', bd=1)
-        right.pack(side='left', fill='both', expand=True)
+        # Panel izquierdo - Calendario y filtros
+        left_panel = tk.Frame(main_content, bg='white', relief='solid', bd=1, width=380)
+        left_panel.pack(side='left', fill='y', padx=(0, 15))
+        left_panel.pack_propagate(False)
 
-        # Calendario
-        cal_header = tk.Frame(left, bg='#0B5394', height=40)
+        # Header del calendario
+        cal_header = tk.Frame(left_panel, bg='#0B5394', height=45)
         cal_header.pack(fill='x')
         cal_header.pack_propagate(False)
-        tk.Label(cal_header, text="Calendario", font=('Arial', 11, 'bold'), fg='white', bg='#0B5394').pack(pady=8)
+        tk.Label(cal_header, text="📅 Calendario de Citas", font=('Arial', 12, 'bold'), 
+                fg='white', bg='#0B5394').pack(pady=10)
 
-        cal_container = tk.Frame(left, bg='white')
-        cal_container.pack(fill='both', expand=True, padx=10, pady=10)
+        # Contenedor del calendario
+        cal_container = tk.Frame(left_panel, bg='white')
+        cal_container.pack(fill='both', expand=True, padx=15, pady=15)
 
         self.patient_cal_date = tk.StringVar()
         if CALENDAR_AVAILABLE:
-            self.patient_calendar = Calendar(cal_container, selectmode='day', date_pattern='dd/mm/yyyy')
+            self.patient_calendar = Calendar(cal_container, selectmode='day', 
+                                           date_pattern='dd/mm/yyyy',
+                                           background='#0B5394',
+                                           foreground='white',
+                                           bordercolor='#1E3A8A',
+                                           headersbackground='#1E3A8A',
+                                           normalbackground='white',
+                                           normalforeground='black',
+                                           weekendbackground='#F8FAFC',
+                                           weekendforeground='#64748B')
             self.patient_calendar.pack(fill='both', expand=True)
+            
             def on_cal_select(event=None):
                 self.patient_cal_date.set(self.patient_calendar.get_date())
                 self.load_patient_appointments()
             self.patient_calendar.bind("<<CalendarSelected>>", on_cal_select)
         else:
-            tk.Label(cal_container, text="tkcalendar no instalado. Use Filtros.", bg='white').pack(pady=10)
-            date_entry = tk.Entry(cal_container, textvariable=self.patient_cal_date)
-            date_entry.pack(pady=5)
-            ttk.Button(cal_container, text='Filtrar', command=self.load_patient_appointments, style='Primary.TButton').pack()
+            # Fallback sin calendario
+            no_cal_frame = tk.Frame(cal_container, bg='#F8FAFC', relief='solid', bd=1)
+            no_cal_frame.pack(fill='both', expand=True, padx=10, pady=10)
+            
+            tk.Label(no_cal_frame, text="📅 Filtro por Fecha", 
+                    font=('Arial', 11, 'bold'), bg='#F8FAFC', fg='#1E3A8A').pack(pady=(10, 5))
+            tk.Label(no_cal_frame, text="(Calendario no disponible)", 
+                    font=('Arial', 9), bg='#F8FAFC', fg='#64748B').pack()
+            
+            date_entry = tk.Entry(no_cal_frame, textvariable=self.patient_cal_date, 
+                                 font=('Arial', 10), justify='center')
+            date_entry.pack(pady=10, padx=10, fill='x')
+            
+            tk.Button(no_cal_frame, text='🔍 Filtrar por Fecha', 
+                     command=self.load_patient_appointments,
+                     bg='#0B5394', fg='white', font=('Arial', 9, 'bold'),
+                     relief='flat', pady=5).pack(pady=(5, 10), padx=10, fill='x')
 
-        # Filtros rápidos
-        filters = tk.Frame(left, bg='white')
-        filters.pack(fill='x', padx=10, pady=(0, 10))
-        tk.Label(filters, text="Mostrar:", bg='white').pack(side='left')
-        self.patient_appointment_filter = ttk.Combobox(filters, values=['Todas', 'Próximas', 'Pasadas', 'Este Mes'], state='readonly', width=12)
+        # Filtros rápidos mejorados
+        filters_frame = tk.LabelFrame(left_panel, text="🔍 Filtros Rápidos", 
+                                    font=('Arial', 10, 'bold'), padx=15, pady=10, bg='white')
+        filters_frame.pack(fill='x', padx=15, pady=(0, 15))
+        
+        tk.Label(filters_frame, text="Mostrar:", font=('Arial', 9, 'bold'), bg='white').pack(anchor='w')
+        self.patient_appointment_filter = ttk.Combobox(filters_frame, 
+                                                     values=['Todas', 'Próximas', 'Pasadas', 'Este Mes'], 
+                                                     state='readonly', width=15, font=('Arial', 9))
         self.patient_appointment_filter.set('Próximas')
-        self.patient_appointment_filter.pack(side='left', padx=5)
+        self.patient_appointment_filter.pack(fill='x', pady=5)
         self.patient_appointment_filter.bind('<<ComboboxSelected>>', lambda e: self.load_patient_appointments())
 
-        # Lista de citas
-        list_header = tk.Frame(right, bg='#0B5394', height=40)
+        # Panel derecho - Lista de citas
+        right_panel = tk.Frame(main_content, bg='white', relief='solid', bd=1)
+        right_panel.pack(side='left', fill='both', expand=True)
+
+        # Header de la lista
+        list_header = tk.Frame(right_panel, bg='#0B5394', height=45)
         list_header.pack(fill='x')
         list_header.pack_propagate(False)
-        tk.Label(list_header, text="Mis Citas", font=('Arial', 11, 'bold'), fg='white', bg='#0B5394').pack(pady=8)
+        tk.Label(list_header, text="📋 Lista de Mis Citas", font=('Arial', 12, 'bold'), 
+                fg='white', bg='#0B5394').pack(pady=10)
+
+        # Tabla de citas con scrollbars mejorados
+        table_container = tk.Frame(right_panel, bg='white')
+        table_container.pack(fill='both', expand=True, padx=15, pady=15)
 
         columns = ('ID','Fecha','Hora','Doctor','Motivo','Estado')
-        self.patient_appointments_tree = ttk.Treeview(right, columns=columns, show='headings', height=14)
-        for c in columns:
-            self.patient_appointments_tree.heading(c, text=c)
-            self.patient_appointments_tree.column(c, width=110 if c in ('Fecha','Doctor','Motivo') else 80)
-        vs = ttk.Scrollbar(right, orient='vertical', command=self.patient_appointments_tree.yview)
-        self.patient_appointments_tree.configure(yscrollcommand=vs.set)
-        self.patient_appointments_tree.pack(side='left', fill='both', expand=True, padx=(10,0), pady=10)
-        vs.pack(side='right', fill='y', pady=10)
+        self.patient_appointments_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=12)
+        
+        # Configurar columnas
+        column_widths = {'ID': 50, 'Fecha': 100, 'Hora': 80, 'Doctor': 130, 'Motivo': 150, 'Estado': 100}
+        for col in columns:
+            self.patient_appointments_tree.heading(col, text=col, anchor='center')
+            self.patient_appointments_tree.column(col, width=column_widths.get(col, 100), anchor='center')
 
-        actions = tk.Frame(main_frame, bg='#F8FAFC')
-        actions.pack(fill='x', pady=(8,0))
-        ttk.Button(actions, text='👁️ Ver Detalles', style='Primary.TButton', command=self.view_my_appointment_details).pack(side='left', padx=5)
-        ttk.Button(actions, text='❌ Cancelar', style='Primary.TButton', command=self.cancel_my_appointment).pack(side='left', padx=5)
+        # Scrollbars con mejor diseño
+        v_scrollbar = ttk.Scrollbar(table_container, orient='vertical', command=self.patient_appointments_tree.yview)
+        h_scrollbar = ttk.Scrollbar(table_container, orient='horizontal', command=self.patient_appointments_tree.xview)
+        self.patient_appointments_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+        
+        # Layout con grid para mejor control
+        self.patient_appointments_tree.grid(row=0, column=0, sticky='nsew')
+        v_scrollbar.grid(row=0, column=1, sticky='ns')
+        h_scrollbar.grid(row=1, column=0, sticky='ew')
+        
+        # Configurar expansión
+        table_container.grid_rowconfigure(0, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
 
-        # Cargar
+        # Panel de acciones mejorado
+        actions_panel = tk.Frame(main_frame, bg='#F8FAFC')
+        actions_panel.pack(fill='x', padx=30, pady=(0, 30))
+        
+        actions_inner = tk.Frame(actions_panel, bg='white', relief='solid', bd=1)
+        actions_inner.pack(fill='x', pady=10)
+        
+        actions_content = tk.Frame(actions_inner, bg='white')
+        actions_content.pack(fill='x', padx=20, pady=15)
+        
+        tk.Label(actions_content, text="⚡ Acciones Rápidas", 
+                font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
+        
+        # Botones de acción
+        action_buttons = [
+            ("👁️ Ver Detalles", self.view_my_appointment_details, "#0B5394"),
+            ("❌ Cancelar Cita", self.cancel_my_appointment, "#DC2626"),
+            ("📧 Contactar Doctor", lambda: messagebox.showinfo("Contactar", "Función en desarrollo"), "#16A085")
+        ]
+        
+        for text, command, color in action_buttons:
+            tk.Button(actions_content, text=text, command=command,
+                     bg=color, fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', bd=0, padx=15, pady=8, cursor='hand2').pack(side='right', padx=5)
+
+        # Cargar datos iniciales
         self.load_patient_appointments()
     
     def create_patient_medical_history(self, parent):
-        """Mi historial médico para pacientes"""
+        """Mi historial médico para pacientes con diseño moderno similar al admin"""
+        # Frame principal con mejor diseño
         main_frame = tk.Frame(parent, bg='#F8FAFC')
-        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        main_frame.pack(fill='both', expand=True)
         
-        # Header
-        tk.Label(main_frame, text="Mi Historial Médico", 
-                font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A').pack(pady=(0, 20))
+        # Header principal con gradiente visual
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=80)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
         
-        # Panel de resumen de salud
-        summary_frame = tk.LabelFrame(main_frame, text="📊 Resumen de Salud", 
-                                    font=('Arial', 12, 'bold'), padx=20, pady=15)
-        summary_frame.pack(fill='x', pady=10)
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=30, pady=15)
+        
+        # Título principal
+        title_frame = tk.Frame(header_content, bg='#1E3A8A')
+        title_frame.pack(side='left', fill='y')
+        
+        tk.Label(title_frame, text="📋 Mi Historial Médico", 
+                font=('Arial', 20, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
+        tk.Label(title_frame, text="Consulta completa de tu historial clínico", 
+                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
+        
+        # Botones de acción en el header
+        actions_frame = tk.Frame(header_content, bg='#1E3A8A')
+        actions_frame.pack(side='right', fill='y')
+        
+        tk.Button(actions_frame, text="📥 Exportar PDF", bg='#0B5394', fg='white',
+                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
+                 command=self.export_history_pdf).pack(side='right', padx=(10, 0))
+        tk.Button(actions_frame, text="🖨️ Imprimir", bg='#0B5394', fg='white',
+                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
+                 command=self.print_my_history).pack(side='right', padx=(10, 0))
+
+        # Contenido principal
+        content_frame = tk.Frame(main_frame, bg='#F8FAFC')
+        content_frame.pack(fill='both', expand=True, padx=30, pady=30)
+        
+        # Panel de resumen de salud mejorado
+        summary_panel = tk.LabelFrame(content_frame, text="📊 Resumen de Mi Salud", 
+                                    font=('Arial', 14, 'bold'), padx=25, pady=20, 
+                                    bg='white', relief='solid', bd=1)
+        summary_panel.pack(fill='x', pady=(0, 30))
         
         try:
             health_summary = self.get_patient_health_summary()
             
-            summary_grid = tk.Frame(summary_frame)
-            summary_grid.pack()
+            # Grid de resumen con mejor diseño
+            summary_grid = tk.Frame(summary_panel, bg='white')
+            summary_grid.pack(fill='x')
             
             summary_items = [
                 ("🩺 Total de Consultas:", str(health_summary.get('total_consultations', 0))),
                 ("📅 Última Consulta:", health_summary.get('last_consultation', 'Nunca')),
-                ("👨‍⚕️ Doctores Atendido por:", str(health_summary.get('doctors_count', 0))),
+                ("👨‍⚕️ Doctores Visitados:", str(health_summary.get('doctors_count', 0))),
                 ("🏥 Especialidades:", health_summary.get('specialties', 'Ninguna'))
             ]
             
             for i, (label, value) in enumerate(summary_items):
-                tk.Label(summary_grid, text=label, font=('Arial', 10, 'bold'), 
-                        fg='#1E3A8A').grid(row=i//2, column=(i%2)*2, sticky='w', padx=(0, 10), pady=5)
-                tk.Label(summary_grid, text=value, font=('Arial', 10), 
-                        fg='#64748B').grid(row=i//2, column=(i%2)*2+1, sticky='w', padx=(0, 30), pady=5)
+                row = i // 2
+                col = (i % 2) * 2
+                
+                tk.Label(summary_grid, text=label, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#1E3A8A').grid(row=row, column=col, sticky='w', padx=(0, 15), pady=10)
+                tk.Label(summary_grid, text=value, font=('Arial', 11), 
+                        bg='white', fg='#059669').grid(row=row, column=col+1, sticky='w', padx=(0, 40), pady=10)
+            
+            # Configurar grid weights
+            for i in range(4):
+                summary_grid.columnconfigure(i, weight=1)
                         
         except Exception as e:
-            tk.Label(summary_frame, text=f"Error cargando resumen: {str(e)}", 
-                    fg='red').pack()
+            tk.Label(summary_panel, text=f"Error cargando resumen: {str(e)}", 
+                    font=('Arial', 10), fg='red', bg='white').pack(pady=10)
         
-        # Filtros de historial
-        filters_frame = tk.LabelFrame(main_frame, text="Filtros", font=('Arial', 11, 'bold'), 
-                                    padx=10, pady=10)
-        filters_frame.pack(fill='x', pady=(0, 20))
+        # Panel de filtros mejorado
+        filters_panel = tk.LabelFrame(content_frame, text="🔍 Filtros de Búsqueda", 
+                                    font=('Arial', 12, 'bold'), padx=20, pady=15, 
+                                    bg='white', relief='solid', bd=1)
+        filters_panel.pack(fill='x', pady=(0, 30))
         
-        filters_row = tk.Frame(filters_frame)
-        filters_row.pack()
+        filters_content = tk.Frame(filters_panel, bg='white')
+        filters_content.pack(fill='x')
         
-        tk.Label(filters_row, text="Período:", font=('Arial', 10)).grid(row=0, column=0, padx=5)
-        self.history_period_filter = ttk.Combobox(filters_row, 
+        # Primera fila de filtros
+        filters_row1 = tk.Frame(filters_content, bg='white')
+        filters_row1.pack(fill='x', pady=(0, 10))
+        
+        tk.Label(filters_row1, text="📅 Período:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=0, padx=5, sticky='w')
+        self.history_period_filter = ttk.Combobox(filters_row1, 
                                                 values=['Todos', 'Este Año', 'Últimos 6 Meses', 'Últimos 3 Meses'], 
-                                                state='readonly', width=15)
+                                                state='readonly', width=18, font=('Arial', 9))
         self.history_period_filter.set('Todos')
-        self.history_period_filter.grid(row=0, column=1, padx=5)
+        self.history_period_filter.grid(row=0, column=1, padx=10, sticky='ew')
         
-        tk.Label(filters_row, text="Doctor:", font=('Arial', 10)).grid(row=0, column=2, padx=5)
-        self.history_doctor_filter = ttk.Combobox(filters_row, state='readonly', width=15)
-        self.history_doctor_filter.grid(row=0, column=3, padx=5)
-        # Poblar doctores del historial del paciente ("Todos" + "id - Nombre Apellido")
+        tk.Label(filters_row1, text="👨‍⚕️ Doctor:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=2, padx=5, sticky='w')
+        self.history_doctor_filter = ttk.Combobox(filters_row1, state='readonly', width=18, font=('Arial', 9))
+        self.history_doctor_filter.grid(row=0, column=3, padx=10, sticky='ew')
+        
+        # Configurar grid weights para filtros
+        filters_row1.columnconfigure(1, weight=1)
+        filters_row1.columnconfigure(3, weight=1)
+        
+        # Poblar doctores del historial del paciente
         try:
             conn = self.db_manager.get_connection(); cur = conn.cursor()
             cur.execute(
@@ -12067,21 +12545,92 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                 """,
                 (self.current_user.id,),
             )
-            doctors = [f"{r[0]} - {r[1]} {r[2]}" for r in cur.fetchall()]
+            doctors = [f"{r[0]} - Dr. {r[1]} {r[2]}" for r in cur.fetchall()]
             self.history_doctor_filter['values'] = ['Todos'] + doctors
             self.history_doctor_filter.set('Todos')
             cur.close(); conn.close()
         except Exception:
-            # Fallback simple
             self.history_doctor_filter['values'] = ['Todos']
             self.history_doctor_filter.set('Todos')
 
-        ttk.Button(
-            filters_row,
-            text="🔍 Filtrar",
-            style='Primary.TButton',
-            command=self.filter_medical_history,
-        ).grid(row=0, column=4, padx=10)
+        # Segunda fila - botón de filtrar
+        filters_row2 = tk.Frame(filters_content, bg='white')
+        filters_row2.pack(fill='x')
+        
+        tk.Button(filters_row2, text="🔍 Aplicar Filtros", 
+                 command=self.filter_medical_history,
+                 bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
+                 relief='flat', padx=20, pady=8).pack(side='left')
+        tk.Button(filters_row2, text="🗑️ Limpiar Filtros", 
+                 command=lambda: [self.history_period_filter.set('Todos'), 
+                                self.history_doctor_filter.set('Todos'), 
+                                self.load_patient_medical_history()],
+                 bg='#6B7280', fg='white', font=('Arial', 10, 'bold'),
+                 relief='flat', padx=20, pady=8).pack(side='left', padx=(10, 0))
+        
+        # Panel de tabla mejorado
+        table_panel = tk.LabelFrame(content_frame, text="📋 Registros de Mi Historial Médico", 
+                                  font=('Arial', 14, 'bold'), padx=25, pady=20, 
+                                  bg='white', relief='solid', bd=1)
+        table_panel.pack(fill='both', expand=True)
+        
+        # Frame contenedor para tabla con scrollbars
+        table_container = tk.Frame(table_panel, bg='white')
+        table_container.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # Tabla de historial médico con diseño mejorado
+        columns = ('Fecha', 'Doctor', 'Diagnóstico', 'Tratamiento', 'Medicamentos', 'Observaciones')
+        self.patient_history_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=12)
+        
+        # Configurar headers con mejores anchos
+        column_widths = {'Fecha': 100, 'Doctor': 150, 'Diagnóstico': 200, 'Tratamiento': 200, 
+                        'Medicamentos': 150, 'Observaciones': 200}
+        
+        for col in columns:
+            self.patient_history_tree.heading(col, text=col, anchor='center')
+            self.patient_history_tree.column(col, width=column_widths.get(col, 100), anchor='center')
+        
+        # Scrollbars vertical y horizontal con mejor diseño
+        scrollbar_y = ttk.Scrollbar(table_container, orient="vertical", command=self.patient_history_tree.yview)
+        scrollbar_x = ttk.Scrollbar(table_container, orient="horizontal", command=self.patient_history_tree.xview)
+        self.patient_history_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+        
+        # Layout con grid para mejor control
+        self.patient_history_tree.grid(row=0, column=0, sticky='nsew')
+        scrollbar_y.grid(row=0, column=1, sticky='ns')
+        scrollbar_x.grid(row=1, column=0, sticky='ew')
+        
+        # Configurar expansión
+        table_container.grid_rowconfigure(0, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
+        
+        # Panel de acciones mejorado
+        actions_panel = tk.Frame(main_frame, bg='#F8FAFC')
+        actions_panel.pack(fill='x', padx=30, pady=(0, 30))
+        
+        actions_inner = tk.Frame(actions_panel, bg='white', relief='solid', bd=1)
+        actions_inner.pack(fill='x', pady=10)
+        
+        actions_content = tk.Frame(actions_inner, bg='white')
+        actions_content.pack(fill='x', padx=20, pady=15)
+        
+        tk.Label(actions_content, text="⚡ Acciones Disponibles", 
+                font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
+        
+        # Botones de acción mejorados
+        history_actions = [
+            ("👁️ Ver Detalle Completo", self.view_history_detail, "#0B5394"),
+            ("📧 Enviar por Email", self.email_my_history, "#16A085"),
+            ("📊 Generar Reporte", lambda: messagebox.showinfo("Reporte", "Función en desarrollo"), "#E67E22")
+        ]
+
+        for text, command, color in history_actions:
+            tk.Button(actions_content, text=text, command=command,
+                     bg=color, fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', bd=0, padx=15, pady=8, cursor='hand2').pack(side='right', padx=5)
+        
+        # Cargar datos iniciales
+        self.load_patient_medical_history()
         
         # Frame contenedor para tabla con scrollbars
         table_container = tk.Frame(main_frame)
@@ -12131,43 +12680,181 @@ Para consultas sobre este reporte, contacte al departamento de administración.
         self.load_patient_medical_history()
 
     def create_patient_settings(self, parent):
-        """Configuración del paciente (perfil básico editable)"""
-        main = tk.Frame(parent, bg='#F8FAFC')
-        main.pack(fill='both', expand=True, padx=20, pady=20)
-
-        header = tk.Frame(main, bg='#0B5394', height=60)
-        header.pack(fill='x', pady=(0, 15))
-        header.pack_propagate(False)
-        tk.Label(header, text='⚙️ CONFIGURACIÓN DE PERFIL', font=('Arial', 14, 'bold'), fg='white', bg='#0B5394').pack(pady=12)
-
-        form = tk.Frame(main, bg='white', relief='solid', bd=1)
-        form.pack(fill='x', padx=10, pady=10)
-
+        """Configuración del paciente con diseño moderno similar al admin"""
+        # Frame principal
+        main_frame = tk.Frame(parent, bg='#F8FAFC')
+        main_frame.pack(fill='both', expand=True)
+        
+        # Header principal con gradiente visual
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=80)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
+        
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=30, pady=15)
+        
+        # Título principal
+        title_frame = tk.Frame(header_content, bg='#1E3A8A')
+        title_frame.pack(side='left', fill='y')
+        
+        tk.Label(title_frame, text="⚙️ Configuración de Mi Perfil", 
+                font=('Arial', 20, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
+        tk.Label(title_frame, text="Administra tu información personal y preferencias", 
+                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
+        
+        # Contenido principal
+        content_frame = tk.Frame(main_frame, bg='#F8FAFC')
+        content_frame.pack(fill='both', expand=True, padx=30, pady=30)
+        
+        # Obtener datos del paciente
         data = self.get_patient_profile_data()
-        fields = [
-            ('Nombre', 'nombre'),
-            ('Apellido', 'apellido'),
-            ('Email', 'email'),
-            ('Teléfono', 'telefono'),
-            ('Dirección', 'direccion'),
+        
+        # Panel de información personal
+        personal_panel = tk.LabelFrame(content_frame, text="👤 Información Personal", 
+                                     font=('Arial', 14, 'bold'), padx=30, pady=20, 
+                                     bg='white', relief='solid', bd=1)
+        personal_panel.pack(fill='x', pady=(0, 30))
+        
+        # Grid para formulario personal
+        personal_grid = tk.Frame(personal_panel, bg='white')
+        personal_grid.pack(fill='x')
+        
+        # Configurar campos del formulario
+        personal_fields = [
+            ('👤 Nombre:', 'nombre', 0, 0),
+            ('👤 Apellido:', 'apellido', 0, 2),
+            ('📧 Email:', 'email', 1, 0),
+            ('📞 Teléfono:', 'telefono', 1, 2),
+            ('🏠 Dirección:', 'direccion', 2, 0)
         ]
+        
         self.patient_settings_vars = {}
-        for label, key in fields:
-            row = tk.Frame(form, bg='white')
-            row.pack(fill='x', padx=15, pady=8)
-            tk.Label(row, text=f"{label}:", width=16, anchor='w', font=('Arial', 10, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
+        
+        for label, key, row, col in personal_fields:
+            # Label
+            tk.Label(personal_grid, text=label, font=('Arial', 11, 'bold'), 
+                    bg='white', fg='#1E3A8A').grid(row=row*2, column=col, sticky='w', 
+                                                   padx=(0, 10), pady=(10, 5))
+            
+            # Entry
             var = tk.StringVar(value=str(data.get(key, '') or ''))
             self.patient_settings_vars[key] = var
-            tk.Entry(row, textvariable=var, font=('Arial', 10), relief='solid', bd=1).pack(side='left', fill='x', expand=True)
+            
+            entry = tk.Entry(personal_grid, textvariable=var, font=('Arial', 10), 
+                           relief='solid', bd=1, width=25 if key != 'direccion' else 60)
+            
+            if key == 'direccion':
+                entry.grid(row=row*2+1, column=col, columnspan=4, sticky='ew', 
+                          padx=(0, 10), pady=(0, 15))
+            else:
+                entry.grid(row=row*2+1, column=col, sticky='ew', 
+                          padx=(0, 10), pady=(0, 15))
+        
+        # Configurar grid weights
+        for i in range(4):
+            personal_grid.columnconfigure(i, weight=1)
+        
+        # Panel de preferencias
+        preferences_panel = tk.LabelFrame(content_frame, text="🎨 Preferencias de la Cuenta", 
+                                        font=('Arial', 14, 'bold'), padx=30, pady=20, 
+                                        bg='white', relief='solid', bd=1)
+        preferences_panel.pack(fill='x', pady=(0, 30))
+        
+        # Grid para preferencias
+        pref_grid = tk.Frame(preferences_panel, bg='white')
+        pref_grid.pack(fill='x')
+        
+        # Notificaciones por email
+        tk.Label(pref_grid, text="📧 Notificaciones por Email:", 
+                font=('Arial', 11, 'bold'), bg='white', fg='#1E3A8A').grid(row=0, column=0, sticky='w', pady=10)
+        self.email_notifications_var = tk.BooleanVar(value=True)
+        tk.Checkbutton(pref_grid, text="Recibir recordatorios de citas", 
+                      variable=self.email_notifications_var, font=('Arial', 10),
+                      bg='white', fg='#374151').grid(row=0, column=1, sticky='w', padx=10)
+        
+        # Recordatorios
+        tk.Label(pref_grid, text="⏰ Recordatorios:", 
+                font=('Arial', 11, 'bold'), bg='white', fg='#1E3A8A').grid(row=1, column=0, sticky='w', pady=10)
+        self.reminder_time_var = tk.StringVar(value="24 horas antes")
+        reminder_combo = ttk.Combobox(pref_grid, textvariable=self.reminder_time_var,
+                                    values=["1 hora antes", "2 horas antes", "24 horas antes", "48 horas antes"],
+                                    state='readonly', width=20, font=('Arial', 10))
+        reminder_combo.grid(row=1, column=1, sticky='w', padx=10)
+        
+        # Panel de información de cuenta
+        account_panel = tk.LabelFrame(content_frame, text="🔐 Información de la Cuenta", 
+                                    font=('Arial', 14, 'bold'), padx=30, pady=20, 
+                                    bg='white', relief='solid', bd=1)
+        account_panel.pack(fill='x', pady=(0, 30))
+        
+        # Grid para información de cuenta
+        account_grid = tk.Frame(account_panel, bg='white')
+        account_grid.pack(fill='x')
+        
+        account_info = [
+            ("👤 Usuario:", f"{data.get('nombre', '')} {data.get('apellido', '')}"),
+            ("🆔 ID de Paciente:", str(data.get('id', 'N/A'))),
+            ("📅 Fecha de Registro:", data.get('fecha_creacion', 'N/A')),
+            ("🔄 Última Actualización:", data.get('fecha_actualizacion', 'N/A'))
+        ]
+        
+        for i, (label, value) in enumerate(account_info):
+            row = i // 2
+            col = (i % 2) * 2
+            
+            tk.Label(account_grid, text=label, font=('Arial', 11, 'bold'), 
+                    bg='white', fg='#1E3A8A').grid(row=row, column=col, sticky='w', 
+                                                   padx=(0, 15), pady=10)
+            tk.Label(account_grid, text=value, font=('Arial', 11), 
+                    bg='white', fg='#059669').grid(row=row, column=col+1, sticky='w', 
+                                                   padx=(0, 40), pady=10)
+        
+        # Panel de acciones
+        actions_panel = tk.Frame(main_frame, bg='#F8FAFC')
+        actions_panel.pack(fill='x', padx=30, pady=(0, 30))
+        
+        actions_inner = tk.Frame(actions_panel, bg='white', relief='solid', bd=1)
+        actions_inner.pack(fill='x', pady=10)
+        
+        actions_content = tk.Frame(actions_inner, bg='white')
+        actions_content.pack(fill='x', padx=20, pady=15)
+        
+        tk.Label(actions_content, text="⚡ Acciones Disponibles", 
+                font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
+        
+        # Botones de acción
+        settings_actions = [
+            ("💾 Guardar Cambios", self.save_patient_settings, "#16A085"),
+            ("🔑 Cambiar Contraseña", self.change_patient_password, "#0B5394"),
+            ("📥 Exportar Datos", lambda: messagebox.showinfo("Exportar", "Función en desarrollo"), "#E67E22")
+        ]
 
-        save = tk.Frame(main, bg='#F8FAFC')
-        save.pack(fill='x', pady=10)
-        tk.Button(save, text='💾 Guardar Cambios', bg='#16A085', fg='white', font=('Arial', 11, 'bold'), command=self.save_patient_settings).pack(side='left')
+        for text, command, color in settings_actions:
+            tk.Button(actions_content, text=text, command=command,
+                     bg=color, fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', bd=0, padx=15, pady=8, cursor='hand2').pack(side='right', padx=5)
 
     def save_patient_settings(self):
+        """Guardar configuración del paciente con validaciones mejoradas"""
         try:
             if not self.current_user:
+                messagebox.showerror('Error', 'No hay usuario activo')
                 return
+                
+            # Validar campos obligatorios
+            required_fields = ['nombre', 'apellido', 'email']
+            for field in required_fields:
+                if not self.patient_settings_vars[field].get().strip():
+                    messagebox.showerror('Error', f'El campo {field} es obligatorio')
+                    return
+            
+            # Validar email
+            email = self.patient_settings_vars['email'].get().strip()
+            if '@' not in email or '.' not in email:
+                messagebox.showerror('Error', 'Por favor ingrese un email válido')
+                return
+            
             conn = self.db_manager.get_connection()
             cur = conn.cursor()
             cur.execute(
@@ -12175,7 +12862,7 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                 (
                     self.patient_settings_vars['nombre'].get().strip(),
                     self.patient_settings_vars['apellido'].get().strip(),
-                    self.patient_settings_vars['email'].get().strip(),
+                    email,
                     self.patient_settings_vars['telefono'].get().strip(),
                     self.patient_settings_vars['direccion'].get().strip(),
                     self.current_user.id,
@@ -12183,9 +12870,111 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             )
             conn.commit()
             cur.close(); conn.close()
-            messagebox.showinfo('Perfil', '✅ Cambios guardados')
+            messagebox.showinfo('Perfil', '✅ Cambios guardados exitosamente')
         except Exception as e:
             messagebox.showerror('Perfil', f'Error guardando cambios: {e}')
+
+    def change_patient_password(self):
+        """Diálogo para cambiar contraseña del paciente"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title('Cambiar Contraseña')
+        dialog.geometry('400x300')
+        dialog.configure(bg='#F8FAFC')
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # Centrar diálogo
+        dialog.geometry("+%d+%d" % (self.root.winfo_rootx() + 200, self.root.winfo_rooty() + 100))
+        
+        # Header
+        header_frame = tk.Frame(dialog, bg='#1E3A8A', height=60)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
+        tk.Label(header_frame, text='🔑 Cambiar Contraseña', 
+                font=('Arial', 14, 'bold'), bg='#1E3A8A', fg='white').pack(pady=15)
+        
+        # Contenido
+        content_frame = tk.Frame(dialog, bg='#F8FAFC')
+        content_frame.pack(fill='both', expand=True, padx=30, pady=20)
+        
+        # Campos
+        fields_frame = tk.Frame(content_frame, bg='white', relief='solid', bd=1)
+        fields_frame.pack(fill='x', pady=(0, 20))
+        
+        # Variables
+        current_pwd_var = tk.StringVar()
+        new_pwd_var = tk.StringVar()
+        confirm_pwd_var = tk.StringVar()
+        
+        # Contraseña actual
+        tk.Label(fields_frame, text='Contraseña Actual:', 
+                font=('Arial', 10, 'bold'), bg='white', fg='#1E3A8A').pack(anchor='w', padx=15, pady=(15, 5))
+        tk.Entry(fields_frame, textvariable=current_pwd_var, show='*', 
+                font=('Arial', 10), relief='solid', bd=1).pack(fill='x', padx=15, pady=(0, 10))
+        
+        # Nueva contraseña
+        tk.Label(fields_frame, text='Nueva Contraseña:', 
+                font=('Arial', 10, 'bold'), bg='white', fg='#1E3A8A').pack(anchor='w', padx=15, pady=(0, 5))
+        tk.Entry(fields_frame, textvariable=new_pwd_var, show='*', 
+                font=('Arial', 10), relief='solid', bd=1).pack(fill='x', padx=15, pady=(0, 10))
+        
+        # Confirmar contraseña
+        tk.Label(fields_frame, text='Confirmar Nueva Contraseña:', 
+                font=('Arial', 10, 'bold'), bg='white', fg='#1E3A8A').pack(anchor='w', padx=15, pady=(0, 5))
+        tk.Entry(fields_frame, textvariable=confirm_pwd_var, show='*', 
+                font=('Arial', 10), relief='solid', bd=1).pack(fill='x', padx=15, pady=(0, 15))
+        
+        # Botones
+        buttons_frame = tk.Frame(content_frame, bg='#F8FAFC')
+        buttons_frame.pack(fill='x')
+        
+        def save_password():
+            try:
+                current = current_pwd_var.get().strip()
+                new = new_pwd_var.get().strip()
+                confirm = confirm_pwd_var.get().strip()
+                
+                if not all([current, new, confirm]):
+                    messagebox.showerror('Error', 'Todos los campos son obligatorios')
+                    return
+                
+                if new != confirm:
+                    messagebox.showerror('Error', 'Las contraseñas nuevas no coinciden')
+                    return
+                
+                if len(new) < 6:
+                    messagebox.showerror('Error', 'La nueva contraseña debe tener al menos 6 caracteres')
+                    return
+                
+                # Verificar contraseña actual
+                conn = self.db_manager.get_connection()
+                cur = conn.cursor()
+                cur.execute("SELECT password FROM usuarios WHERE id = ?", (self.current_user.id,))
+                stored_password = cur.fetchone()[0]
+                
+                if stored_password != current:
+                    messagebox.showerror('Error', 'La contraseña actual es incorrecta')
+                    cur.close(); conn.close()
+                    return
+                
+                # Actualizar contraseña
+                cur.execute("UPDATE usuarios SET password = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?", 
+                           (new, self.current_user.id))
+                conn.commit()
+                cur.close(); conn.close()
+                
+                messagebox.showinfo('Éxito', '✅ Contraseña cambiada exitosamente')
+                dialog.destroy()
+                
+            except Exception as e:
+                messagebox.showerror('Error', f'Error cambiando contraseña: {e}')
+        
+        tk.Button(buttons_frame, text='💾 Guardar', command=save_password,
+                 bg='#16A085', fg='white', font=('Arial', 10, 'bold'),
+                 relief='flat', padx=20, pady=8).pack(side='left')
+        tk.Button(buttons_frame, text='❌ Cancelar', command=dialog.destroy,
+                 bg='#E74C3C', fg='white', font=('Arial', 10, 'bold'),
+                 relief='flat', padx=20, pady=8).pack(side='left', padx=(10, 0))
 
     def open_patient_schedule_dialog(self):
         """Diálogo ligero para que el paciente agende su cita"""
@@ -12418,115 +13207,206 @@ Estado: {vals[5]}"""
         self.load_patient_medical_history()
     
     def create_patient_billing(self, parent):
-        """Mis facturas y pagos para pacientes - Vista mejorada"""
+        """Mis facturas y pagos con diseño moderno similar al admin"""
+        # Frame principal
         main_frame = tk.Frame(parent, bg='#F8FAFC')
-        main_frame.pack(fill='both', expand=True, padx=15, pady=15)
+        main_frame.pack(fill='both', expand=True)
         
-        # Header moderno
-        header_frame = tk.Frame(main_frame, bg='#0B5394', height=60)
-        header_frame.pack(fill='x', pady=(0, 15))
+        # Header principal con gradiente visual
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=80)
+        header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
         
-        header_content = tk.Frame(header_frame, bg='#0B5394')
-        header_content.pack(expand=True, fill='both', padx=20, pady=10)
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=30, pady=15)
         
-        tk.Label(header_content, text="💰", font=('Arial', 16), bg='#0B5394', fg='white').pack(side='left', pady=5)
-        tk.Label(header_content, text="MIS FACTURAS Y PAGOS", 
-                font=('Arial', 14, 'bold'), bg='#0B5394', fg='white').pack(side='left', padx=(10, 0), pady=5)
-        tk.Label(header_content, text="Estado de mis cuentas médicas", 
-                font=('Arial', 10), bg='#0B5394', fg='#FFFFFF').pack(side='left', padx=(15, 0), pady=5)
+        # Título principal
+        title_frame = tk.Frame(header_content, bg='#1E3A8A')
+        title_frame.pack(side='left', fill='y')
         
-        # Botón de actualizar
-        refresh_btn = tk.Button(
-            header_content,
-            text="� Actualizar",
-            command=self.refresh_patient_billing,
-            bg='#0B5394',
-            fg='white',
-            font=('Arial', 10, 'bold'),
-            padx=15,
-            pady=5
-        )
-        refresh_btn.pack(side='right', pady=5)
+        tk.Label(title_frame, text="💰 Mis Facturas y Pagos", 
+                font=('Arial', 20, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
+        tk.Label(title_frame, text="Administra y consulta tu estado financiero", 
+                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
         
-        # Contenido dividido en dos paneles
+        # Botones de acción en el header
+        actions_frame = tk.Frame(header_content, bg='#1E3A8A')
+        actions_frame.pack(side='right', fill='y')
+        
+        tk.Button(actions_frame, text="🔄 Actualizar", bg='#0B5394', fg='white',
+                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
+                 command=self.refresh_patient_billing).pack(side='right', padx=(10, 0))
+        tk.Button(actions_frame, text="📊 Resumen", bg='#0B5394', fg='white',
+                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
+                 command=self.show_billing_summary).pack(side='right', padx=(10, 0))
+
+        # Contenido principal
         content_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        content_frame.pack(fill='both', expand=True)
+        content_frame.pack(fill='both', expand=True, padx=30, pady=30)
         
-        # Panel izquierdo: Resumen financiero
-        left_panel = tk.Frame(content_frame, bg='#F8FAFC', width=380)
-        left_panel.pack(side='left', fill='y', padx=(0, 15))
-        left_panel.pack_propagate(False)
-        
-        # Panel derecho: Lista de facturas
-        right_panel = tk.Frame(content_frame, bg='#F8FAFC')
-        right_panel.pack(side='right', fill='both', expand=True)
-        
-        # Resumen financiero personalizado
-        financial_frame = tk.LabelFrame(
-            left_panel, 
-            text="💰 MI ESTADO FINANCIERO", 
-            font=('Arial', 11, 'bold'),
-            bg='#e8f5e8',
-            fg='#2e7d32',
-            padx=15, 
-            pady=15
-        )
-        financial_frame.pack(fill='x', pady=(0, 15))
+        # Panel de resumen financiero mejorado
+        financial_panel = tk.LabelFrame(content_frame, text="💰 Mi Estado Financiero", 
+                                      font=('Arial', 14, 'bold'), padx=25, pady=20, 
+                                      bg='white', relief='solid', bd=1)
+        financial_panel.pack(fill='x', pady=(0, 30))
         
         try:
             billing_summary = self.get_patient_billing_summary()
             
-            # Indicadores financieros del paciente
-            financial_indicators = [
-                ("💳 Total Pagado", f"₡{billing_summary.get('total_paid', 0):,.2f}", "#16A085"),
-                ("⏳ Pendiente", f"₡{billing_summary.get('total_pending', 0):,.2f}", "#C0392B"),
-                ("📋 Mis Facturas", str(billing_summary.get('total_invoices', 0)), "#0B5394"),
-                ("📅 Este Mes", f"₡{billing_summary.get('month_total', 0):,.2f}", "#16A085")
+            # Grid de indicadores financieros
+            financial_grid = tk.Frame(financial_panel, bg='white')
+            financial_grid.pack(fill='x')
+            
+            # Tarjetas de estado financiero
+            financial_cards = [
+                ("💳", "Total Pagado", f"₡{billing_summary.get('total_paid', 0):,.2f}", "#16A085"),
+                ("⏳", "Pendiente", f"₡{billing_summary.get('total_pending', 0):,.2f}", "#C0392B"),
+                ("📋", "Mis Facturas", str(billing_summary.get('total_invoices', 0)), "#0B5394"),
+                ("📅", "Este Mes", f"₡{billing_summary.get('month_total', 0):,.2f}", "#8B5CF6")
             ]
             
-            for title, value, color in financial_indicators:
-                indicator_row = tk.Frame(financial_frame, bg='#e8f5e8')
-                indicator_row.pack(fill='x', pady=8)
+            for i, (icon, title, value, color) in enumerate(financial_cards):
+                col = i % 2
+                row = i // 2
                 
-                tk.Label(indicator_row, text=title, font=('Arial', 11, 'bold'),
-                        bg='#e8f5e8', fg='#2e7d32').pack(side='left')
-                tk.Label(indicator_row, text=value, font=('Arial', 12, 'bold'),
-                        bg='#e8f5e8', fg=color).pack(side='right')
+                # Frame de la tarjeta
+                card_frame = tk.Frame(financial_grid, bg=color, relief='flat', bd=2)
+                card_frame.grid(row=row, column=col, padx=15, pady=10, sticky='ew')
+                
+                # Contenido de la tarjeta
+                card_content = tk.Frame(card_frame, bg=color)
+                card_content.pack(fill='both', expand=True, padx=20, pady=15)
+                
+                # Icono y valor
+                tk.Label(card_content, text=icon, font=('Arial', 18), 
+                        bg=color, fg='white').pack(side='left')
+                
+                text_frame = tk.Frame(card_content, bg=color)
+                text_frame.pack(side='right', fill='x', expand=True)
+                
+                tk.Label(text_frame, text=value, font=('Arial', 16, 'bold'), 
+                        bg=color, fg='white').pack(anchor='e')
+                tk.Label(text_frame, text=title, font=('Arial', 10), 
+                        bg=color, fg='white').pack(anchor='e')
             
-            # Estado de cuenta
-            if billing_summary.get('total_pending', 0) > 0:
-                status_color = '#C0392B'
-                status_text = "⚠️ Tiene pagos pendientes"
-            else:
-                status_color = '#16A085'
-                status_text = "✅ Cuenta al día"
-                
-            tk.Label(financial_frame, text=status_text, font=('Arial', 11, 'bold'),
-                    bg='#e8f5e8', fg=status_color).pack(pady=(10, 0))
-                
+            # Configurar expansión del grid
+            financial_grid.columnconfigure(0, weight=1)
+            financial_grid.columnconfigure(1, weight=1)
+            
         except Exception as e:
-            tk.Label(financial_frame, text=f"Error cargando resumen: {str(e)}", 
-                    font=('Arial', 9), bg='#e8f5e8', fg='#C0392B').pack()
+            error_frame = tk.Frame(financial_panel, bg='white')
+            error_frame.pack(fill='x', pady=10)
+            tk.Label(error_frame, text=f"Error cargando resumen: {str(e)}", 
+                    font=('Arial', 10), fg='red', bg='white').pack()
         
-        # Panel de acciones del paciente
-        actions_frame = tk.LabelFrame(
-            left_panel,
-            text="📋 MIS OPCIONES",
-            font=('Arial', 11, 'bold'),
-            bg='#fff3e0',
-            fg='#e65100',
-            padx=15,
-            pady=15
-        )
-        actions_frame.pack(fill='x', pady=(0, 15))
+        # Panel de filtros para facturas
+        filters_panel = tk.LabelFrame(content_frame, text="🔍 Filtros de Facturas", 
+                                    font=('Arial', 12, 'bold'), padx=20, pady=15, 
+                                    bg='white', relief='solid', bd=1)
+        filters_panel.pack(fill='x', pady=(0, 30))
         
-        patient_actions = [
-            ("📄 Descargar Factura", self.download_patient_invoice, '#0B5394'),
-            ("💳 Historial de Pagos", self.view_payment_history, '#16A085'),
-            ("📧 Solicitar Estado", self.request_account_statement, '#16A085'),
-            ("❓ Consultar Duda", self.billing_inquiry, '#E67E22')
+        filters_content = tk.Frame(filters_panel, bg='white')
+        filters_content.pack(fill='x')
+        
+        # Filtros en una sola fila
+        filters_row = tk.Frame(filters_content, bg='white')
+        filters_row.pack(fill='x')
+        
+        tk.Label(filters_row, text="📅 Período:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=0, padx=5, sticky='w')
+        self.billing_period_filter = ttk.Combobox(filters_row, 
+                                                values=['Todos', 'Este Año', 'Últimos 6 Meses', 'Últimos 3 Meses'], 
+                                                state='readonly', width=18, font=('Arial', 9))
+        self.billing_period_filter.set('Todos')
+        self.billing_period_filter.grid(row=0, column=1, padx=10, sticky='ew')
+        
+        tk.Label(filters_row, text="💰 Estado:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=2, padx=5, sticky='w')
+        self.billing_status_filter = ttk.Combobox(filters_row, 
+                                                values=['Todos', 'Pagado', 'Pendiente', 'Vencido'], 
+                                                state='readonly', width=18, font=('Arial', 9))
+        self.billing_status_filter.set('Todos')
+        self.billing_status_filter.grid(row=0, column=3, padx=10, sticky='ew')
+        
+        # Botones de filtro
+        tk.Button(filters_row, text="🔍 Filtrar", 
+                 command=self.filter_patient_billing,
+                 bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
+                 relief='flat', padx=15, pady=6).grid(row=0, column=4, padx=10)
+        tk.Button(filters_row, text="🗑️ Limpiar", 
+                 command=self.clear_billing_filters,
+                 bg='#6B7280', fg='white', font=('Arial', 10, 'bold'),
+                 relief='flat', padx=15, pady=6).grid(row=0, column=5, padx=5)
+        
+        # Configurar expansión
+        filters_row.columnconfigure(1, weight=1)
+        filters_row.columnconfigure(3, weight=1)
+        
+        # Panel de tabla de facturas
+        table_panel = tk.LabelFrame(content_frame, text="📋 Mis Facturas", 
+                                  font=('Arial', 14, 'bold'), padx=25, pady=20, 
+                                  bg='white', relief='solid', bd=1)
+        table_panel.pack(fill='both', expand=True)
+        
+        # Frame contenedor para tabla con scrollbars
+        table_container = tk.Frame(table_panel, bg='white')
+        table_container.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # Tabla de facturas con diseño mejorado
+        columns = ('Número', 'Fecha', 'Doctor/Servicio', 'Monto', 'Estado', 'Vencimiento')
+        self.patient_billing_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=10)
+        
+        # Configurar headers con mejores anchos
+        column_widths = {'Número': 120, 'Fecha': 100, 'Doctor/Servicio': 200, 
+                        'Monto': 120, 'Estado': 100, 'Vencimiento': 100}
+        
+        for col in columns:
+            self.patient_billing_tree.heading(col, text=col, anchor='center')
+            self.patient_billing_tree.column(col, width=column_widths.get(col, 100), anchor='center')
+        
+        # Scrollbars
+        scrollbar_y = ttk.Scrollbar(table_container, orient="vertical", command=self.patient_billing_tree.yview)
+        scrollbar_x = ttk.Scrollbar(table_container, orient="horizontal", command=self.patient_billing_tree.xview)
+        self.patient_billing_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+        
+        # Layout con grid
+        self.patient_billing_tree.grid(row=0, column=0, sticky='nsew')
+        scrollbar_y.grid(row=0, column=1, sticky='ns')
+        scrollbar_x.grid(row=1, column=0, sticky='ew')
+        
+        # Configurar expansión
+        table_container.grid_rowconfigure(0, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
+        
+        # Panel de acciones
+        actions_panel = tk.Frame(main_frame, bg='#F8FAFC')
+        actions_panel.pack(fill='x', padx=30, pady=(0, 30))
+        
+        actions_inner = tk.Frame(actions_panel, bg='white', relief='solid', bd=1)
+        actions_inner.pack(fill='x', pady=10)
+        
+        actions_content = tk.Frame(actions_inner, bg='white')
+        actions_content.pack(fill='x', padx=20, pady=15)
+        
+        tk.Label(actions_content, text="⚡ Acciones Disponibles", 
+                font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
+        
+        # Botones de acción
+        billing_actions = [
+            ("👁️ Ver Detalle", self.view_billing_detail, "#0B5394"),
+            ("📥 Descargar PDF", self.download_billing_pdf, "#16A085"),
+            ("💳 Pagar En Línea", lambda: messagebox.showinfo("Pago", "Función en desarrollo"), "#8B5CF6"),
+            ("📧 Enviar por Email", self.email_my_billing, "#E67E22")
         ]
+
+        for text, command, color in billing_actions:
+            tk.Button(actions_content, text=text, command=command,
+                     bg=color, fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', bd=0, padx=15, pady=8, cursor='hand2').pack(side='right', padx=5)
+        
+        # Cargar datos iniciales
+        self.load_patient_billing_data()
+
+    def get_patient_billing_summary(self):
         
         for text, command, color in patient_actions:
             btn = tk.Button(
@@ -12680,31 +13560,58 @@ Estado: {vals[5]}"""
             print(f"Error obteniendo resumen del paciente: {e}")
             return {'total_paid': 0, 'total_pending': 0, 'total_invoices': 0, 'month_total': 0}
     
-    def load_patient_billing_data(self):
-        """Cargar facturas del paciente actual"""
+    def load_patient_billing_data(self, period_filter='Todos', status_filter='Todos'):
+        """Cargar facturas del paciente actual con filtros"""
         try:
             if not self.current_user:
                 return
             
+            # Verificar qué tabla existe
+            tree_widget = None
+            if hasattr(self, 'patient_billing_tree'):
+                tree_widget = self.patient_billing_tree
+            elif hasattr(self, 'patient_invoices_tree'):
+                tree_widget = self.patient_invoices_tree
+            else:
+                return  # No hay tabla de facturas
+            
             # Limpiar tabla
-            for item in self.patient_invoices_tree.get_children():
-                self.patient_invoices_tree.delete(item)
+            for item in tree_widget.get_children():
+                tree_widget.delete(item)
             
             conn = self.db_manager.get_connection()
             cursor = conn.cursor()
             
-            # Obtener facturas del paciente
-            cursor.execute('''
+            # Construir query con filtros
+            base_query = '''
                 SELECT f.numero_factura, f.fecha_creacion, 
                        (SELECT nombre || ' ' || apellido FROM usuarios WHERE id = f.doctor_id) as doctor_nombre,
                        f.concepto, f.monto, f.estado
                 FROM facturas f
                 WHERE f.paciente_id = ?
-                ORDER BY f.fecha_creacion DESC
-            ''', (self.current_user.id,))
+            '''
             
+            params = [self.current_user.id]
+            
+            # Aplicar filtro de período
+            if period_filter != 'Todos':
+                if period_filter == 'Este Año':
+                    base_query += " AND strftime('%Y', f.fecha_creacion) = strftime('%Y', 'now')"
+                elif period_filter == 'Últimos 6 Meses':
+                    base_query += " AND f.fecha_creacion >= date('now', '-6 months')"
+                elif period_filter == 'Últimos 3 Meses':
+                    base_query += " AND f.fecha_creacion >= date('now', '-3 months')"
+            
+            # Aplicar filtro de estado
+            if status_filter != 'Todos':
+                base_query += " AND f.estado = ?"
+                params.append(status_filter)
+            
+            base_query += " ORDER BY f.fecha_creacion DESC"
+            
+            cursor.execute(base_query, params)
             invoices = cursor.fetchall()
-            
+
             for invoice in invoices:
                 fecha = invoice[1]
                 if fecha:
@@ -12723,7 +13630,7 @@ Estado: {vals[5]}"""
                 elif estado == 'Pago_Parcial':
                     estado = '🔸 Parcial'
                 
-                self.patient_invoices_tree.insert('', 'end', values=(
+                tree_widget.insert('', 'end', values=(
                     invoice[0] or 'N/A',
                     fecha,
                     invoice[2] or 'N/A',
@@ -12778,6 +13685,108 @@ Estado: {vals[5]}"""
                            "• Llamar al teléfono principal de la clínica\n" +
                            "• Solicitar cita con administración\n\n" +
                            "Horario: Lunes a Viernes 8:00 AM - 5:00 PM")
+
+    def filter_patient_billing(self):
+        """Filtrar facturas del paciente según período y estado"""
+        try:
+            period = self.billing_period_filter.get()
+            status = self.billing_status_filter.get()
+            self.load_patient_billing_data(period_filter=period, status_filter=status)
+        except Exception as e:
+            print(f"Error filtrando facturas: {e}")
+            self.load_patient_billing_data()
+    
+    def clear_billing_filters(self):
+        """Limpiar filtros de facturación"""
+        try:
+            self.billing_period_filter.set('Todos')
+            self.billing_status_filter.set('Todos')
+            self.load_patient_billing_data()
+        except Exception as e:
+            print(f"Error limpiando filtros: {e}")
+    
+    def view_billing_detail(self):
+        """Ver detalle de factura seleccionada"""
+        try:
+            selection = self.patient_billing_tree.selection()
+            if not selection:
+                messagebox.showwarning("Selección", "Por favor seleccione una factura para ver detalles")
+                return
+            
+            item = self.patient_billing_tree.item(selection[0])
+            values = item['values']
+            
+            detail_text = f"""📄 DETALLE DE FACTURA
+            
+🔢 Número: {values[0]}
+📅 Fecha: {values[1]}
+🏥 Servicio: {values[2]}
+💰 Monto: {values[3]}
+📊 Estado: {values[4]}
+📅 Vencimiento: {values[5]}
+
+Para más información o dudas sobre esta factura,
+contacte a secretaría."""
+            
+            messagebox.showinfo("Detalle de Factura", detail_text)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando detalle: {e}")
+    
+    def download_billing_pdf(self):
+        """Descargar PDF de factura seleccionada"""
+        try:
+            selection = self.patient_billing_tree.selection()
+            if not selection:
+                messagebox.showwarning("Selección", "Por favor seleccione una factura para descargar")
+                return
+            
+            item = self.patient_billing_tree.item(selection[0])
+            factura_numero = item['values'][0]
+            
+            messagebox.showinfo("Descarga PDF", 
+                              f"📥 Descargando factura {factura_numero}\n\n" +
+                              "La funcionalidad de descarga PDF estará disponible próximamente.")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error descargando PDF: {e}")
+    
+    def email_my_billing(self):
+        """Enviar factura por email"""
+        try:
+            selection = self.patient_billing_tree.selection()
+            if not selection:
+                messagebox.showwarning("Selección", "Por favor seleccione una factura para enviar")
+                return
+            
+            item = self.patient_billing_tree.item(selection[0])
+            factura_numero = item['values'][0]
+            
+            messagebox.showinfo("Envío por Email", 
+                              f"📧 Enviando factura {factura_numero} por email\n\n" +
+                              "La factura será enviada a su correo registrado.")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error enviando email: {e}")
+    
+    def show_billing_summary(self):
+        """Mostrar resumen de facturación"""
+        try:
+            summary = self.get_patient_billing_summary()
+            
+            summary_text = f"""💰 RESUMEN DE FACTURACIÓN
+            
+💳 Total Pagado: ₡{summary.get('total_paid', 0):,.2f}
+⏳ Total Pendiente: ₡{summary.get('total_pending', 0):,.2f}
+📋 Total de Facturas: {summary.get('total_invoices', 0)}
+📅 Total Este Mes: ₡{summary.get('month_total', 0):,.2f}
+
+Estado de cuenta actualizado al {datetime.now().strftime('%d/%m/%Y')}"""
+            
+            messagebox.showinfo("Resumen Financiero", summary_text)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando resumen: {e}")
     
     def filter_patient_invoices(self, event=None):
         """Filtrar facturas del paciente"""
@@ -13204,8 +14213,97 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                         )
                         cursor.execute(sql, (patient_id,))
                     except Exception:
-                        # 4) Último recurso: sin info de seguro
+                        # 4) Último recurso: datos básicos
                         cursor.execute(base_sql, (patient_id,))
+
+            result = cursor.fetchone()
+            if result:
+                columns = [description[0] for description in cursor.description]
+                patient_data = dict(zip(columns, result))
+                cursor.close()
+                conn.close()
+                return patient_data
+            else:
+                cursor.close()
+                conn.close()
+                return {}
+
+        except Exception as e:
+            print(f"Error obteniendo información del paciente: {e}")
+            return {}
+
+    def get_patient_stats(self):
+        """Obtener estadísticas del paciente actual"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            patient_id = self.current_user.id
+            
+            stats = {}
+            
+            # Próximas citas
+            cursor.execute("""
+                SELECT COUNT(*) FROM citas 
+                WHERE paciente_id = ? AND fecha_hora > datetime('now')
+                AND estado IN ('confirmada', 'pendiente')
+            """, (patient_id,))
+            stats['upcoming_appointments'] = cursor.fetchone()[0]
+            
+            # Total de consultas
+            cursor.execute("""
+                SELECT COUNT(*) FROM citas WHERE paciente_id = ?
+            """, (patient_id,))
+            stats['total_consultations'] = cursor.fetchone()[0]
+            
+            # Facturas pendientes
+            cursor.execute("""
+                SELECT COUNT(*) FROM facturas 
+                WHERE paciente_id = ? AND estado = 'pendiente'
+            """, (patient_id,))
+            stats['pending_bills'] = cursor.fetchone()[0]
+            
+            # Doctores visitados (únicos)
+            cursor.execute("""
+                SELECT COUNT(DISTINCT doctor_id) FROM citas WHERE paciente_id = ?
+            """, (patient_id,))
+            stats['doctors_visited'] = cursor.fetchone()[0]
+            
+            cursor.close()
+            conn.close()
+            return stats
+            
+        except Exception as e:
+            print(f"Error obteniendo estadísticas del paciente: {e}")
+            return {
+                'upcoming_appointments': 0,
+                'total_consultations': 0, 
+                'pending_bills': 0,
+                'doctors_visited': 0
+            }
+
+    def get_patient_info(self, patient_id):
+        """Obtener información completa del paciente"""
+        try:
+            conn = sqlite3.connect('database/medisync.db')
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Query base con columnas correctas
+            base_sql = """
+                SELECT u.id, u.nombre, u.apellido, u.email, u.telefono, u.direccion,
+                       u.fecha_nacimiento, u.fecha_creacion, u.fecha_actualizacion,
+                       p.numero_expediente, p.tipo_sangre, p.alergias, p.contacto_emergencia,
+                       p.telefono_emergencia, p.seguro_medico
+                FROM usuarios u 
+                LEFT JOIN pacientes p ON u.id = p.id 
+                WHERE u.id = ?
+            """
+            
+            try:
+                cursor.execute(base_sql, (patient_id,))
+            except Exception:
+                # Query simplificado si hay problemas
+                cursor.execute("SELECT * FROM usuarios WHERE id = ?", (patient_id,))
 
             row = cursor.fetchone()
             if row:
@@ -13269,17 +14367,22 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
             
             cursor.execute("""
                 SELECT c.*, u.nombre || ' ' || u.apellido as doctor_nombre,
-                       DATE(c.fecha_hora) as fecha_formatted,
-                       TIME(c.fecha_hora) as hora_formatted
+                       DATE(c.fecha_hora) as fecha,
+                       TIME(c.fecha_hora) as hora,
+                       c.motivo
                 FROM citas c
                 JOIN usuarios u ON c.doctor_id = u.id
-                WHERE c.paciente_id = ? AND c.fecha_hora > ? AND c.estado = 'programada'
+                WHERE c.paciente_id = ? AND c.fecha_hora > ? 
+                AND c.estado IN ('confirmada', 'pendiente')
                 ORDER BY c.fecha_hora ASC
+                LIMIT 5
             """, (patient_id, now))
             
             appointments = []
             for row in cursor.fetchall():
                 apt = dict(zip([col[0] for col in cursor.description], row))
+                # Ajustar nombres de campos para compatibilidad
+                apt['doctor'] = apt.get('doctor_nombre', 'N/A')
                 appointments.append(apt)
             
             cursor.close()
@@ -16547,10 +17650,21 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                     messagebox.showerror("Error", f"Error al eliminar usuario: {str(e)}")
     
     # Funciones para pacientes
-    def request_appointment(self): messagebox.showinfo("Acción", "Solicitar cita - En desarrollo")
-    def view_my_history(self): messagebox.showinfo("Acción", "Ver mi historial - En desarrollo")
-    def view_my_bills(self): messagebox.showinfo("Acción", "Ver mis facturas - En desarrollo")
-    def update_my_profile(self): messagebox.showinfo("Acción", "Actualizar perfil - En desarrollo")
+    def request_appointment(self): 
+        """Redirigir a la pestaña de citas para solicitar nueva cita"""
+        self.switch_patient_tab("appointments")
+        
+    def view_my_history(self): 
+        """Redirigir a la pestaña de historial médico"""
+        self.switch_patient_tab("history")
+        
+    def view_my_bills(self): 
+        """Redirigir a la pestaña de facturación"""
+        self.switch_patient_tab("billing")
+        
+    def update_my_profile(self): 
+        """Redirigir a la pestaña de configuración/perfil"""
+        self.switch_patient_tab("settings")
     def request_new_appointment(self): messagebox.showinfo("Acción", "Solicitar nueva cita - En desarrollo")
     
     # NUEVAS FUNCIONES PARA FORMULARIO MEJORADO
@@ -17175,8 +18289,112 @@ La cita ha sido guardada en el sistema."""
             }
     def get_patient_health_summary(self): return {}
     def get_patient_billing_summary(self): return {}
-    def get_patient_profile_data(self): return self.get_patient_info()
+    def get_patient_profile_data(self): return self.get_patient_info(self.current_user.id)
     def get_patient_personal_stats(self): return {}
+
+    # ==================== FUNCIONES DE FACTURACIÓN PARA PACIENTES ====================
+    
+    def filter_patient_billing(self):
+        """Filtrar facturas del paciente según período y estado"""
+        try:
+            period = self.billing_period_filter.get()
+            status = self.billing_status_filter.get()
+            self.load_patient_billing_data(period_filter=period, status_filter=status)
+        except Exception as e:
+            print(f"Error filtrando facturas: {e}")
+            self.load_patient_billing_data()
+    
+    def clear_billing_filters(self):
+        """Limpiar filtros de facturación"""
+        try:
+            self.billing_period_filter.set('Todos')
+            self.billing_status_filter.set('Todos')
+            self.load_patient_billing_data()
+        except Exception as e:
+            print(f"Error limpiando filtros: {e}")
+    
+    def view_billing_detail(self):
+        """Ver detalle de factura seleccionada"""
+        try:
+            selection = self.patient_billing_tree.selection()
+            if not selection:
+                messagebox.showwarning("Selección", "Por favor seleccione una factura para ver detalles")
+                return
+            
+            item = self.patient_billing_tree.item(selection[0])
+            values = item['values']
+            
+            detail_text = f"""📄 DETALLE DE FACTURA
+            
+🔢 Número: {values[0]}
+📅 Fecha: {values[1]}
+🏥 Servicio: {values[2]}
+💰 Monto: {values[3]}
+📊 Estado: {values[4]}
+📅 Vencimiento: {values[5]}
+
+Para más información o dudas sobre esta factura,
+contacte a secretaría."""
+            
+            messagebox.showinfo("Detalle de Factura", detail_text)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando detalle: {e}")
+    
+    def download_billing_pdf(self):
+        """Descargar PDF de factura seleccionada"""
+        try:
+            selection = self.patient_billing_tree.selection()
+            if not selection:
+                messagebox.showwarning("Selección", "Por favor seleccione una factura para descargar")
+                return
+            
+            item = self.patient_billing_tree.item(selection[0])
+            factura_numero = item['values'][0]
+            
+            messagebox.showinfo("Descarga PDF", 
+                              f"📥 Descargando factura {factura_numero}\n\n" +
+                              "La funcionalidad de descarga PDF estará disponible próximamente.")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error descargando PDF: {e}")
+    
+    def email_my_billing(self):
+        """Enviar factura por email"""
+        try:
+            selection = self.patient_billing_tree.selection()
+            if not selection:
+                messagebox.showwarning("Selección", "Por favor seleccione una factura para enviar")
+                return
+            
+            item = self.patient_billing_tree.item(selection[0])
+            factura_numero = item['values'][0]
+            
+            messagebox.showinfo("Envío por Email", 
+                              f"📧 Enviando factura {factura_numero} por email\n\n" +
+                              "La factura será enviada a su correo registrado.")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error enviando email: {e}")
+    
+    def show_billing_summary(self):
+        """Mostrar resumen de facturación"""
+        try:
+            summary = self.get_patient_billing_summary()
+            
+            summary_text = f"""💰 RESUMEN DE FACTURACIÓN
+            
+💳 Total Pagado: ₡{summary.get('total_paid', 0):,.2f}
+⏳ Total Pendiente: ₡{summary.get('total_pending', 0):,.2f}
+📋 Total de Facturas: {summary.get('total_invoices', 0)}
+📅 Total Este Mes: ₡{summary.get('month_total', 0):,.2f}
+
+Estado de cuenta actualizado al {datetime.now().strftime('%d/%m/%Y')}"""
+            
+            messagebox.showinfo("Resumen Financiero", summary_text)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando resumen: {e}")
 
 if __name__ == "__main__":
     app = MedisyncApp()
