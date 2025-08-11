@@ -8917,11 +8917,11 @@ Notas: {factura_info[7] or 'Sin notas'}
         
         reports_buttons = [
             ("� Reporte de Ingresos", self.generate_income_report, "#0B5394"),
-            ("📋 Facturas Pendientes", self.generate_pending_invoices_report, "#C0392B"),
-            ("👥 Estadísticas de Usuarios", self.generate_users_report, "#16A085"),
-            ("📅 Reporte de Citas", self.generate_appointments_report, "#059669"),
-            ("💰 Estado Financiero", self.generate_financial_report, "#E67E22"),
-            ("🏥 Reporte de Servicios", self.generate_services_report, "#8e44ad")
+            ("📋 Facturas Pendientes", self.generate_pending_invoices_report, "#0B5394"),
+            ("👥 Estadísticas de Usuarios", self.generate_users_report, "#0B5394"),
+            ("📅 Reporte de Citas", self.generate_appointments_report, "#0B5394"),
+            ("💰 Estado Financiero", self.generate_financial_report, "#0B5394"),
+            ("🏥 Reporte de Servicios", self.generate_services_report, "#0B5394")
         ]
         
         for text, command, color in reports_buttons:
@@ -8962,8 +8962,8 @@ Notas: {factura_info[7] or 'Sin notas'}
         
         export_buttons = [
             ("📄 Exportar a PDF", self.export_all_reports_pdf, "#0B5394"),
-            ("📊 Exportar a Excel", self.export_to_excel, "#16A085"),
-            ("📧 Enviar por Email", self.email_reports, "#E67E22")
+            ("📊 Exportar a Excel", self.export_to_excel, "#0B5394"),
+            ("📧 Enviar por Email", self.email_reports, "#0B5394")
         ]
         
         for text, command, color in export_buttons:
@@ -9649,7 +9649,7 @@ Notas: {factura_info[7] or 'Sin notas'}
                 
                 for value in total_values:
                     tk.Label(total_frame, text=value, font=('Arial', 12, 'bold'), 
-                            fg='white', bg='#059669', width=15).pack(side='left', padx=1, pady=8)
+                            fg='white', bg='#0B5394', width=15).pack(side='left', padx=1, pady=8)
             else:
                 tk.Label(content_frame, text="No hay datos de ingresos para el período seleccionado", 
                         font=('Arial', 12), fg='#64748B', bg='white').pack(pady=20)
@@ -9812,12 +9812,12 @@ Notas: {factura_info[7] or 'Sin notas'}
                 
                 # Headers
                 headers = ['Número', 'Fecha', 'Paciente', 'Monto', 'Días Pendiente']
-                header_frame = tk.Frame(table_frame, bg='#C0392B')
+                header_frame = tk.Frame(table_frame, bg='#0B5394')
                 header_frame.pack(fill='x')
                 
                 for header in headers:
                     tk.Label(header_frame, text=header, font=('Arial', 11, 'bold'), 
-                            fg='white', bg='#C0392B', width=15).pack(side='left', padx=1, pady=8)
+                            fg='white', bg='#0B5394', width=15).pack(side='left', padx=1, pady=8)
                 
                 total_pending = 0
                 
@@ -9842,14 +9842,14 @@ Notas: {factura_info[7] or 'Sin notas'}
                                 fg='#1E293B', bg='#FFEBEE', width=15).pack(side='left', padx=1, pady=3)
                 
                 # Total
-                total_frame = tk.Frame(table_frame, bg='#C0392B')
+                total_frame = tk.Frame(table_frame, bg='#0B5394')
                 total_frame.pack(fill='x')
                 
                 tk.Label(total_frame, text=f"TOTAL PENDIENTE: ₡{total_pending:,.2f}", 
-                        font=('Arial', 12, 'bold'), fg='white', bg='#C0392B').pack(pady=8)
+                        font=('Arial', 12, 'bold'), fg='white', bg='#0B5394').pack(pady=8)
             else:
                 tk.Label(content_frame, text="¡Excelente! No hay facturas pendientes en este período", 
-                        font=('Arial', 12), fg='#059669', bg='white').pack(pady=20)
+                        font=('Arial', 12), fg='#0B5394', bg='white').pack(pady=20)
             
             cursor.close()
             conn.close()
@@ -9909,24 +9909,24 @@ Notas: {factura_info[7] or 'Sin notas'}
             metrics_frame.pack(fill='x', pady=(0, 20))
             
             # Ingresos
-            income_card = tk.Frame(metrics_frame, bg='#10B981', relief='raised', bd=2)
+            income_card = tk.Frame(metrics_frame, bg='#0B5394', relief='raised', bd=2)
             income_card.pack(side='left', fill='both', expand=True, padx=(0, 10))
             tk.Label(income_card, text="💰 INGRESOS TOTALES", font=('Arial', 10, 'bold'), 
-                    fg='white', bg='#10B981').pack(pady=(10, 5))
+                    fg='white', bg='#0B5394').pack(pady=(10, 5))
             tk.Label(income_card, text=f"₡{total_ingresos:,.2f}", font=('Arial', 14, 'bold'), 
-                    fg='white', bg='#10B981').pack(pady=(0, 5))
+                    fg='white', bg='#0B5394').pack(pady=(0, 5))
             tk.Label(income_card, text=f"{num_pagadas} facturas pagadas", font=('Arial', 9), 
-                    fg='white', bg='#10B981').pack(pady=(0, 10))
+                    fg='white', bg='#0B5394').pack(pady=(0, 10))
             
             # Pendientes
-            pending_card = tk.Frame(metrics_frame, bg='#EF4444', relief='raised', bd=2)
+            pending_card = tk.Frame(metrics_frame, bg='#0B5394', relief='raised', bd=2)
             pending_card.pack(side='left', fill='both', expand=True, padx=(5, 5))
             tk.Label(pending_card, text="⏳ CUENTAS POR COBRAR", font=('Arial', 10, 'bold'), 
-                    fg='white', bg='#EF4444').pack(pady=(10, 5))
+                    fg='white', bg='#0B5394').pack(pady=(10, 5))
             tk.Label(pending_card, text=f"₡{total_pendiente:,.2f}", font=('Arial', 14, 'bold'), 
-                    fg='white', bg='#EF4444').pack(pady=(0, 5))
+                    fg='white', bg='#0B5394').pack(pady=(0, 5))
             tk.Label(pending_card, text=f"{num_pendientes} facturas pendientes", font=('Arial', 9), 
-                    fg='white', bg='#EF4444').pack(pady=(0, 10))
+                    fg='white', bg='#0B5394').pack(pady=(0, 10))
             
             # Total neto
             total_neto = total_ingresos + total_pendiente
@@ -9957,20 +9957,20 @@ Notas: {factura_info[7] or 'Sin notas'}
                 # Barra de cobrado
                 cobrado_width = int((cobro_percentage / 100) * 300)
                 if cobrado_width > 0:
-                    cobrado_bar = tk.Frame(progress_frame, bg='#10B981', height=25)
+                    cobrado_bar = tk.Frame(progress_frame, bg='#0B5394', height=25)
                     cobrado_bar.pack(side='left', fill='y')
                     cobrado_bar.config(width=cobrado_width)
                     tk.Label(cobrado_bar, text=f"Cobrado: {cobro_percentage:.1f}%", 
-                            font=('Arial', 9, 'bold'), fg='white', bg='#10B981').pack(pady=3)
+                            font=('Arial', 9, 'bold'), fg='white', bg='#0B5394').pack(pady=3)
                 
                 # Barra de pendiente
                 pendiente_width = int((pendiente_percentage / 100) * 300)
                 if pendiente_width > 0:
-                    pendiente_bar = tk.Frame(progress_frame, bg='#EF4444', height=25)
+                    pendiente_bar = tk.Frame(progress_frame, bg='#0B5394', height=25)
                     pendiente_bar.pack(side='left', fill='y')
                     pendiente_bar.config(width=pendiente_width)
                     tk.Label(pendiente_bar, text=f"Pendiente: {pendiente_percentage:.1f}%", 
-                            font=('Arial', 9, 'bold'), fg='white', bg='#EF4444').pack(pady=3)
+                            font=('Arial', 9, 'bold'), fg='white', bg='#0B5394').pack(pady=3)
                 
                 # Recomendaciones
                 recommendations_frame = tk.Frame(content_frame, bg='#F8F9FA', relief='sunken', bd=1)
@@ -9981,17 +9981,17 @@ Notas: {factura_info[7] or 'Sin notas'}
                 
                 if pendiente_percentage > 30:
                     tk.Label(recommendations_frame, text="• Alto porcentaje de cuentas por cobrar - revisar procesos de cobro", 
-                            font=('Arial', 10), fg='#DC2626', bg='#F8F9FA').pack(anchor='w', padx=20)
+                            font=('Arial', 10), fg='#0B5394', bg='#F8F9FA').pack(anchor='w', padx=20)
                 elif pendiente_percentage > 15:
                     tk.Label(recommendations_frame, text="• Porcentaje moderado de cuentas por cobrar - seguimiento regular", 
-                            font=('Arial', 10), fg='#F59E0B', bg='#F8F9FA').pack(anchor='w', padx=20)
+                            font=('Arial', 10), fg='#0B5394', bg='#F8F9FA').pack(anchor='w', padx=20)
                 else:
                     tk.Label(recommendations_frame, text="• Excelente eficiencia de cobro - mantener procesos actuales", 
-                            font=('Arial', 10), fg='#059669', bg='#F8F9FA').pack(anchor='w', padx=20)
+                            font=('Arial', 10), fg='#0B5394', bg='#F8F9FA').pack(anchor='w', padx=20)
                 
                 if num_pendientes > 0:
                     tk.Label(recommendations_frame, text=f"• Revisar {num_pendientes} facturas pendientes para acelerar cobro", 
-                            font=('Arial', 10), fg='#7C3AED', bg='#F8F9FA').pack(anchor='w', padx=20, pady=(0, 10))
+                            font=('Arial', 10), fg='#0B5394', bg='#F8F9FA').pack(anchor='w', padx=20, pady=(0, 10))
             
         except Exception as e:
             tk.Label(content_frame, text=f"Error cargando datos financieros: {str(e)}", 
@@ -10059,9 +10059,9 @@ Notas: {factura_info[7] or 'Sin notas'}
                     porcentaje = (cantidad / total_citas) * 100
                     
                     # Determinar color según estado
-                    color = '#10B981' if estado == 'confirmada' else \
-                           '#EF4444' if estado == 'cancelada' else \
-                           '#F59E0B' if estado == 'pendiente' else '#6B7280'
+                    color = '#0B5394' if estado == 'confirmada' else \
+                           '#0B5394' if estado == 'cancelada' else \
+                           '#0B5394' if estado == 'pendiente' else '#6B7280'
                     
                     estado_frame = tk.Frame(left_frame, bg=color, relief='raised', bd=1)
                     estado_frame.pack(fill='x', pady=2)
@@ -10083,8 +10083,8 @@ Notas: {factura_info[7] or 'Sin notas'}
             
             if servicios_populares:
                 for i, (motivo, cantidad) in enumerate(servicios_populares[:5]):
-                    # Gradiente de colores
-                    colors = ['#0B5394', '#16A085', '#E67E22', '#8E44AD', '#E74C3C']
+                    # Gradiente de colores - solo azul estándar
+                    colors = ['#0B5394', '#0B5394', '#0B5394', '#0B5394', '#0B5394']
                     color = colors[i % len(colors)]
                     
                     servicio_frame = tk.Frame(right_frame, bg=color, relief='raised', bd=1)
@@ -10863,9 +10863,13 @@ Para consultas sobre este reporte, contacte al departamento de administración.
         
         tk.Label(right_frame, text="Historiales Médicos", font=('Arial', 12, 'bold')).pack(pady=5)
         
+        # Frame contenedor para tabla con scrollbars
+        table_container = tk.Frame(right_frame)
+        table_container.pack(fill='both', expand=True, padx=5)
+        
         # Tabla de historiales
         columns = ('Fecha', 'Diagnóstico', 'Tratamiento', 'Notas')
-        self.medical_records_tree = ttk.Treeview(right_frame, columns=columns, show='headings', height=12)
+        self.medical_records_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=12)
         
         for col in columns:
             self.medical_records_tree.heading(col, text=col)
@@ -10874,12 +10878,19 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             else:
                 self.medical_records_tree.column(col, width=150)
         
-        # Scrollbar para historiales
-        records_scrollbar = ttk.Scrollbar(right_frame, orient="vertical", command=self.medical_records_tree.yview)
-        self.medical_records_tree.configure(yscrollcommand=records_scrollbar.set)
+        # Scrollbars para historiales
+        records_scrollbar_y = ttk.Scrollbar(table_container, orient="vertical", command=self.medical_records_tree.yview)
+        records_scrollbar_x = ttk.Scrollbar(table_container, orient="horizontal", command=self.medical_records_tree.xview)
+        self.medical_records_tree.configure(yscrollcommand=records_scrollbar_y.set, xscrollcommand=records_scrollbar_x.set)
         
-        self.medical_records_tree.pack(side='left', fill='both', expand=True, padx=5)
-        records_scrollbar.pack(side='right', fill='y')
+        # Layout con grid para mejor control
+        self.medical_records_tree.grid(row=0, column=0, sticky='nsew')
+        records_scrollbar_y.grid(row=0, column=1, sticky='ns')
+        records_scrollbar_x.grid(row=1, column=0, sticky='ew')
+        
+        # Configurar expansión
+        table_container.grid_rowconfigure(0, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
         
         # Botones para historiales
         records_actions_frame = tk.Frame(right_frame)
@@ -12072,9 +12083,13 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             command=self.filter_medical_history,
         ).grid(row=0, column=4, padx=10)
         
+        # Frame contenedor para tabla con scrollbars
+        table_container = tk.Frame(main_frame)
+        table_container.pack(fill='both', expand=True)
+        
         # Tabla de historial médico
         columns = ('Fecha', 'Doctor', 'Diagnóstico', 'Tratamiento', 'Medicamentos', 'Observaciones')
-        self.patient_history_tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=12)
+        self.patient_history_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=12)
         
         # Configurar headers
         column_widths = {'Fecha': 100, 'Doctor': 150, 'Diagnóstico': 200, 'Tratamiento': 200, 
@@ -12084,13 +12099,19 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             self.patient_history_tree.heading(col, text=col)
             self.patient_history_tree.column(col, width=column_widths.get(col, 100))
         
-        # Scrollbar
-        scrollbar_y = ttk.Scrollbar(main_frame, orient="vertical", command=self.patient_history_tree.yview)
-        self.patient_history_tree.configure(yscrollcommand=scrollbar_y.set)
+        # Scrollbars vertical y horizontal
+        scrollbar_y = ttk.Scrollbar(table_container, orient="vertical", command=self.patient_history_tree.yview)
+        scrollbar_x = ttk.Scrollbar(table_container, orient="horizontal", command=self.patient_history_tree.xview)
+        self.patient_history_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
         
-        # Pack
-        self.patient_history_tree.pack(side='left', fill='both', expand=True)
-        scrollbar_y.pack(side='right', fill='y')
+        # Layout con grid para mejor control
+        self.patient_history_tree.grid(row=0, column=0, sticky='nsew')
+        scrollbar_y.grid(row=0, column=1, sticky='ns')
+        scrollbar_x.grid(row=1, column=0, sticky='ew')
+        
+        # Configurar expansión
+        table_container.grid_rowconfigure(0, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
         
         # Botones de acción
         actions_frame = tk.Frame(main_frame, bg='#F8FAFC')
@@ -17066,7 +17087,92 @@ La cita ha sido guardada en el sistema."""
     
     # Funciones de datos adicionales que faltan
     def get_billing_summary(self): return {}
-    def get_secretaria_quick_stats(self): return {}
+    def get_secretaria_quick_stats(self):
+        """Obtener estadísticas rápidas para el panel de secretaría"""
+        try:
+            conn = self.db_manager.get_connection()
+            cur = conn.cursor()
+            
+            stats = {}
+            
+            # Citas de hoy
+            today = datetime.now().strftime('%Y-%m-%d')
+            cur.execute("SELECT COUNT(*) FROM citas WHERE DATE(fecha) = ?", (today,))
+            stats['appointments_today'] = cur.fetchone()[0]
+            
+            # Citas pendientes
+            cur.execute("SELECT COUNT(*) FROM citas WHERE estado = 'pendiente'")
+            stats['pending_appointments'] = cur.fetchone()[0]
+            
+            # Citas completadas hoy
+            cur.execute("SELECT COUNT(*) FROM citas WHERE DATE(fecha) = ? AND estado = 'completada'", (today,))
+            stats['completed_today'] = cur.fetchone()[0]
+            
+            # Total de pacientes
+            cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo = 'paciente'")
+            stats['total_patients'] = cur.fetchone()[0]
+            
+            # Nuevos pacientes este mes
+            first_day_month = datetime.now().replace(day=1).strftime('%Y-%m-%d')
+            cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo = 'paciente' AND DATE(fecha_registro) >= ?", (first_day_month,))
+            stats['new_patients_month'] = cur.fetchone()[0]
+            
+            # Contactos pendientes (aproximación)
+            stats['pending_contacts'] = 0
+            
+            # Ingresos hoy
+            cur.execute("""
+                SELECT COALESCE(SUM(total), 0) 
+                FROM facturas 
+                WHERE DATE(fecha) = ? AND estado = 'pagada'
+            """, (today,))
+            stats['today_income'] = cur.fetchone()[0]
+            
+            # Facturas pendientes
+            cur.execute("SELECT COUNT(*) FROM facturas WHERE estado = 'pendiente'")
+            stats['pending_invoices'] = cur.fetchone()[0]
+            
+            # Facturas pagadas hoy
+            cur.execute("SELECT COUNT(*) FROM facturas WHERE DATE(fecha) = ? AND estado = 'pagada'", (today,))
+            stats['paid_today'] = cur.fetchone()[0]
+            
+            # Total del mes
+            cur.execute("""
+                SELECT COALESCE(SUM(total), 0) 
+                FROM facturas 
+                WHERE DATE(fecha) >= ? AND estado = 'pagada'
+            """, (first_day_month,))
+            stats['month_total'] = cur.fetchone()[0]
+            
+            # Doctores activos
+            cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo = 'doctor' AND estado = 'activo'")
+            stats['active_doctors'] = cur.fetchone()[0]
+            
+            # Consultas programadas
+            cur.execute("SELECT COUNT(*) FROM citas WHERE estado IN ('pendiente', 'confirmada')")
+            stats['scheduled_consultations'] = cur.fetchone()[0]
+            
+            cur.close()
+            conn.close()
+            
+            return stats
+            
+        except Exception as e:
+            print(f"Error obteniendo estadísticas: {e}")
+            return {
+                'appointments_today': 0,
+                'pending_appointments': 0,
+                'completed_today': 0,
+                'total_patients': 0,
+                'new_patients_month': 0,
+                'pending_contacts': 0,
+                'today_income': 0,
+                'pending_invoices': 0,
+                'paid_today': 0,
+                'month_total': 0,
+                'active_doctors': 0,
+                'scheduled_consultations': 0
+            }
     def get_patient_health_summary(self): return {}
     def get_patient_billing_summary(self): return {}
     def get_patient_profile_data(self): return self.get_patient_info()
