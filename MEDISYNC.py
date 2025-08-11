@@ -4455,18 +4455,6 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
             tk.Button(buttons_frame, text="Cancelar", command=selection_window.destroy,
                      bg='#64748B', fg='white', font=('Arial', 10, 'bold'),
                      relief='flat', padx=15, pady=8).pack(side='left', padx=(10, 0))
-        if not selection:
-            messagebox.showwarning("Selección", "Por favor seleccione un servicio para quitar")
-            return
-        
-        # Obtener índice del servicio seleccionado
-        index = self.invoice_services_tree.index(selection[0])
-        
-        # Confirmar eliminación
-        if messagebox.askyesno("Confirmar", f"¿Quitar '{self.selected_services[index]['nombre']}' de la factura?"):
-            del self.selected_services[index]
-            self.update_invoice_services_display()
-            self.calculate_totals()
     
     def edit_service_in_invoice(self):
         """Editar servicio en la factura"""
@@ -5078,77 +5066,10 @@ Estado: {factura[5]}
     def generate_services_report_integrated(self):
         """Generar reporte de ingresos por servicio"""
         messagebox.showinfo("Ingresos por Servicio", "Función de reporte por servicios en desarrollo")
-
-
         
-        # Botón Resumen Rápido
-        summary_btn = tk.Button(
-            buttons_frame,
-            text="� Resumen",
-            command=self.show_billing_summary,
-            bg='#0B5394',
-            fg='white',
-            font=('Arial', 10, 'bold'),
-            padx=15,
-            pady=8
-        )
-        summary_btn.pack(side='left', padx=5)
-        
-        # Contenido principal dividido en secciones
-        content_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        content_frame.pack(fill='both', expand=True)
-        
-        # Panel izquierdo: Facturas recientes
-        left_panel = tk.LabelFrame(
-            content_frame,
-            text="📋 FACTURAS RECIENTES",
-            font=('Arial', 12, 'bold'),
-            bg='#FFFFFF',
-            fg='#1E3A8A',
-            padx=15,
-            pady=15
-        )
-        left_panel.pack(side='left', fill='both', expand=True, padx=(0, 10))
-        
-        # Frame para tabla y scrollbars
-        table_frame = tk.Frame(left_panel, bg='#FFFFFF')
-        table_frame.pack(fill='both', expand=True, pady=(10, 0))
-        
-        # Tabla de facturas recientes
-        columns = ('Número', 'Fecha', 'Paciente', 'Monto', 'Estado')
-        self.billing_tree = ttk.Treeview(table_frame, columns=columns, show='headings', height=12)
-        
-        # Configurar columnas
-        column_widths = {'Número': 120, 'Fecha': 100, 'Paciente': 150, 'Monto': 100, 'Estado': 100}
-        for col in columns:
-            self.billing_tree.heading(col, text=col)
-            self.billing_tree.column(col, width=column_widths.get(col, 100), anchor='center')
-        
-        # Scrollbars verticales y horizontales con mejor visibilidad
-        billing_scroll_y = ttk.Scrollbar(table_frame, orient="vertical", command=self.billing_tree.yview)
-        billing_scroll_x = ttk.Scrollbar(table_frame, orient="horizontal", command=self.billing_tree.xview)
-        self.billing_tree.configure(yscrollcommand=billing_scroll_y.set, xscrollcommand=billing_scroll_x.set)
-        
-        # Layout con grid para mejor control de scrollbars con padding
-        self.billing_tree.grid(row=0, column=0, sticky='nsew', padx=(5, 0), pady=(5, 0))
-        billing_scroll_y.grid(row=0, column=1, sticky='ns', padx=(0, 5), pady=(5, 0))
-        billing_scroll_x.grid(row=1, column=0, sticky='ew', padx=(5, 0), pady=(0, 5))
-        
-        # Configurar expansión con mínimo para scrollbars
-        table_frame.grid_rowconfigure(0, weight=1)
-        table_frame.grid_rowconfigure(1, weight=0, minsize=20)
-        table_frame.grid_columnconfigure(0, weight=1)
-        table_frame.grid_columnconfigure(1, weight=0, minsize=20)
-        
-        # Panel derecho: Estadísticas y acciones rápidas
-        right_panel = tk.Frame(content_frame, bg='#F8FAFC', width=300)
-        right_panel.pack(side='right', fill='y', padx=(10, 0))
-        right_panel.pack_propagate(False)
-        
-        self.create_billing_stats_panel(right_panel)
-        
-        # Cargar datos iniciales
-        self.load_billing_data_integrated()
+    def create_billing_main_tab(self, parent):
+        """Crear pestaña principal de facturación"""
+        pass
     
     def create_billing_stats_panel(self, parent):
         """Crear panel de estadísticas de facturación"""
@@ -8518,96 +8439,72 @@ Notas: {factura_info[7] or 'Sin notas'}
         except Exception as e:
             messagebox.showerror("Error de instalación", 
                                 f"No se pudo instalar ReportLab automáticamente.\n{str(e)}")
-            story.append(Paragraph(f"<b>FACTURA #{factura_data[0]}</b>", styles['Heading2']))
-            story.append(Paragraph(f"Fecha: {datetime.fromisoformat(factura_data[1]).strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+    
+    def export_billing_report_pdf(self):
+        """Exportar reporte de facturación a PDF"""
+        try:
+            from tkinter import filedialog
+            from reportlab.lib.pagesizes import letter
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.lib import colors
+            
+            # Obtener datos de facturas
+            if not hasattr(self, 'billing_tree') or not self.billing_tree.get_children():
+                messagebox.showwarning("Sin datos", "No hay facturas para exportar")
+                return
+            
+            # Crear archivo PDF
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".pdf",
+                filetypes=[("PDF files", "*.pdf")],
+                title="Guardar reporte de facturación"
+            )
+            
+            if not filename:
+                return
+                
+            doc = SimpleDocTemplate(filename, pagesize=letter)
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Título
+            story.append(Paragraph("<b>REPORTE DE FACTURACIÓN</b>", styles['Title']))
             story.append(Spacer(1, 20))
             
-            # Datos del paciente
-            story.append(Paragraph("<b>DATOS DEL PACIENTE</b>", styles['Heading3']))
-            patient_info = f"""
-            Nombre: {factura_data[5]} {factura_data[6]}<br/>
-            Email: {factura_data[7] or 'No especificado'}<br/>
-            Teléfono: {factura_data[8] or 'No especificado'}
-            """
-            story.append(Paragraph(patient_info, styles['Normal']))
-            story.append(Spacer(1, 20))
+            # Tabla de facturas
+            data = [['Número', 'Fecha', 'Paciente', 'Monto', 'Estado']]
             
-            # Servicios
-            story.append(Paragraph("<b>SERVICIOS</b>", styles['Heading3']))
+            for item in self.billing_tree.get_children():
+                values = self.billing_tree.item(item)['values']
+                data.append([str(val) for val in values])
             
-            # Crear tabla de servicios
-            services_data = [['Servicio', 'Precio']]
-            for item in self.services_tree.get_children():
-                values = self.services_tree.item(item)['values']
-                services_data.append([values[0], values[1]])
-            
-            services_table = Table(services_data)
-            services_table.setStyle(TableStyle([
+            table = Table(data)
+            table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 14),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
                 ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             
-            story.append(services_table)
-            story.append(Spacer(1, 20))
-            
-            # Totales
-            subtotal = sum(float(self.services_tree.item(item)['values'][1].replace('RD$ ', '').replace(',', '')) 
-                          for item in self.services_tree.get_children())
-            itbis = subtotal * 0.18
-            total = subtotal + itbis
-            
-            totals_data = [
-                ['Subtotal:', f'RD$ {subtotal:,.2f}'],
-                ['ITBIS (18%):', f'RD$ {itbis:,.2f}'],
-                ['TOTAL:', f'RD$ {total:,.2f}']
-            ]
-            
-            totals_table = Table(totals_data, colWidths=[3*inch, 2*inch])
-            totals_table.setStyle(TableStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, -1), (-1, -1), 14),
-                ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            
-            story.append(totals_table)
-            story.append(Spacer(1, 30))
-            
-            # Observaciones
-            if factura_data[4]:
-                story.append(Paragraph("<b>OBSERVACIONES</b>", styles['Heading3']))
-                story.append(Paragraph(factura_data[4], styles['Normal']))
-                story.append(Spacer(1, 20))
-            
-            # Footer
-            footer_text = f"""
-            <b>¡Gracias por confiar en MEDISYNC!</b><br/>
-            Factura generada automáticamente el {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}<br/>
-            Para dudas o consultas, contactar al departamento de facturación
-            """
-            story.append(Paragraph(footer_text, styles['Normal']))
-            
-            # Construir PDF
+            story.append(table)
             doc.build(story)
             
-            # Abrir el PDF
-            os.startfile(filepath)
-            messagebox.showinfo("PDF Generado", f"Factura guardada como: {filename}")
-            
-            cursor.close()
-            conn.close()
+            messagebox.showinfo("PDF Generado", f"Reporte guardado como: {filename}")
             
         except ImportError:
-            messagebox.showwarning("Advertencia", "reportlab no está instalado. No se puede generar PDF")
+            messagebox.showerror("ReportLab no encontrado", 
+                               "Necesita instalar ReportLab para generar PDFs")
         except Exception as e:
             messagebox.showerror("Error", f"Error generando PDF: {str(e)}")
+    
+    def refresh_billing_data(self):
+        """Actualizar datos de facturación"""
+        pass
     
     def create_payments_tab(self, parent):
         """Crear pestaña de procesamiento de pagos"""
@@ -10550,6 +10447,8 @@ Para consultas sobre este reporte, contacte al departamento de administración.
     def manage_report_templates(self):
         """Gestionar plantillas de reportes"""
         messagebox.showinfo("Plantillas", "Gestión de plantillas en desarrollo")
+        
+    def create_doctor_menu(self, parent):
         """Crear menú para doctores"""
         # Crear notebook con pestañas específicas para doctores
         self.notebook = ttk.Notebook(parent)
@@ -13407,107 +13306,6 @@ Estado: {vals[5]}"""
         self.load_patient_billing_data()
 
     def get_patient_billing_summary(self):
-        
-        for text, command, color in patient_actions:
-            btn = tk.Button(
-                actions_frame,
-                text=text,
-                command=command,
-                bg=color,
-                fg='white',
-                font=('Arial', 10, 'bold'),
-                padx=10,
-                pady=8,
-                relief='raised'
-            )
-            btn.pack(fill='x', pady=5)
-        
-        # Información importante
-        info_frame = tk.LabelFrame(
-            left_panel,
-            text="ℹ️ INFORMACIÓN IMPORTANTE",
-            font=('Arial', 11, 'bold'),
-            bg='#e3f2fd',
-            fg='#1565c0',
-            padx=15,
-            pady=15
-        )
-        info_frame.pack(fill='both', expand=True)
-        
-        info_text = """• Las facturas se generan automáticamente después de cada consulta
-• Los pagos pueden realizarse en efectivo, tarjeta o transferencia
-• Puede descargar sus facturas en formato PDF
-• Para dudas sobre facturación, consulte con secretaría"""
-        
-        tk.Label(info_frame, text=info_text, font=('Arial', 9), 
-                bg='#e3f2fd', fg='#1565c0', justify='left', anchor='w').pack(fill='both', expand=True)
-        
-        # Panel de facturas (lado derecho)
-        invoices_frame = tk.LabelFrame(
-            right_panel,
-            text="📄 HISTORIAL DE FACTURAS",
-            font=('Arial', 12, 'bold'),
-            bg='#f1f8e9',
-            fg='#2e7d32',
-            padx=15,
-            pady=15
-        )
-        invoices_frame.pack(fill='both', expand=True)
-        
-        # Filtros para paciente
-        patient_filter_frame = tk.Frame(invoices_frame, bg='#f1f8e9')
-        patient_filter_frame.pack(fill='x', pady=(0, 15))
-        
-        tk.Label(patient_filter_frame, text="🔍 Buscar:", font=('Arial', 10, 'bold'),
-                bg='#f1f8e9', fg='#2e7d32').pack(side='left')
-        
-        self.patient_filter_var = tk.StringVar()
-        filter_entry = tk.Entry(patient_filter_frame, textvariable=self.patient_filter_var, 
-                               font=('Arial', 10), width=20)
-        filter_entry.pack(side='left', padx=(10, 0))
-        filter_entry.bind('<KeyRelease>', self.filter_patient_invoices)
-        
-        # Filtro por estado
-        tk.Label(patient_filter_frame, text="Estado:", font=('Arial', 10, 'bold'),
-                bg='#f1f8e9', fg='#2e7d32').pack(side='left', padx=(20, 5))
-        
-        self.patient_status_filter = tk.StringVar(value="todos")
-        status_combo = ttk.Combobox(patient_filter_frame, textvariable=self.patient_status_filter,
-                                   values=["todos", "pendiente", "pagada", "pago_parcial"],
-                                   state="readonly", width=12)
-        status_combo.pack(side='left')
-        status_combo.bind('<<ComboboxSelected>>', self.filter_patient_invoices)
-        
-        # Tabla de facturas del paciente
-        columns = ('Número', 'Fecha', 'Doctor', 'Concepto', 'Monto', 'Estado')
-        self.patient_invoices_tree = ttk.Treeview(invoices_frame, columns=columns, 
-                                                 show='headings', height=15)
-        
-        # Configurar columnas
-        column_widths = {'Número': 100, 'Fecha': 90, 'Doctor': 120, 'Concepto': 150, 'Monto': 90, 'Estado': 80}
-        for col in columns:
-            self.patient_invoices_tree.heading(col, text=col)
-            self.patient_invoices_tree.column(col, width=column_widths.get(col, 100), anchor='center')
-        
-        # Scrollbar
-        patient_scroll = ttk.Scrollbar(invoices_frame, orient="vertical", 
-                                      command=self.patient_invoices_tree.yview)
-        self.patient_invoices_tree.configure(yscrollcommand=patient_scroll.set)
-        
-        # Pack tabla
-        table_frame = tk.Frame(invoices_frame, bg='#f1f8e9')
-        table_frame.pack(fill='both', expand=True)
-        
-        self.patient_invoices_tree.pack(side='left', fill='both', expand=True)
-        patient_scroll.pack(side='right', fill='y')
-        
-        # Eventos
-        self.patient_invoices_tree.bind('<Double-1>', self.view_patient_invoice_details)
-        
-        # Cargar datos del paciente
-        self.load_patient_billing_data()
-    
-    def get_patient_billing_summary(self):
         """Obtener resumen de facturación del paciente actual"""
         try:
             if not self.current_user:
@@ -13815,71 +13613,7 @@ Estado de cuenta actualizado al {datetime.now().strftime('%d/%m/%Y')}"""
 consulte con secretaría o use el Sistema Completo de Facturación"""
         
         messagebox.showinfo("Detalles de Mi Factura", details_text)
-        self.patient_billing_status_filter.set('Todas')
-        self.patient_billing_status_filter.grid(row=0, column=1, padx=5)
         
-        tk.Label(filters_row, text="Período:", font=('Arial', 10)).grid(row=0, column=2, padx=5)
-        self.patient_billing_period_filter = ttk.Combobox(filters_row, 
-                                                        values=['Todos', 'Este Mes', 'Últimos 3 Meses', 'Este Año'], 
-                                                        state='readonly', width=12)
-        self.patient_billing_period_filter.set('Todos')
-        self.patient_billing_period_filter.grid(row=0, column=3, padx=5)
-        
-        tk.Button(filters_row, text="🔍 Filtrar", bg='#0B5394', fg='white',
-                 command=self.filter_patient_billing).grid(row=0, column=4, padx=10)
-        
-        # Frame contenedor para tabla y scrollbars
-        table_billing_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        table_billing_frame.pack(fill='both', expand=True, pady=(10, 0))
-        
-        # Tabla de facturas
-        columns = ('Número', 'Fecha', 'Concepto', 'Monto', 'Estado', 'Vencimiento', 'Doctor')
-        self.patient_billing_tree = ttk.Treeview(table_billing_frame, columns=columns, show='headings', height=12)
-        
-        # Configurar headers
-        column_widths = {'Número': 100, 'Fecha': 100, 'Concepto': 200, 'Monto': 100, 
-                        'Estado': 100, 'Vencimiento': 100, 'Doctor': 150}
-        
-        for col in columns:
-            self.patient_billing_tree.heading(col, text=col)
-            self.patient_billing_tree.column(col, width=column_widths.get(col, 100))
-        
-        # Scrollbars verticales y horizontales con mejor visibilidad
-        scrollbar_y = ttk.Scrollbar(table_billing_frame, orient="vertical", command=self.patient_billing_tree.yview)
-        scrollbar_x = ttk.Scrollbar(table_billing_frame, orient="horizontal", command=self.patient_billing_tree.xview)
-        self.patient_billing_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
-        
-        # Layout con grid para mejor control de scrollbars con padding
-        self.patient_billing_tree.grid(row=0, column=0, sticky='nsew', padx=(5, 0), pady=(5, 0))
-        scrollbar_y.grid(row=0, column=1, sticky='ns', padx=(0, 5), pady=(5, 0))
-        scrollbar_x.grid(row=1, column=0, sticky='ew', padx=(5, 0), pady=(0, 5))
-        
-        # Configurar expansión con mínimo para scrollbars
-        table_billing_frame.grid_rowconfigure(0, weight=1)
-        table_billing_frame.grid_rowconfigure(1, weight=0, minsize=20)
-        table_billing_frame.grid_columnconfigure(0, weight=1)
-        table_billing_frame.grid_columnconfigure(1, weight=0, minsize=20)
-        
-        # Botones de acción
-        actions_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        actions_frame.pack(fill='x', pady=(10, 0))
-        
-        billing_actions = [
-            ("👁️ Ver Detalle", self.view_my_invoice_detail, "#0B5394"),
-            ("💳 Pagar Ahora", self.pay_invoice_online, "#16A085"),
-            ("🖨️ Imprimir Factura", self.print_my_invoice, "#16A085"),
-            ("📥 Descargar PDF", self.download_invoice_pdf, "#E67E22"),
-            ("📞 Consultar Pago", self.inquire_payment, "#1abc9c")
-        ]
-        
-        for text, command, color in billing_actions:
-            btn = tk.Button(actions_frame, text=text, command=command, 
-                           bg=color, fg='white', font=('Arial', 9, 'bold'))
-            btn.pack(side='left', padx=5, pady=5)
-        
-        # Cargar datos
-        self.load_patient_billing()
-    
     def create_patient_profile(self, parent):
         """Mi perfil para pacientes"""
         main_frame = tk.Frame(parent, bg='#F8FAFC')
