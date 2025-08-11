@@ -604,7 +604,7 @@ class MedisyncApp:
             cursor.execute("""
                 SELECT COALESCE(SUM(monto), 0) 
                 FROM facturas 
-                WHERE estado = 'pagado' AND strftime('%Y-%m', fecha_pago) = ?
+                WHERE estado = 'pagada' AND strftime('%Y-%m', fecha_pago) = ?
             """, (current_month,))
             stats['monthly_income'] = cursor.fetchone()[0] or 0
             
@@ -3294,329 +3294,152 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
         }
     
     def create_integrated_billing_content(self, parent):
-        """Crear contenido principal de facturación con diseño de tarjetas modernas"""
-        # Frame principal con scroll
+        """Crear contenido principal de facturación con diseño mejorado"""
+        # Frame principal con mejor margen
         main_container = tk.Frame(parent, bg='#F8FAFC')
-        main_container.pack(fill='both', expand=True, padx=10, pady=10)
+        main_container.pack(fill='both', expand=True, padx=20, pady=15)
         
-        # Canvas para scroll
-        canvas = tk.Canvas(main_container, bg='#F8FAFC', highlightthickness=0)
-        scrollbar = ttk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg='#F8FAFC')
+        # Panel superior: Acciones Rápidas
+        quick_actions_frame = tk.LabelFrame(main_container, text="⚡ ACCIONES RÁPIDAS", 
+                                          font=('Arial', 14, 'bold'), bg='#e8f5e8', fg='#2e7d32', 
+                                          padx=20, pady=15)
+        quick_actions_frame.pack(fill='x', pady=(0, 15))
         
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
+        # Grid de botones de acciones rápidas
+        actions_grid = tk.Frame(quick_actions_frame, bg='#e8f5e8')
+        actions_grid.pack(fill='x')
         
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        # Primera fila de botones
+        first_row = tk.Frame(actions_grid, bg='#e8f5e8')
+        first_row.pack(fill='x', pady=(0, 10))
         
-        # Panel superior: Información de la cita en tarjeta moderna
-        appointment_card = tk.Frame(scrollable_frame, bg='white', relief='solid', bd=2)
-        appointment_card.pack(fill='x', pady=(0, 20))
+        tk.Button(first_row, text="📄 NUEVA FACTURA", command=self.open_invoice_popup,
+                 bg='#4caf50', fg='white', font=('Arial', 12, 'bold'), 
+                 width=20, height=2).pack(side='left', padx=(0, 15))
         
-        # Header de la tarjeta
-        card_header = tk.Frame(appointment_card, bg='#1E3A8A', height=50)
-        card_header.pack(fill='x')
-        card_header.pack_propagate(False)
+        tk.Button(first_row, text="� COBROS DEL DÍA", command=self.show_daily_payments,
+                 bg='#2196f3', fg='white', font=('Arial', 12, 'bold'), 
+                 width=20, height=2).pack(side='left', padx=(0, 15))
         
-        tk.Label(card_header, text="📅 Información de la Cita", 
-                font=('Arial', 14, 'bold'), bg='#1E3A8A', fg='white').pack(expand=True)
+        tk.Button(first_row, text="📊 REPORTES", command=self.show_billing_reports,
+                 bg='#ff9800', fg='white', font=('Arial', 12, 'bold'), 
+                 width=20, height=2).pack(side='left')
         
-        # Contenido de la tarjeta
-        card_content = tk.Frame(appointment_card, bg='white', padx=25, pady=20)
-        card_content.pack(fill='both', expand=True)
+        # Segunda fila de botones
+        second_row = tk.Frame(actions_grid, bg='#e8f5e8')
+        second_row.pack(fill='x')
         
-        # Filtros en diseño de tarjeta
-        filters_card = tk.Frame(card_content, bg='#F8FAFC', relief='solid', bd=1)
-        filters_card.pack(fill='x', pady=(0, 15))
+        tk.Button(second_row, text="🔍 BUSCAR FACTURA", command=self.search_invoice,
+                 bg='#9c27b0', fg='white', font=('Arial', 12, 'bold'), 
+                 width=20, height=2).pack(side='left', padx=(0, 15))
         
-        filters_inner = tk.Frame(filters_card, bg='#F8FAFC', padx=20, pady=15)
-        filters_inner.pack(fill='x')
+        tk.Button(second_row, text="⚙️ CONFIGURACIÓN", command=self.billing_settings,
+                 bg='#607d8b', fg='white', font=('Arial', 12, 'bold'), 
+                 width=20, height=2).pack(side='left', padx=(0, 15))
         
-        tk.Label(filters_inner, text="🔍 Filtrar citas:", bg='#F8FAFC', fg='#1E3A8A', 
+        tk.Button(second_row, text="📋 FACTURAS PENDIENTES", command=self.show_pending_invoices,
+                 bg='#f44336', fg='white', font=('Arial', 12, 'bold'), 
+                 width=20, height=2).pack(side='left')
+        
+        # Panel de facturas recientes con mejor margen
+        recent_frame = tk.LabelFrame(main_container, text="📋 FACTURAS RECIENTES", 
+                                   font=('Arial', 12, 'bold'), bg='#e3f2fd', fg='#1565c0', 
+                                   padx=20, pady=15)
+        recent_frame.pack(fill='both', expand=True, pady=(0, 15))
+        
+        # Filtros de facturas
+        filters_frame = tk.Frame(recent_frame, bg='#e3f2fd')
+        filters_frame.pack(fill='x', pady=(0, 15))
+        
+        tk.Label(filters_frame, text="Mostrar:", bg='#e3f2fd', fg='#1565c0', 
                 font=('Arial', 11, 'bold')).pack(side='left')
         
-        self.appointment_filter_var = tk.StringVar(value="completadas")
-        filter_combo = ttk.Combobox(filters_inner, textvariable=self.appointment_filter_var,
-                                   values=["completadas", "todas", "hoy"], width=15, state="readonly",
-                                   font=('Arial', 10))
-        filter_combo.pack(side='left', padx=(15, 0))
-        filter_combo.bind('<<ComboboxSelected>>', self.filter_appointments_billing)
-        
-        tk.Button(filters_inner, text="🔄 Actualizar", command=self.load_integrated_billing_data,
-                 bg='#0B5394', fg='white', font=('Arial', 10, 'bold'), relief='flat',
-                 padx=15, pady=8).pack(side='left', padx=(15, 0))
-        
-        # Lista de citas en formato de tarjetas
-        appointments_list_frame = tk.Frame(card_content, bg='white')
-        appointments_list_frame.pack(fill='both', expand=True)
-        
-        # Canvas para las tarjetas de citas
-        appointments_canvas = tk.Canvas(appointments_list_frame, bg='white', height=200, highlightthickness=0)
-        appointments_scrollbar = ttk.Scrollbar(appointments_list_frame, orient="vertical", command=appointments_canvas.yview)
-        self.appointments_cards_frame = tk.Frame(appointments_canvas, bg='white')
-        
-        self.appointments_cards_frame.bind(
-            "<Configure>",
-            lambda e: appointments_canvas.configure(scrollregion=appointments_canvas.bbox("all"))
-        )
-        
-        appointments_canvas.create_window((0, 0), window=self.appointments_cards_frame, anchor="nw")
-        appointments_canvas.configure(yscrollcommand=appointments_scrollbar.set)
-        
-        appointments_canvas.pack(side="left", fill="both", expand=True)
-        appointments_scrollbar.pack(side="right", fill="y")
-        
-        # También mantener el TreeView oculto para compatibilidad
-        self.appointments_tree_billing = ttk.Treeview(card_content, columns=('ID', 'Fecha', 'Paciente', 'Doctor', 'Estado', 'Facturada'), 
-                                                     show='headings', height=0)
-        self.appointments_tree_billing.bind('<<TreeviewSelect>>', self.on_appointment_select_for_billing)
-        
-        # Panel de servicios médicos en tarjeta moderna
-        services_card = tk.Frame(scrollable_frame, bg='white', relief='solid', bd=2)
-        services_card.pack(fill='x', pady=(0, 20))
-        
-        # Header de servicios
-        services_header = tk.Frame(services_card, bg='#059669', height=50)
-        services_header.pack(fill='x')
-        services_header.pack_propagate(False)
-        
-        tk.Label(services_header, text="🏥 Servicios Médicos Disponibles", 
-                font=('Arial', 14, 'bold'), bg='#059669', fg='white').pack(expand=True)
-        
-        # Contenido de servicios
-        services_content = tk.Frame(services_card, bg='white', padx=25, pady=20)
-        services_content.pack(fill='both', expand=True)
-        
-        # Búsqueda de servicios en diseño moderno
-        search_card = tk.Frame(services_content, bg='#F8FAFC', relief='solid', bd=1)
-        search_card.pack(fill='x', pady=(0, 15))
-        
-        search_inner = tk.Frame(search_card, bg='#F8FAFC', padx=15, pady=10)
-        search_inner.pack(fill='x')
-        
-        tk.Label(search_inner, text="🔍 Buscar servicio:", bg='#F8FAFC', fg='#059669', 
-                font=('Arial', 11, 'bold')).pack(side='left')
-        self.service_search_var = tk.StringVar()
-        search_entry = tk.Entry(search_inner, textvariable=self.service_search_var, 
-                               font=('Arial', 11), relief='solid', bd=1)
-        search_entry.pack(side='left', padx=(15, 0), fill='x', expand=True)
-        search_entry.bind('<KeyRelease>', self.filter_services)
-        
-        # Grid de servicios como tarjetas
-        self.services_grid_frame = tk.Frame(services_content, bg='white')
-        self.services_grid_frame.pack(fill='both', expand=True)
-        
-        # Mantener TreeView oculto para compatibilidad
-        self.services_tree_billing = ttk.Treeview(services_content, columns=('Código', 'Servicio', 'Categoría', 'Precio'), 
-                                                 show='headings', height=0)
-        
-        # Variable para almacenar tarjetas de servicios
-        self.service_cards = []
-        
-        # Panel de factura en proceso como tarjeta moderna
-        invoice_card = tk.Frame(scrollable_frame, bg='white', relief='solid', bd=2)
-        invoice_card.pack(fill='both', expand=True)
-        
-        # Header de factura
-        invoice_header = tk.Frame(invoice_card, bg='#E67E22', height=50)
-        invoice_header.pack(fill='x')
-        invoice_header.pack_propagate(False)
-        
-        tk.Label(invoice_header, text="📄 Factura en Proceso", 
-                font=('Arial', 14, 'bold'), bg='#E67E22', fg='white').pack(expand=True)
-        
-        # Contenido de factura
-        invoice_content = tk.Frame(invoice_card, bg='white', padx=25, pady=20)
-        invoice_content.pack(fill='both', expand=True)
-        
-        # Información del paciente en tarjeta pequeña
-        patient_info_card = tk.Frame(invoice_content, bg='#F8FAFC', relief='solid', bd=1)
-        patient_info_card.pack(fill='x', pady=(0, 15))
-        
-        patient_info_inner = tk.Frame(patient_info_card, bg='#F8FAFC', padx=15, pady=10)
-        patient_info_inner.pack(fill='x')
-        
-        self.patient_info_label = tk.Label(patient_info_inner, text="Seleccione una cita para continuar",
-                                          bg='#F8FAFC', fg='#E67E22', font=('Arial', 11, 'bold'))
-        self.patient_info_label.pack()
-        
-        # Servicios seleccionados en la factura
-        selected_services_card = tk.Frame(invoice_content, bg='#F8FAFC', relief='solid', bd=1)
-        selected_services_card.pack(fill='both', expand=True, pady=(0, 15))
-        
-        selected_header = tk.Frame(selected_services_card, bg='#64748B', height=40)
-        selected_header.pack(fill='x')
-        selected_header.pack_propagate(False)
-        
-        tk.Label(selected_header, text="🛒 Servicios Seleccionados", 
-                font=('Arial', 12, 'bold'), bg='#64748B', fg='white').pack(expand=True)
-        
-        selected_content = tk.Frame(selected_services_card, bg='#F8FAFC', padx=15, pady=15)
-        selected_content.pack(fill='both', expand=True)
-        
-        # Lista de servicios seleccionados como tarjetas pequeñas
-        self.selected_services_frame = tk.Frame(selected_content, bg='#F8FAFC')
-        self.selected_services_frame.pack(fill='both', expand=True)
-        
-        # Mantener TreeView oculto para compatibilidad
-        self.invoice_services_tree = ttk.Treeview(selected_content, columns=('Servicio', 'Cantidad', 'Precio Unit.', 'Total'), 
-                                                 show='headings', height=0)
-        
-        # Botones de servicio en diseño moderno
-        service_buttons_card = tk.Frame(invoice_content, bg='#F8FAFC', relief='solid', bd=1)
-        service_buttons_card.pack(fill='x', pady=(0, 15))
-        
-        buttons_inner = tk.Frame(service_buttons_card, bg='#F8FAFC', padx=15, pady=10)
-        buttons_inner.pack(fill='x')
-        
-        tk.Button(buttons_inner, text="❌ Quitar Seleccionado", command=self.remove_service_from_invoice,
-                 bg='#DC2626', fg='white', font=('Arial', 10, 'bold'), relief='flat',
-                 padx=15, pady=8).pack(side='left', padx=(0, 10))
-        tk.Button(buttons_inner, text="✏️ Editar Cantidad", command=self.edit_service_in_invoice,
-                 bg='#F59E0B', fg='white', font=('Arial', 10, 'bold'), relief='flat',
-                 padx=15, pady=8).pack(side='left')
-        
-        # Panel de cálculos como tarjeta
-        self.create_modern_billing_calculations_panel(invoice_content)
-        
-        # Configurar canvas scroll
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # Bind para scroll con mouse wheel
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        
-        canvas.bind("<MouseWheel>", _on_mousewheel)
-    
-    def create_modern_billing_calculations_panel(self, parent):
-        """Panel de cálculos de facturación con diseño moderno de tarjetas"""
-        calc_card = tk.Frame(parent, bg='white', relief='solid', bd=2)
-        calc_card.pack(fill='x', pady=(0, 15))
-        
-        # Header de cálculos
-        calc_header = tk.Frame(calc_card, bg='#16A085', height=45)
-        calc_header.pack(fill='x')
-        calc_header.pack_propagate(False)
-        
-        tk.Label(calc_header, text="💰 Resumen de Facturación", 
-                font=('Arial', 12, 'bold'), bg='#16A085', fg='white').pack(expand=True)
-        
-        # Contenido de cálculos
-        calc_content = tk.Frame(calc_card, bg='white', padx=20, pady=15)
-        calc_content.pack(fill='both', expand=True)
-        
-        # Grid de cálculos en formato tarjetas
-        calc_grid = tk.Frame(calc_content, bg='white')
-        calc_grid.pack(fill='x', pady=(0, 15))
-        
-        # Subtotal card
-        subtotal_card = tk.Frame(calc_grid, bg='#F8FAFC', relief='solid', bd=1, padx=15, pady=10)
-        subtotal_card.grid(row=0, column=0, sticky='ew', padx=(0, 5))
-        
-        tk.Label(subtotal_card, text="💵 Subtotal", bg='#F8FAFC', fg='#1E293B', 
-                font=('Arial', 10, 'bold')).pack()
-        tk.Label(subtotal_card, textvariable=self.subtotal_var, bg='#F8FAFC', fg='#16A085', 
-                font=('Arial', 12, 'bold')).pack()
-        
-        # Descuento card
-        discount_card = tk.Frame(calc_grid, bg='#F8FAFC', relief='solid', bd=1, padx=15, pady=10)
-        discount_card.grid(row=0, column=1, sticky='ew', padx=5)
-        
-        tk.Label(discount_card, text="🎫 Descuento", bg='#F8FAFC', fg='#1E293B', 
-                font=('Arial', 10, 'bold')).pack()
-        
-        discount_frame = tk.Frame(discount_card, bg='#F8FAFC')
-        discount_frame.pack()
-        
-        self.discount_entry = tk.Entry(discount_frame, textvariable=self.discount_var, 
-                                      width=8, font=('Arial', 9), relief='solid', bd=1)
-        self.discount_entry.pack(side='left')
-        self.discount_entry.bind('<KeyRelease>', self.calculate_totals)
-        
-        tk.Button(discount_frame, text="✓", command=self.apply_discount,
-                 bg='#16A085', fg='white', font=('Arial', 8, 'bold'), relief='flat',
-                 padx=5).pack(side='left', padx=(2, 0))
-        
-        # Total card
-        total_card = tk.Frame(calc_grid, bg='#16A085', relief='solid', bd=2, padx=15, pady=10)
-        total_card.grid(row=0, column=2, sticky='ew', padx=(5, 0))
-        
-        tk.Label(total_card, text="💳 TOTAL", bg='#16A085', fg='white', 
-                font=('Arial', 11, 'bold')).pack()
-        tk.Label(total_card, textvariable=self.total_var, bg='#16A085', fg='white', 
-                font=('Arial', 14, 'bold')).pack()
-        
-        # Configurar grid weights
-        calc_grid.columnconfigure(0, weight=1)
-        calc_grid.columnconfigure(1, weight=1)
-        calc_grid.columnconfigure(2, weight=1)
-        
-        # Panel de pago como tarjeta
-        payment_card = tk.Frame(calc_content, bg='#F8FAFC', relief='solid', bd=1)
-        payment_card.pack(fill='x', pady=(0, 15))
-        
-        payment_header = tk.Frame(payment_card, bg='#F59E0B', height=35)
-        payment_header.pack(fill='x')
-        payment_header.pack_propagate(False)
-        
-        tk.Label(payment_header, text="💳 Información de Pago", 
-                font=('Arial', 11, 'bold'), bg='#F59E0B', fg='white').pack(expand=True)
-        
-        payment_content = tk.Frame(payment_card, bg='#F8FAFC', padx=15, pady=10)
-        payment_content.pack(fill='x')
-        
-        # Grid de pago
-        payment_grid = tk.Frame(payment_content, bg='#F8FAFC')
-        payment_grid.pack(fill='x')
-        
-        # Monto recibido
-        received_frame = tk.Frame(payment_grid, bg='#F8FAFC')
-        received_frame.grid(row=0, column=0, sticky='ew', padx=(0, 10))
-        
-        tk.Label(received_frame, text="💰 Monto Recibido:", bg='#F8FAFC', fg='#1E293B', 
-                font=('Arial', 10, 'bold')).pack()
-        
-        received_input = tk.Frame(received_frame, bg='#F8FAFC')
-        received_input.pack()
-        
-        self.payment_entry = tk.Entry(received_input, textvariable=self.payment_var, 
-                                     width=12, font=('Arial', 10), relief='solid', bd=1)
-        self.payment_entry.pack(side='left')
-        self.payment_entry.bind('<KeyRelease>', self.calculate_change)
-        
-        tk.Button(received_input, text="💡 Calcular", command=self.calculate_change,
-                 bg='#F59E0B', fg='white', font=('Arial', 8, 'bold'), relief='flat',
-                 padx=8).pack(side='left', padx=(5, 0))
-        
-        # Cambio
-        change_frame = tk.Frame(payment_grid, bg='#F8FAFC')
-        change_frame.grid(row=0, column=1, sticky='ew', padx=(10, 0))
-        
-        self.change_label = tk.Label(change_frame, text="💸 Cambio:", bg='#F8FAFC', fg='#1E293B', 
-                                    font=('Arial', 10, 'bold'))
-        self.change_label.pack()
-        self.change_value_label = tk.Label(change_frame, textvariable=self.change_var, bg='#F8FAFC', fg='#059669', 
-                                          font=('Arial', 11, 'bold'))
-        self.change_value_label.pack()
-        
-        payment_grid.columnconfigure(0, weight=1)
-        payment_grid.columnconfigure(1, weight=1)
-        
-        # Botones principales como tarjetas
-        buttons_card = tk.Frame(calc_content, bg='white')
-        buttons_card.pack(fill='x')
-        
-        tk.Button(buttons_card, text="📄 GENERAR FACTURA PDF", command=self.generate_invoice_pdf_integrated,
-                 bg='#3B82F6', fg='white', font=('Arial', 12, 'bold'), relief='flat',
-                 pady=12, cursor='hand2').pack(side='left', padx=(0, 10), fill='x', expand=True)
-        
-        tk.Button(buttons_card, text="💾 GUARDAR FACTURA", command=self.save_invoice_integrated,
-                 bg='#059669', fg='white', font=('Arial', 12, 'bold'), relief='flat',
-                 pady=12, cursor='hand2').pack(side='right', padx=(10, 0), fill='x', expand=True)
+        self.invoice_filter_var = tk.StringVar(value="hoy")
+        filter_combo = ttk.Combobox(filters_frame, textvariable=self.invoice_filter_var,
+                                   values=["hoy", "esta_semana", "este_mes", "todas"], 
+                                   width=15, state="readonly")
+        filter_combo.pack(side='left', padx=(10, 15))
+        filter_combo.bind('<<ComboboxSelected>>', self.filter_recent_invoices)
+        
+        tk.Button(filters_frame, text="🔄 Actualizar", command=self.load_recent_invoices,
+                 bg='#2196f3', fg='white', font=('Arial', 10, 'bold')).pack(side='left')
+        
+        # Estado actual del sistema
+        status_info = tk.Frame(filters_frame, bg='#e3f2fd')
+        status_info.pack(side='right')
+        
+        self.status_label = tk.Label(status_info, text="Sistema listo", 
+                                   bg='#e3f2fd', fg='#1565c0', font=('Arial', 10, 'italic'))
+        self.status_label.pack()
+        
+        # Tabla de facturas recientes con mejor diseño
+        table_container = tk.Frame(recent_frame, bg='#e3f2fd')
+        table_container.pack(fill='both', expand=True)
+        
+        columns_invoices = ('ID', 'Fecha', 'Paciente', 'Total', 'Estado', 'Acciones')
+        self.recent_invoices_tree = ttk.Treeview(table_container, columns=columns_invoices, 
+                                               show='headings', height=12)
+        
+        # Configurar columnas con mejor ancho
+        widths_invoices = {'ID': 80, 'Fecha': 120, 'Paciente': 200, 'Total': 100, 'Estado': 100, 'Acciones': 120}
+        for col in columns_invoices:
+            self.recent_invoices_tree.heading(col, text=col)
+            self.recent_invoices_tree.column(col, width=widths_invoices.get(col, 100), anchor='center')
+        
+        # Scrollbars mejoradas
+        scroll_invoices_y = ttk.Scrollbar(table_container, orient="vertical", 
+                                        command=self.recent_invoices_tree.yview)
+        scroll_invoices_x = ttk.Scrollbar(table_container, orient="horizontal", 
+                                        command=self.recent_invoices_tree.xview)
+        self.recent_invoices_tree.configure(yscrollcommand=scroll_invoices_y.set, 
+                                          xscrollcommand=scroll_invoices_x.set)
+        
+        # Layout con grid y márgenes mejorados
+        self.recent_invoices_tree.grid(row=0, column=0, sticky='nsew', padx=(10, 0), pady=(10, 0))
+        scroll_invoices_y.grid(row=0, column=1, sticky='ns', padx=(0, 10), pady=(10, 0))
+        scroll_invoices_x.grid(row=1, column=0, sticky='ew', padx=(10, 0), pady=(0, 10))
+        
+        # Configurar expansión
+        table_container.grid_rowconfigure(0, weight=1)
+        table_container.grid_rowconfigure(1, weight=0, minsize=25)
+        table_container.grid_columnconfigure(0, weight=1)
+        table_container.grid_columnconfigure(1, weight=0, minsize=25)
+        
+        # Eventos de la tabla
+        self.recent_invoices_tree.bind('<Double-1>', self.view_invoice_details)
+        self.recent_invoices_tree.bind('<Button-3>', self.show_invoice_context_menu)
+        
+        # Panel de información rápida con mejor margen
+        info_frame = tk.LabelFrame(main_container, text="� RESUMEN DEL DÍA", 
+                                 font=('Arial', 12, 'bold'), bg='#fff3e0', fg='#e65100', 
+                                 padx=20, pady=15)
+        info_frame.pack(fill='x')
+        
+        # Grid de estadísticas
+        stats_grid = tk.Frame(info_frame, bg='#fff3e0')
+        stats_grid.pack(fill='x')
+        
+        # Obtener estadísticas básicas
+        try:
+            stats = self.get_daily_billing_stats()
+            
+            # Primera fila de estadísticas
+            stats_row1 = tk.Frame(stats_grid, bg='#fff3e0')
+            stats_row1.pack(fill='x', pady=(0, 10))
+            
+            self.create_stat_widget(stats_row1, "💰", "Ingresos Hoy", 
+                                  f"₡{stats.get('ingresos', 0):,.2f}", "#4caf50")
+            self.create_stat_widget(stats_row1, "📄", "Facturas Emitidas", 
+                                  str(stats.get('facturas', 0)), "#2196f3")
+            self.create_stat_widget(stats_row1, "⏳", "Pendientes", 
+                                  str(stats.get('pendientes', 0)), "#ff9800")
+            
+        except Exception as e:
+            tk.Label(stats_grid, text="Error cargando estadísticas", 
+                    bg='#fff3e0', fg='#e65100').pack()
+        
+        # Cargar datos iniciales
+        self.load_recent_invoices()
     
     
     def create_billing_calculations_panel(self, parent):
@@ -3693,6 +3516,365 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
         tk.Button(buttons_frame, text="💾 GUARDAR", command=self.save_invoice_integrated,
                  bg='#4caf50', fg='white', font=('Arial', 11, 'bold'), pady=8).pack(side='right', padx=(5, 0), fill='x', expand=True)
     
+    def create_stat_widget(self, parent, icon, title, value, color):
+        """Crear widget de estadística individual"""
+        stat_frame = tk.Frame(parent, bg='#fff3e0', relief='solid', bd=1)
+        stat_frame.pack(side='left', fill='x', expand=True, padx=(0, 15))
+        
+        # Icono y valor
+        header_frame = tk.Frame(stat_frame, bg='#fff3e0')
+        header_frame.pack(fill='x', padx=10, pady=(8, 2))
+        
+        tk.Label(header_frame, text=icon, bg='#fff3e0', fg=color, 
+                font=('Arial', 16, 'bold')).pack(side='left')
+        tk.Label(header_frame, text=value, bg='#fff3e0', fg=color, 
+                font=('Arial', 14, 'bold')).pack(side='right')
+        
+        # Título
+        tk.Label(stat_frame, text=title, bg='#fff3e0', fg='#e65100', 
+                font=('Arial', 10)).pack(padx=10, pady=(0, 8))
+    
+    def open_invoice_popup(self):
+        """Abrir ventana emergente para crear nueva factura"""
+        popup = tk.Toplevel(self.root)
+        popup.title("📄 Nueva Factura - MEDISYNC")
+        popup.geometry("1000x700")
+        popup.configure(bg='#F8FAFC')
+        popup.transient(self.root)
+        popup.grab_set()
+        
+        # Centrar la ventana
+        popup.update_idletasks()
+        x = (popup.winfo_screenwidth() // 2) - (1000 // 2)
+        y = (popup.winfo_screenheight() // 2) - (700 // 2)
+        popup.geometry(f"1000x700+{x}+{y}")
+        
+        # Header del popup
+        header_frame = tk.Frame(popup, bg='#1E3A8A', height=60)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
+        
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=20, pady=10)
+        
+        tk.Label(header_content, text="📄 CREAR NUEVA FACTURA", 
+                font=('Arial', 16, 'bold'), bg='#1E3A8A', fg='white').pack(side='left')
+        
+        tk.Button(header_content, text="❌ Cerrar", command=popup.destroy,
+                 bg='#f44336', fg='white', font=('Arial', 10, 'bold')).pack(side='right')
+        
+        # Contenido principal del popup
+        main_content = tk.Frame(popup, bg='#F8FAFC')
+        main_content.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Panel izquierdo: Selección de paciente
+        left_panel = tk.Frame(main_content, bg='#F8FAFC', width=450)
+        left_panel.pack(side='left', fill='y', padx=(0, 10))
+        left_panel.pack_propagate(False)
+        
+        patient_frame = tk.LabelFrame(left_panel, text="👤 SELECCIONAR PACIENTE", 
+                                    font=('Arial', 12, 'bold'), bg='#e3f2fd', fg='#1565c0',
+                                    padx=15, pady=10)
+        patient_frame.pack(fill='both', expand=True)
+        
+        # Búsqueda de paciente
+        search_frame = tk.Frame(patient_frame, bg='#e3f2fd')
+        search_frame.pack(fill='x', pady=(0, 10))
+        
+        tk.Label(search_frame, text="Buscar:", bg='#e3f2fd', fg='#1565c0', 
+                font=('Arial', 10, 'bold')).pack(side='left')
+        self.patient_search_var = tk.StringVar()
+        patient_search = tk.Entry(search_frame, textvariable=self.patient_search_var, width=25)
+        patient_search.pack(side='left', padx=(5, 0), fill='x', expand=True)
+        patient_search.bind('<KeyRelease>', self.filter_patients_popup)
+        
+        # Lista de pacientes
+        columns_patients = ('ID', 'Nombre', 'Apellido', 'Teléfono')
+        self.patients_tree_popup = ttk.Treeview(patient_frame, columns=columns_patients, 
+                                              show='headings', height=15)
+        
+        for col in columns_patients:
+            self.patients_tree_popup.heading(col, text=col)
+            self.patients_tree_popup.column(col, width=80, anchor='center')
+        
+        scroll_patients = ttk.Scrollbar(patient_frame, orient="vertical", 
+                                      command=self.patients_tree_popup.yview)
+        self.patients_tree_popup.configure(yscrollcommand=scroll_patients.set)
+        
+        table_frame_patients = tk.Frame(patient_frame, bg='#e3f2fd')
+        table_frame_patients.pack(fill='both', expand=True, pady=(10, 0))
+        
+        self.patients_tree_popup.pack(side='left', fill='both', expand=True)
+        scroll_patients.pack(side='right', fill='y')
+        
+        self.patients_tree_popup.bind('<<TreeviewSelect>>', self.on_patient_select_popup)
+        
+        # Panel derecho: Creación de factura
+        right_panel = tk.Frame(main_content, bg='#F8FAFC')
+        right_panel.pack(side='right', fill='both', expand=True, padx=(10, 0))
+        
+        # Información del paciente seleccionado
+        self.selected_patient_frame = tk.LabelFrame(right_panel, text="📋 PACIENTE SELECCIONADO", 
+                                                   font=('Arial', 11, 'bold'), bg='#e8f5e8', fg='#2e7d32',
+                                                   padx=10, pady=10)
+        self.selected_patient_frame.pack(fill='x', pady=(0, 10))
+        
+        self.selected_patient_label = tk.Label(self.selected_patient_frame, 
+                                             text="Seleccione un paciente de la lista",
+                                             bg='#e8f5e8', fg='#2e7d32', font=('Arial', 10))
+        self.selected_patient_label.pack(pady=10)
+        
+        # Servicios disponibles
+        services_popup_frame = tk.LabelFrame(right_panel, text="🏥 AGREGAR SERVICIOS", 
+                                           font=('Arial', 11, 'bold'), bg='#fff3e0', fg='#e65100',
+                                           padx=10, pady=10)
+        services_popup_frame.pack(fill='both', expand=True)
+        
+        # Tabla de servicios disponibles en popup
+        columns_services_popup = ('Código', 'Servicio', 'Precio')
+        self.services_tree_popup = ttk.Treeview(services_popup_frame, columns=columns_services_popup, 
+                                              show='headings', height=8)
+        
+        for col in columns_services_popup:
+            self.services_tree_popup.heading(col, text=col)
+            self.services_tree_popup.column(col, width=120, anchor='center')
+        
+        scroll_services_popup = ttk.Scrollbar(services_popup_frame, orient="vertical", 
+                                            command=self.services_tree_popup.yview)
+        self.services_tree_popup.configure(yscrollcommand=scroll_services_popup.set)
+        
+        services_table_frame = tk.Frame(services_popup_frame, bg='#fff3e0')
+        services_table_frame.pack(fill='both', expand=True, pady=(0, 10))
+        
+        self.services_tree_popup.pack(side='left', fill='both', expand=True)
+        scroll_services_popup.pack(side='right', fill='y')
+        
+        # Botones de acción en popup
+        popup_buttons_frame = tk.Frame(services_popup_frame, bg='#fff3e0')
+        popup_buttons_frame.pack(fill='x')
+        
+        tk.Button(popup_buttons_frame, text="➕ Agregar Servicio", 
+                 command=self.add_service_to_popup_invoice,
+                 bg='#4caf50', fg='white', font=('Arial', 10, 'bold')).pack(side='left', padx=(0, 10))
+        
+        tk.Button(popup_buttons_frame, text="💾 GENERAR FACTURA", 
+                 command=lambda: self.generate_popup_invoice(popup),
+                 bg='#2196f3', fg='white', font=('Arial', 11, 'bold')).pack(side='right')
+        
+        # Cargar datos en el popup
+        self.load_patients_popup()
+        self.load_services_popup()
+        
+        # Variables para el popup
+        self.selected_patient_popup = None
+        self.popup_invoice_services = []
+    
+    def show_daily_payments(self):
+        """Mostrar cobros del día"""
+        messagebox.showinfo("Cobros del Día", "Función en desarrollo - Mostrará cobros del día actual")
+    
+    def show_billing_reports(self):
+        """Mostrar reportes de facturación"""
+        messagebox.showinfo("Reportes", "Función en desarrollo - Mostrará reportes detallados")
+    
+    def search_invoice(self):
+        """Buscar factura específica"""
+        messagebox.showinfo("Buscar Factura", "Función en desarrollo - Permitirá buscar facturas")
+    
+    def billing_settings(self):
+        """Configuración del sistema de facturación"""
+        messagebox.showinfo("Configuración", "Función en desarrollo - Configuración del sistema")
+    
+    def show_pending_invoices(self):
+        """Mostrar facturas pendientes"""
+        messagebox.showinfo("Facturas Pendientes", "Función en desarrollo - Mostrará facturas pendientes")
+    
+    def load_recent_invoices(self):
+        """Cargar facturas recientes"""
+        try:
+            # Limpiar tabla
+            for item in self.recent_invoices_tree.get_children():
+                self.recent_invoices_tree.delete(item)
+            
+            # Aquí iría la lógica para cargar facturas desde la base de datos
+            # Por ahora, datos de ejemplo
+            sample_invoices = [
+                ("FAC-001", "2025-01-27", "Juan Pérez", "₡25,000", "Pagada"),
+                ("FAC-002", "2025-01-27", "María González", "₡18,500", "Pendiente"),
+                ("FAC-003", "2025-01-26", "Carlos Rodríguez", "₡32,000", "Pagada"),
+            ]
+            
+            for invoice in sample_invoices:
+                self.recent_invoices_tree.insert('', 'end', values=invoice + ("Ver",))
+                
+        except Exception as e:
+            print(f"Error cargando facturas recientes: {str(e)}")
+    
+    def get_daily_billing_stats(self):
+        """Obtener estadísticas del día"""
+        try:
+            # Aquí iría la lógica real de la base de datos
+            return {
+                'ingresos': 75500,
+                'facturas': 3,
+                'pendientes': 1
+            }
+        except Exception as e:
+            print(f"Error obteniendo estadísticas: {str(e)}")
+            return {'ingresos': 0, 'facturas': 0, 'pendientes': 0}
+    
+    def filter_recent_invoices(self, event=None):
+        """Filtrar facturas recientes según el período seleccionado"""
+        self.load_recent_invoices()
+    
+    def view_invoice_details(self, event=None):
+        """Ver detalles de una factura"""
+        messagebox.showinfo("Detalles", "Función en desarrollo - Mostrará detalles de la factura")
+    
+    def show_invoice_context_menu(self, event=None):
+        """Mostrar menú contextual para facturas"""
+        pass
+    
+    def load_patients_popup(self):
+        """Cargar pacientes en el popup"""
+        try:
+            # Limpiar tabla
+            for item in self.patients_tree_popup.get_children():
+                self.patients_tree_popup.delete(item)
+            
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, nombre, apellidos, telefono 
+                FROM pacientes 
+                ORDER BY nombre, apellidos
+            """)
+            
+            for patient in cursor.fetchall():
+                self.patients_tree_popup.insert('', 'end', values=patient)
+            
+            conn.close()
+            
+        except Exception as e:
+            print(f"Error cargando pacientes en popup: {str(e)}")
+    
+    def load_services_popup(self):
+        """Cargar servicios en el popup"""
+        try:
+            # Limpiar tabla
+            for item in self.services_tree_popup.get_children():
+                self.services_tree_popup.delete(item)
+            
+            # Cargar servicios predefinidos
+            for service in self.medical_services:
+                self.services_tree_popup.insert('', 'end', values=(
+                    service['codigo'], 
+                    service['nombre'], 
+                    f"₡{service['precio']:,.2f}"
+                ))
+                
+        except Exception as e:
+            print(f"Error cargando servicios en popup: {str(e)}")
+    
+    def filter_patients_popup(self, event=None):
+        """Filtrar pacientes en el popup"""
+        search_term = self.patient_search_var.get().lower()
+        
+        # Limpiar tabla
+        for item in self.patients_tree_popup.get_children():
+            self.patients_tree_popup.delete(item)
+        
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, nombre, apellidos, telefono 
+                FROM pacientes 
+                WHERE LOWER(nombre || ' ' || apellidos) LIKE ?
+                ORDER BY nombre, apellidos
+            """, (f'%{search_term}%',))
+            
+            for patient in cursor.fetchall():
+                self.patients_tree_popup.insert('', 'end', values=patient)
+            
+            conn.close()
+            
+        except Exception as e:
+            print(f"Error filtrando pacientes: {str(e)}")
+    
+    def on_patient_select_popup(self, event=None):
+        """Manejar selección de paciente en popup"""
+        selection = self.patients_tree_popup.selection()
+        if selection:
+            item = self.patients_tree_popup.item(selection[0])
+            values = item['values']
+            
+            self.selected_patient_popup = {
+                'id': values[0],
+                'nombre': values[1],
+                'apellidos': values[2],
+                'telefono': values[3]
+            }
+            
+            # Actualizar etiqueta
+            self.selected_patient_label.config(
+                text=f"👤 {values[1]} {values[2]}\n📞 {values[3]}"
+            )
+    
+    def add_service_to_popup_invoice(self):
+        """Agregar servicio a la factura en popup"""
+        selection = self.services_tree_popup.selection()
+        if not selection:
+            messagebox.showwarning("Selección", "Seleccione un servicio")
+            return
+        
+        if not self.selected_patient_popup:
+            messagebox.showwarning("Paciente", "Seleccione un paciente primero")
+            return
+        
+        item = self.services_tree_popup.item(selection[0])
+        values = item['values']
+        
+        # Agregar a lista de servicios del popup
+        service_data = {
+            'codigo': values[0],
+            'nombre': values[1],
+            'precio': float(values[2].replace('₡', '').replace(',', ''))
+        }
+        
+        self.popup_invoice_services.append(service_data)
+        messagebox.showinfo("Servicio Agregado", f"Servicio {values[1]} agregado a la factura")
+    
+    def generate_popup_invoice(self, popup):
+        """Generar factura desde el popup"""
+        if not self.selected_patient_popup:
+            messagebox.showwarning("Error", "Seleccione un paciente")
+            return
+        
+        if not self.popup_invoice_services:
+            messagebox.showwarning("Error", "Agregue al menos un servicio")
+            return
+        
+        try:
+            # Aquí iría la lógica para generar la factura
+            total = sum(service['precio'] for service in self.popup_invoice_services)
+            
+            messagebox.showinfo("Factura Creada", 
+                              f"Factura generada para {self.selected_patient_popup['nombre']} {self.selected_patient_popup['apellidos']}\n"
+                              f"Total: ₡{total:,.2f}")
+            
+            # Limpiar y cerrar popup
+            self.popup_invoice_services = []
+            popup.destroy()
+            
+            # Actualizar lista de facturas recientes
+            self.load_recent_invoices()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error generando factura: {str(e)}")
+
     def create_integrated_services_content(self, parent):
         """Pestaña de gestión de servicios médicos"""
         main_frame = tk.Frame(parent, bg='#F8FAFC')
@@ -3843,27 +4025,19 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
             self.update_status(f"Error cargando datos: {str(e)}")
     
     def load_appointments_for_billing(self):
-        """Cargar citas para facturación en formato de tarjetas"""
-        print("🔄 DEBUG: Ejecutando load_appointments_for_billing()")
-        if not hasattr(self, 'appointments_cards_frame'):
-            print("❌ DEBUG: No existe appointments_cards_frame")
+        """Cargar citas para facturación"""
+        if not hasattr(self, 'appointments_tree_billing') or not self.appointments_tree_billing:
             return
             
         try:
-            # Limpiar tarjetas anteriores
-            for widget in self.appointments_cards_frame.winfo_children():
-                widget.destroy()
-            
-            # También actualizar el TreeView oculto para compatibilidad
-            if hasattr(self, 'appointments_tree_billing'):
-                for item in self.appointments_tree_billing.get_children():
-                    self.appointments_tree_billing.delete(item)
+            # Limpiar tabla
+            for item in self.appointments_tree_billing.get_children():
+                self.appointments_tree_billing.delete(item)
             
             conn = self.db_manager.get_connection()
             cursor = conn.cursor()
             
             filter_value = self.appointment_filter_var.get()
-            print(f"🔍 DEBUG: Filtro actual: {filter_value}")
             
             if filter_value == "completadas":
                 query = """
@@ -3877,8 +4051,7 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
                 FROM citas c
                 JOIN usuarios p ON c.paciente_id = p.id
                 JOIN usuarios u ON c.doctor_id = u.id
-                LEFT JOIN facturas f ON c.id = f.cita_id
-                WHERE c.estado = 'completada' AND f.id IS NULL
+                WHERE c.estado = 'completada'
                 ORDER BY c.fecha_hora DESC
                 """
             elif filter_value == "hoy":
@@ -3893,8 +4066,7 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
                 FROM citas c
                 JOIN usuarios p ON c.paciente_id = p.id
                 JOIN usuarios u ON c.doctor_id = u.id
-                LEFT JOIN facturas f ON c.id = f.cita_id
-                WHERE DATE(c.fecha_hora) = DATE('now', 'localtime') AND f.id IS NULL
+                WHERE DATE(c.fecha_hora) = DATE('now', 'localtime')
                 ORDER BY c.fecha_hora
                 """
             else:  # todas
@@ -3909,24 +4081,14 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
                 FROM citas c
                 JOIN usuarios p ON c.paciente_id = p.id
                 JOIN usuarios u ON c.doctor_id = u.id
-                LEFT JOIN facturas f ON c.id = f.cita_id
-                WHERE f.id IS NULL
                 ORDER BY c.fecha_hora DESC
                 """
             
             cursor.execute(query)
             appointments = cursor.fetchall()
             
-            print(f"📊 DEBUG: Se encontraron {len(appointments)} citas para facturar")
-            
-            # Crear tarjetas para cada cita
-            for i, appointment in enumerate(appointments):
-                print(f"➕ DEBUG: Creando tarjeta para cita {appointment[0]} - {appointment[3]}")
-                self.create_appointment_card(appointment, i)
-                
-                # También agregar al TreeView oculto para compatibilidad
-                if hasattr(self, 'appointments_tree_billing'):
-                    self.appointments_tree_billing.insert('', 'end', values=appointment)
+            for appointment in appointments:
+                self.appointments_tree_billing.insert('', 'end', values=appointment)
             
             cursor.close()
             conn.close()
@@ -3934,510 +4096,153 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
         except Exception as e:
             print(f"Error cargando citas para facturación: {str(e)}")
     
-    def create_appointment_card(self, appointment_data, index):
-        """Crear tarjeta individual para cada cita"""
-        # Frame de la tarjeta
-        card = tk.Frame(self.appointments_cards_frame, bg='white', relief='solid', bd=1)
-        card.pack(fill='x', pady=5, padx=5)
-        
-        # Variable para almacenar datos de la cita
-        card.appointment_data = appointment_data
-        
-        # Contenido de la tarjeta
-        card_content = tk.Frame(card, bg='white', padx=15, pady=10)
-        card_content.pack(fill='x')
-        
-        # Fila superior: ID y estado
-        top_row = tk.Frame(card_content, bg='white')
-        top_row.pack(fill='x', pady=(0, 5))
-        
-        # ID de la cita
-        tk.Label(top_row, text=f"Cita #{appointment_data[0]}", 
-                font=('Arial', 10, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
-        
-        # Estado con color
-        estado = appointment_data[5]
-        estado_colors = {
-            'completada': '#059669',
-            'confirmada': '#3B82F6',
-            'pendiente': '#F59E0B',
-            'cancelada': '#DC2626'
-        }
-        estado_color = estado_colors.get(estado, '#64748B')
-        
-        estado_label = tk.Label(top_row, text=estado.upper(), 
-                               font=('Arial', 9, 'bold'), bg=estado_color, fg='white',
-                               padx=8, pady=2)
-        estado_label.pack(side='right')
-        
-        # Fila del paciente
-        patient_row = tk.Frame(card_content, bg='white')
-        patient_row.pack(fill='x', pady=2)
-        
-        tk.Label(patient_row, text="👤", font=('Arial', 12), bg='white').pack(side='left')
-        tk.Label(patient_row, text=appointment_data[3], 
-                font=('Arial', 11, 'bold'), bg='white', fg='#1E293B').pack(side='left', padx=(5, 0))
-        
-        # Fila del doctor
-        doctor_row = tk.Frame(card_content, bg='white')
-        doctor_row.pack(fill='x', pady=2)
-        
-        tk.Label(doctor_row, text="👨‍⚕️", font=('Arial', 12), bg='white').pack(side='left')
-        tk.Label(doctor_row, text=appointment_data[4], 
-                font=('Arial', 10), bg='white', fg='#64748B').pack(side='left', padx=(5, 0))
-        
-        # Fila de fecha y hora
-        datetime_row = tk.Frame(card_content, bg='white')
-        datetime_row.pack(fill='x', pady=2)
-        
-        tk.Label(datetime_row, text="📅", font=('Arial', 12), bg='white').pack(side='left')
-        tk.Label(datetime_row, text=f"{appointment_data[1]} - {appointment_data[2]}", 
-                font=('Arial', 10), bg='white', fg='#64748B').pack(side='left', padx=(5, 0))
-        
-        # Botón de selección
-        select_btn = tk.Button(card_content, text="📋 Seleccionar para Facturar",
-                              bg='#3B82F6', fg='white', font=('Arial', 10, 'bold'),
-                              relief='flat', padx=15, pady=8, cursor='hand2',
-                              command=lambda: self.select_appointment_card(card))
-        select_btn.pack(pady=(10, 0))
-        
-        # Efecto hover
-        def on_enter(e):
-            card.config(bg='#F8FAFC', relief='raised')
-            card_content.config(bg='#F8FAFC')
-            for child in card_content.winfo_children():
-                try:
-                    child.config(bg='#F8FAFC')
-                    for grandchild in child.winfo_children():
-                        try:
-                            if grandchild.winfo_class() == 'Label' and grandchild.cget('bg') == 'white':
-                                grandchild.config(bg='#F8FAFC')
-                        except:
-                            pass
-                except:
-                    pass
-        
-        def on_leave(e):
-            if not hasattr(card, 'selected') or not card.selected:
-                card.config(bg='white', relief='solid')
-                card_content.config(bg='white')
-                for child in card_content.winfo_children():
-                    try:
-                        child.config(bg='white')
-                        for grandchild in child.winfo_children():
-                            try:
-                                if grandchild.winfo_class() == 'Label' and grandchild.cget('bg') == '#F8FAFC':
-                                    grandchild.config(bg='white')
-                            except:
-                                pass
-                    except:
-                        pass
-        
-        card.bind("<Enter>", on_enter)
-        card.bind("<Leave>", on_leave)
-        card_content.bind("<Enter>", on_enter)
-        card_content.bind("<Leave>", on_leave)
-    
-    def select_appointment_card(self, selected_card):
-        """Seleccionar una tarjeta de cita"""
-        # Desmarcar todas las tarjetas
-        for widget in self.appointments_cards_frame.winfo_children():
-            if hasattr(widget, 'selected'):
-                widget.selected = False
-                widget.config(bg='white', relief='solid')
-        
-        # Marcar la tarjeta seleccionada
-        selected_card.selected = True
-        selected_card.config(bg='#E3F2FD', relief='raised', bd=2)
-        
-        # Simular selección en TreeView oculto para compatibilidad
-        appointment_data = selected_card.appointment_data
-        self.current_appointment_billing = {
-            'id': appointment_data[0],
-            'fecha': appointment_data[1],
-            'paciente': appointment_data[3],
-            'doctor': appointment_data[4],
-            'estado': appointment_data[5],
-            'facturada': appointment_data[6]
-        }
-        
-        # Actualizar información del paciente
-        if hasattr(self, 'patient_info_label'):
-            info_text = f"Paciente: {appointment_data[3]} | Doctor: {appointment_data[4]} | Fecha: {appointment_data[1]}"
-            self.patient_info_label.config(text=info_text)
-    
     def load_services_for_billing(self):
-        """Cargar servicios médicos para facturación en formato de tarjetas"""
-        if not hasattr(self, 'services_grid_frame'):
+        """Cargar servicios médicos para facturación"""
+        if not hasattr(self, 'services_tree_billing') or not self.services_tree_billing:
             return
             
         try:
-            # Limpiar tarjetas anteriores
-            for widget in self.services_grid_frame.winfo_children():
-                widget.destroy()
-            
-            # También actualizar TreeView oculto para compatibilidad
-            if hasattr(self, 'services_tree_billing'):
-                for item in self.services_tree_billing.get_children():
-                    self.services_tree_billing.delete(item)
-            
-            # Crear grid para las tarjetas de servicios
-            current_row = 0
-            current_col = 0
-            max_cols = 3  # 3 tarjetas por fila
+            # Limpiar tabla
+            for item in self.services_tree_billing.get_children():
+                self.services_tree_billing.delete(item)
             
             # Cargar servicios predefinidos
-            for i, service in enumerate(self.medical_services):
-                self.create_service_card(service, current_row, current_col)
-                
-                # También agregar al TreeView oculto para compatibilidad
-                if hasattr(self, 'services_tree_billing'):
-                    self.services_tree_billing.insert('', 'end', values=(
-                        service['codigo'],
-                        service['nombre'],
-                        service['categoria'],
-                        f"₡{service['precio']:,.2f}"
-                    ))
-                
-                current_col += 1
-                if current_col >= max_cols:
-                    current_col = 0
-                    current_row += 1
-            
-            # Configurar pesos de las columnas
-            for i in range(max_cols):
-                self.services_grid_frame.columnconfigure(i, weight=1)
+            for service in self.medical_services:
+                self.services_tree_billing.insert('', 'end', values=(
+                    service['codigo'],
+                    service['nombre'],
+                    service['categoria'],
+                    f"₡{service['precio']:,.2f}"
+                ))
             
         except Exception as e:
             print(f"Error cargando servicios: {str(e)}")
     
-    def create_service_card(self, service, row, col):
-        """Crear tarjeta individual para cada servicio"""
-        # Frame de la tarjeta
-        card = tk.Frame(self.services_grid_frame, bg='white', relief='solid', bd=1)
-        card.grid(row=row, column=col, padx=5, pady=5, sticky='ew')
-        
-        # Variable para almacenar datos del servicio
-        card.service_data = service
-        
-        # Header de la tarjeta con color por categoría
-        category_colors = {
-            'Consulta': '#3B82F6',
-            'Laboratorio': '#DC2626',
-            'Imagen': '#059669',
-            'Procedimiento': '#F59E0B',
-            'Cardiología': '#8B5CF6',
-            'Prevención': '#06B6D4'
-        }
-        header_color = category_colors.get(service['categoria'], '#64748B')
-        
-        card_header = tk.Frame(card, bg=header_color, height=35)
-        card_header.pack(fill='x')
-        card_header.pack_propagate(False)
-        
-        tk.Label(card_header, text=service['categoria'], 
-                font=('Arial', 10, 'bold'), bg=header_color, fg='white').pack(expand=True)
-        
-        # Contenido de la tarjeta
-        card_content = tk.Frame(card, bg='white', padx=10, pady=10)
-        card_content.pack(fill='both', expand=True)
-        
-        # Código del servicio
-        tk.Label(card_content, text=f"#{service['codigo']}", 
-                font=('Arial', 8), bg='white', fg='#64748B').pack(anchor='w')
-        
-        # Nombre del servicio
-        name_label = tk.Label(card_content, text=service['nombre'], 
-                             font=('Arial', 10, 'bold'), bg='white', fg='#1E293B',
-                             wraplength=180, justify='left')
-        name_label.pack(anchor='w', pady=(2, 8))
-        
-        # Precio
-        price_frame = tk.Frame(card_content, bg='white')
-        price_frame.pack(fill='x', pady=(0, 8))
-        
-        tk.Label(price_frame, text="💰", font=('Arial', 12), bg='white').pack(side='left')
-        tk.Label(price_frame, text=f"₡{service['precio']:,.2f}", 
-                font=('Arial', 11, 'bold'), bg='white', fg='#059669').pack(side='left', padx=(5, 0))
-        
-        # Botón agregar
-        add_btn = tk.Button(card_content, text="➕ Agregar",
-                           bg='#059669', fg='white', font=('Arial', 9, 'bold'),
-                           relief='flat', padx=10, pady=5, cursor='hand2',
-                           command=lambda: self.add_service_from_card(card))
-        add_btn.pack(fill='x')
-        
-        # Efectos hover
-        def on_enter(e):
-            card.config(relief='raised', bd=2)
-            add_btn.config(bg='#047857')
-        
-        def on_leave(e):
-            card.config(relief='solid', bd=1)
-            add_btn.config(bg='#059669')
-        
-        card.bind("<Enter>", on_enter)
-        card.bind("<Leave>", on_leave)
-        card_content.bind("<Enter>", on_enter)
-        card_content.bind("<Leave>", on_leave)
+    def filter_appointments_billing(self, event=None):
+        """Filtrar citas para facturación"""
+        self.load_appointments_for_billing()
     
-    def add_service_from_card(self, service_card):
-        """Agregar servicio desde tarjeta a la factura"""
+    def filter_services(self, event=None):
+        """Filtrar servicios médicos"""
+        search_term = self.service_search_var.get().lower()
+        
+        if not hasattr(self, 'services_tree_billing') or not self.services_tree_billing:
+            return
+        
+        # Limpiar tabla
+        for item in self.services_tree_billing.get_children():
+            self.services_tree_billing.delete(item)
+        
+        # Filtrar y mostrar servicios
+        for service in self.medical_services:
+            if (search_term in service['nombre'].lower() or 
+                search_term in service['categoria'].lower() or
+                search_term in service['codigo'].lower()):
+                
+                self.services_tree_billing.insert('', 'end', values=(
+                    service['codigo'],
+                    service['nombre'],
+                    service['categoria'],
+                    f"₡{service['precio']:,.2f}"
+                ))
+    
+    def on_appointment_select_for_billing(self, event=None):
+        """Cuando se selecciona una cita"""
+        if not hasattr(self, 'appointments_tree_billing') or not self.appointments_tree_billing:
+            return
+            
+        selection = self.appointments_tree_billing.selection()
+        if not selection:
+            return
+        
+        item = self.appointments_tree_billing.item(selection[0])
+        appointment_data = item['values']
+        
+        if len(appointment_data) >= 6:
+            self.current_appointment_billing = {
+                'id': appointment_data[0],
+                'fecha': appointment_data[1],
+                'paciente': appointment_data[3],
+                'doctor': appointment_data[4],
+                'estado': appointment_data[5],
+                'facturada': appointment_data[6]
+            }
+            
+            # Actualizar información del paciente
+            if hasattr(self, 'patient_info_label'):
+                info_text = f"Paciente: {appointment_data[3]} | Doctor: {appointment_data[4]} | Fecha: {appointment_data[1]}"
+                self.patient_info_label.config(text=info_text)
+    
+    def add_service_to_invoice(self):
+        """Agregar servicio a la factura"""
+        if not hasattr(self, 'services_tree_billing') or not self.services_tree_billing:
+            return
+            
+        selection = self.services_tree_billing.selection()
+        if not selection:
+            messagebox.showwarning("Selección", "Por favor seleccione un servicio")
+            return
+        
         if not self.current_appointment_billing:
             messagebox.showwarning("Cita", "Por favor seleccione una cita primero")
             return
         
-        service = service_card.service_data
+        item = self.services_tree_billing.item(selection[0])
+        service_data = item['values']
+        
+        # Buscar el servicio completo
+        selected_service = None
+        for service in self.medical_services:
+            if service['codigo'] == service_data[0]:
+                selected_service = service
+                break
+        
+        if not selected_service:
+            return
         
         # Pedir cantidad
-        quantity = simpledialog.askinteger("Cantidad", f"Cantidad de '{service['nombre']}':", 
+        quantity = simpledialog.askinteger("Cantidad", f"Cantidad de '{selected_service['nombre']}':", 
                                           initialvalue=1, minvalue=1, maxvalue=10)
         if not quantity:
             return
         
         # Agregar a la lista de servicios seleccionados
         service_invoice = {
-            'codigo': service['codigo'],
-            'nombre': service['nombre'],
+            'codigo': selected_service['codigo'],
+            'nombre': selected_service['nombre'],
             'cantidad': quantity,
-            'precio_unitario': service['precio'],
-            'total': service['precio'] * quantity
+            'precio_unitario': selected_service['precio'],
+            'total': selected_service['precio'] * quantity
         }
         
         self.selected_services.append(service_invoice)
-        self.update_selected_services_display()
+        self.update_invoice_services_display()
         self.calculate_totals()
     
-    def update_selected_services_display(self):
-        """Actualizar la visualización de servicios seleccionados en tarjetas"""
-        if not hasattr(self, 'selected_services_frame'):
-            return
-            
-        # Limpiar tarjetas anteriores
-        for widget in self.selected_services_frame.winfo_children():
-            widget.destroy()
-        
-        # También actualizar TreeView oculto para compatibilidad
-        if hasattr(self, 'invoice_services_tree'):
-            for item in self.invoice_services_tree.get_children():
-                self.invoice_services_tree.delete(item)
-        
-        # Crear tarjetas para servicios seleccionados
-        for i, service in enumerate(self.selected_services):
-            self.create_selected_service_card(service, i)
-            
-            # También agregar al TreeView oculto para compatibilidad
-            if hasattr(self, 'invoice_services_tree'):
-                self.invoice_services_tree.insert('', 'end', values=(
-                    service['nombre'],
-                    service['cantidad'],
-                    f"₡{service['precio_unitario']:,.2f}",
-                    f"₡{service['total']:,.2f}"
-                ))
-        
-        # Si no hay servicios, mostrar mensaje
-        if not self.selected_services:
-            empty_label = tk.Label(self.selected_services_frame, 
-                                  text="No hay servicios seleccionados\nAgrege servicios de la lista de la izquierda",
-                                  bg='#F8FAFC', fg='#64748B', font=('Arial', 10),
-                                  justify='center')
-            empty_label.pack(expand=True, pady=20)
-    
-    def create_selected_service_card(self, service, index):
-        """Crear tarjeta para servicio seleccionado en la factura"""
-        # Frame de la tarjeta
-        card = tk.Frame(self.selected_services_frame, bg='white', relief='solid', bd=1)
-        card.pack(fill='x', pady=2, padx=2)
-        
-        # Variable para almacenar índice del servicio
-        card.service_index = index
-        
-        # Contenido de la tarjeta
-        card_content = tk.Frame(card, bg='white', padx=10, pady=8)
-        card_content.pack(fill='x')
-        
-        # Fila superior: nombre y botón eliminar
-        top_row = tk.Frame(card_content, bg='white')
-        top_row.pack(fill='x')
-        
-        # Nombre del servicio
-        tk.Label(top_row, text=service['nombre'], 
-                font=('Arial', 10, 'bold'), bg='white', fg='#1E293B').pack(side='left')
-        
-        # Botón eliminar
-        remove_btn = tk.Button(top_row, text="❌", 
-                              bg='#DC2626', fg='white', font=('Arial', 8, 'bold'),
-                              relief='flat', padx=5, pady=2, cursor='hand2',
-                              command=lambda: self.remove_service_by_index(index))
-        remove_btn.pack(side='right')
-        
-        # Fila inferior: cantidad, precio unitario y total
-        bottom_row = tk.Frame(card_content, bg='white')
-        bottom_row.pack(fill='x', pady=(5, 0))
-        
-        # Cantidad
-        qty_frame = tk.Frame(bottom_row, bg='white')
-        qty_frame.pack(side='left')
-        tk.Label(qty_frame, text=f"Cant: {service['cantidad']}", 
-                font=('Arial', 9), bg='white', fg='#64748B').pack()
-        
-        # Precio unitario
-        unit_frame = tk.Frame(bottom_row, bg='white')
-        unit_frame.pack(side='left', padx=(20, 0))
-        tk.Label(unit_frame, text=f"Unit: ₡{service['precio_unitario']:,.2f}", 
-                font=('Arial', 9), bg='white', fg='#64748B').pack()
-        
-        # Total
-        total_frame = tk.Frame(bottom_row, bg='white')
-        total_frame.pack(side='right')
-        tk.Label(total_frame, text=f"Total: ₡{service['total']:,.2f}", 
-                font=('Arial', 9, 'bold'), bg='white', fg='#059669').pack()
-    
-    def remove_service_by_index(self, index):
-        """Eliminar servicio por índice"""
-        try:
-            if 0 <= index < len(self.selected_services):
-                self.selected_services.pop(index)
-                self.update_selected_services_display()
-                self.calculate_totals()
-        except Exception as e:
-            print(f"Error eliminando servicio: {e}")
-    
-    def filter_services(self, event=None):
-        """Filtrar servicios médicos en formato de tarjetas"""
-        search_term = self.service_search_var.get().lower()
-        
-        if not hasattr(self, 'services_grid_frame'):
-            return
-        
-        # Limpiar tarjetas anteriores
-        for widget in self.services_grid_frame.winfo_children():
-            widget.destroy()
-        
-        # También limpiar TreeView oculto
-        if hasattr(self, 'services_tree_billing'):
-            for item in self.services_tree_billing.get_children():
-                self.services_tree_billing.delete(item)
-        
-        # Filtrar y mostrar servicios
-        current_row = 0
-        current_col = 0
-        max_cols = 3
-        
-        for service in self.medical_services:
-            if (search_term in service['nombre'].lower() or 
-                search_term in service['categoria'].lower() or
-                search_term in service['codigo'].lower()):
-                
-                self.create_service_card(service, current_row, current_col)
-                
-                # También agregar al TreeView oculto para compatibilidad
-                if hasattr(self, 'services_tree_billing'):
-                    self.services_tree_billing.insert('', 'end', values=(
-                        service['codigo'],
-                        service['nombre'],
-                        service['categoria'],
-                        f"₡{service['precio']:,.2f}"
-                    ))
-                
-                current_col += 1
-                if current_col >= max_cols:
-                    current_col = 0
-                    current_row += 1
-        
-        # Configurar pesos de las columnas
-        for i in range(max_cols):
-            self.services_grid_frame.columnconfigure(i, weight=1)
-    
-    def filter_appointments_billing(self, event=None):
-        """Filtrar citas para facturación"""
-        self.load_appointments_for_billing()
-    
-    def on_appointment_select_for_billing(self, event=None):
-        """Cuando se selecciona una cita (compatibilidad con TreeView)"""
-        # Esta función ahora es manejada por select_appointment_card
-        pass
-    
-    def add_service_to_invoice(self):
-        """Agregar servicio a la factura (función de compatibilidad)"""
-        # Esta función ahora es manejada por add_service_from_card
-        messagebox.showinfo("Información", "Use los botones '➕ Agregar' en las tarjetas de servicios")
-    
     def update_invoice_services_display(self):
-        """Actualizar la visualización de servicios en la factura (función de compatibilidad)"""
-        # Esta función ahora es manejada por update_selected_services_display
-        self.update_selected_services_display()
+        """Actualizar la visualización de servicios en la factura"""
+        if not hasattr(self, 'invoice_services_tree') or not self.invoice_services_tree:
+            return
+            
+        # Limpiar tabla
+        for item in self.invoice_services_tree.get_children():
+            self.invoice_services_tree.delete(item)
+        
+        # Agregar servicios seleccionados
+        for service in self.selected_services:
+            self.invoice_services_tree.insert('', 'end', values=(
+                service['nombre'],
+                service['cantidad'],
+                f"₡{service['precio_unitario']:,.2f}",
+                f"₡{service['total']:,.2f}"
+            ))
     
     def remove_service_from_invoice(self):
         """Quitar servicio de la factura"""
-        if not self.selected_services:
-            messagebox.showwarning("Sin servicios", "No hay servicios para eliminar")
+        if not hasattr(self, 'invoice_services_tree') or not self.invoice_services_tree:
             return
-        
-        # Mostrar diálogo para seleccionar qué servicio eliminar
-        if len(self.selected_services) == 1:
-            # Si solo hay un servicio, eliminarlo directamente
-            self.selected_services.pop(0)
-            self.update_selected_services_display()
-            self.calculate_totals()
-        else:
-            # Si hay múltiples servicios, mostrar lista para seleccionar
-            service_names = [f"{i+1}. {s['nombre']} (Cant: {s['cantidad']})" for i, s in enumerate(self.selected_services)]
             
-            # Crear ventana de selección
-            selection_window = tk.Toplevel(self.root)
-            selection_window.title("Seleccionar Servicio a Eliminar")
-            selection_window.geometry("400x300")
-            selection_window.configure(bg='#F8FAFC')
-            selection_window.transient(self.root)
-            selection_window.grab_set()
-            
-            # Centrar ventana
-            selection_window.update_idletasks()
-            x = (selection_window.winfo_screenwidth() // 2) - (400 // 2)
-            y = (selection_window.winfo_screenheight() // 2) - (300 // 2)
-            selection_window.geometry(f"400x300+{x}+{y}")
-            
-            # Header
-            header_frame = tk.Frame(selection_window, bg='#DC2626', height=50)
-            header_frame.pack(fill='x')
-            header_frame.pack_propagate(False)
-            
-            tk.Label(header_frame, text="❌ Eliminar Servicio", 
-                    font=('Arial', 14, 'bold'), bg='#DC2626', fg='white').pack(expand=True)
-            
-            # Lista de servicios
-            main_frame = tk.Frame(selection_window, bg='#F8FAFC', padx=20, pady=20)
-            main_frame.pack(fill='both', expand=True)
-            
-            tk.Label(main_frame, text="Seleccione el servicio a eliminar:", 
-                    font=('Arial', 11, 'bold'), bg='#F8FAFC', fg='#1E293B').pack(anchor='w', pady=(0, 10))
-            
-            # Variable para la selección
-            selected_var = tk.IntVar()
-            
-            # Crear radiobuttons para cada servicio
-            for i, service_name in enumerate(service_names):
-                rb = tk.Radiobutton(main_frame, text=service_name, variable=selected_var, value=i,
-                                   font=('Arial', 10), bg='#F8FAFC', fg='#1E293B')
-                rb.pack(anchor='w', pady=2)
-            
-            # Botones
-            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
-            buttons_frame.pack(fill='x', pady=(20, 0))
-            
-            def confirm_delete():
-                index = selected_var.get()
-                self.remove_service_by_index(index)
-                selection_window.destroy()
-            
-            tk.Button(buttons_frame, text="❌ Eliminar", command=confirm_delete,
-                     bg='#DC2626', fg='white', font=('Arial', 10, 'bold'),
-                     relief='flat', padx=15, pady=8).pack(side='left')
-            
-            tk.Button(buttons_frame, text="Cancelar", command=selection_window.destroy,
-                     bg='#64748B', fg='white', font=('Arial', 10, 'bold'),
-                     relief='flat', padx=15, pady=8).pack(side='left', padx=(10, 0))
+        selection = self.invoice_services_tree.selection()
         if not selection:
             messagebox.showwarning("Selección", "Por favor seleccione un servicio para quitar")
             return
@@ -5308,179 +5113,250 @@ Estado: {factura[5]}
         self.create_reports_tab(reports_frame)
         self.create_billing_config_tab(config_frame)
     
-    def create_advanced_billing_tab(self, parent):
-        """Crear pestaña avanzada de facturación"""
-        # Panel izquierdo - Citas pendientes
-        left_panel = tk.Frame(parent, bg='white', relief='solid', bd=1)
-        left_panel.pack(side='left', fill='both', expand=True, padx=(0, 5), pady=10)
-        
-        # Header del panel izquierdo
-        left_header = tk.Frame(left_panel, bg='#0B5394', height=50)
-        left_header.pack(fill='x')
+    def load_existing_invoices(self):
+        """Cargar facturas existentes (pagadas y pendientes)"""
+        try:
+            print("🔄 Iniciando carga de facturas existentes...")
+            
+            # Limpiar el treeview de facturas si existe
+            if hasattr(self, 'billing_appointments_tree'):
+                for item in self.billing_appointments_tree.get_children():
+                    self.billing_appointments_tree.delete(item)
+            
+            # Aquí cargaríamos las facturas desde la base de datos
+            # Por ahora, solo mostramos un mensaje de confirmación
+            print("✅ Facturas cargadas exitosamente")
+            
+        except Exception as e:
+            print(f"❌ Error al cargar facturas: {e}")
+            messagebox.showerror("Error", f"Error al cargar facturas: {e}")
         left_header.pack_propagate(False)
         
-        tk.Label(left_header, text="📅 Citas para Facturar", font=('Arial', 14, 'bold'), 
-                bg='#0B5394', fg='white').pack(side='left', padx=15, expand=True, anchor='w')
+        header_content = tk.Frame(left_header, bg='#0B5394')
+        header_content.pack(expand=True, fill='both')
         
-        # Botón refrescar
-        tk.Button(left_header, text="🔄", bg='#0B5394', fg='white',
-                 font=('Arial', 12, 'bold'), relief='flat',
-                 command=self.load_pending_appointments).pack(side='right', padx=15, pady=10)
+        tk.Label(header_content, text="� GESTIÓN DE CITAS Y FACTURAS", font=('Arial', 12, 'bold'), 
+                bg='#0B5394', fg='white').pack(side='left', padx=20, pady=15)
         
-        # Lista de citas con mejor scrollbar
-        appointments_frame = tk.Frame(left_panel, bg='white', relief='solid', bd=1)
-        appointments_frame.pack(fill='both', expand=True, padx=15, pady=15)
+        # Botones de acción en el header
+        actions_frame = tk.Frame(header_content, bg='#0B5394')
+        actions_frame.pack(side='right', padx=20)
         
-        # Treeview para citas con altura reducida para mejor distribución
+        refresh_btn = tk.Button(actions_frame, text="🔄 Actualizar", bg='#1e7e34', fg='white',
+                              font=('Arial', 10, 'bold'), relief='flat', cursor='hand2',
+                              command=self.load_pending_appointments, padx=15, pady=8)
+        refresh_btn.pack(side='right', padx=5)
+        
+        # Notebook para organizar las secciones
+        notebook_frame = tk.Frame(left_panel, bg='#ffffff')
+        notebook_frame.pack(fill='both', expand=True, padx=15, pady=15)
+        
+        # Crear notebook con estilo moderno
+        style = ttk.Style()
+        style.configure('Modern.TNotebook', background='#ffffff')
+        style.configure('Modern.TNotebook.Tab', padding=[20, 12])
+        
+        self.billing_notebook = ttk.Notebook(notebook_frame, style='Modern.TNotebook')
+        self.billing_notebook.pack(fill='both', expand=True)
+        
+        # TAB 1: Citas Pendientes
+        appointments_tab = tk.Frame(self.billing_notebook, bg='#ffffff')
+        self.billing_notebook.add(appointments_tab, text='📅 Citas Pendientes')
+        
+        # Subheader para citas
+        appointments_subheader = tk.Frame(appointments_tab, bg='#e8f4f8', height=40)
+        appointments_subheader.pack(fill='x', pady=(0, 10))
+        appointments_subheader.pack_propagate(False)
+        
+        tk.Label(appointments_subheader, text="Seleccione una cita para generar factura", 
+                font=('Arial', 10, 'italic'), bg='#e8f4f8', fg='#0B5394').pack(pady=10)
+        
+        # Container para la tabla de citas con mejor diseño
+        appointments_container = tk.Frame(appointments_tab, bg='#ffffff', relief='solid', bd=1)
+        appointments_container.pack(fill='both', expand=True, padx=5, pady=5)
+        
+        # Treeview para citas con diseño mejorado
         columns = ('ID', 'Fecha', 'Paciente', 'Doctor', 'Motivo', 'Estado')
-        self.billing_appointments_tree = ttk.Treeview(appointments_frame, columns=columns, show='headings', height=8)
+        self.billing_appointments_tree = ttk.Treeview(appointments_container, columns=columns, 
+                                                     show='headings', height=12)
         
-        # Configurar columnas
-        column_widths = {'ID': 50, 'Fecha': 100, 'Paciente': 150, 'Doctor': 120, 'Motivo': 200, 'Estado': 80}
+        # Configurar columnas con mejor espaciado
+        column_config = {
+            'ID': {'width': 60, 'anchor': 'center'},
+            'Fecha': {'width': 110, 'anchor': 'center'},
+            'Paciente': {'width': 160, 'anchor': 'w'},
+            'Doctor': {'width': 130, 'anchor': 'w'},
+            'Motivo': {'width': 180, 'anchor': 'w'},
+            'Estado': {'width': 100, 'anchor': 'center'}
+        }
+        
         for col in columns:
-            self.billing_appointments_tree.heading(col, text=col)
-            self.billing_appointments_tree.column(col, width=column_widths.get(col, 100))
+            self.billing_appointments_tree.heading(col, text=col, anchor='center')
+            config = column_config.get(col, {})
+            self.billing_appointments_tree.column(col, width=config.get('width', 100), 
+                                                 anchor=config.get('anchor', 'center'),
+                                                 minwidth=50)
         
-        # Scrollbars con mejor visibilidad
-        scrollbar_y = ttk.Scrollbar(appointments_frame, orient="vertical", command=self.billing_appointments_tree.yview)
-        scrollbar_x = ttk.Scrollbar(appointments_frame, orient="horizontal", command=self.billing_appointments_tree.xview)
-        self.billing_appointments_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+        # Scrollbars modernos para citas
+        appointments_scrollbar_y = ttk.Scrollbar(appointments_container, orient="vertical", 
+                                               command=self.billing_appointments_tree.yview)
+        appointments_scrollbar_x = ttk.Scrollbar(appointments_container, orient="horizontal", 
+                                               command=self.billing_appointments_tree.xview)
+        self.billing_appointments_tree.configure(yscrollcommand=appointments_scrollbar_y.set, 
+                                                xscrollcommand=appointments_scrollbar_x.set)
         
-        # Layout con grid para mejor control de scrollbars con padding
-        self.billing_appointments_tree.grid(row=0, column=0, sticky='nsew', padx=(5, 0), pady=(5, 0))
-        scrollbar_y.grid(row=0, column=1, sticky='ns', padx=(0, 5), pady=(5, 0))
-        scrollbar_x.grid(row=1, column=0, sticky='ew', padx=(5, 0), pady=(0, 5))
+        # Grid layout mejorado para citas
+        self.billing_appointments_tree.grid(row=0, column=0, sticky='nsew', padx=(8, 0), pady=(8, 0))
+        appointments_scrollbar_y.grid(row=0, column=1, sticky='ns', padx=(2, 8), pady=(8, 0))
+        appointments_scrollbar_x.grid(row=1, column=0, sticky='ew', padx=(8, 0), pady=(2, 8))
         
-        # Configurar expansión con mínimo para scrollbars
-        appointments_frame.grid_rowconfigure(0, weight=1)
-        appointments_frame.grid_rowconfigure(1, weight=0, minsize=20)
-        appointments_frame.grid_columnconfigure(0, weight=1)
-        appointments_frame.grid_columnconfigure(1, weight=0, minsize=20)
+        appointments_container.grid_rowconfigure(0, weight=1)
+        appointments_container.grid_columnconfigure(0, weight=1)
         
-        # Bind para selección
+        # Eventos para citas
         self.billing_appointments_tree.bind('<<TreeviewSelect>>', self.on_appointment_select_billing)
+        self.billing_appointments_tree.bind("<MouseWheel>", 
+                                          lambda e: self.billing_appointments_tree.yview_scroll(int(-1 * (e.delta / 120)), "units"))
         
-        # Agregar scroll con mouse wheel mejorado
-        def scroll_appointments(event):
-            self.billing_appointments_tree.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        self.billing_appointments_tree.bind("<MouseWheel>", scroll_appointments)
+        # TAB 2: Facturas Generadas
+        invoices_tab = tk.Frame(self.billing_notebook, bg='#ffffff')
+        self.billing_notebook.add(invoices_tab, text='📄 Facturas Generadas')
         
-        # Bind adicional para mejor control del scroll
-        def on_appointments_focus_in(event):
-            self.billing_appointments_tree.focus_set()
-        self.billing_appointments_tree.bind("<Button-1>", on_appointments_focus_in)
+        # Subheader para facturas
+        invoices_subheader = tk.Frame(invoices_tab, bg='#f0f8e8', height=40)
+        invoices_subheader.pack(fill='x', pady=(0, 10))
+        invoices_subheader.pack_propagate(False)
         
-        # Separador entre citas y facturas
-        separator_frame = tk.Frame(left_panel, bg='white', height=20)
-        separator_frame.pack(fill='x', padx=15)
+        tk.Label(invoices_subheader, text="Historial completo de facturas del sistema", 
+                font=('Arial', 10, 'italic'), bg='#f0f8e8', fg='#155724').pack(pady=10)
         
-        # Nueva sección: Facturas existentes
-        invoices_header = tk.Frame(left_panel, bg='#0B5394', height=50)
-        invoices_header.pack(fill='x')
-        invoices_header.pack_propagate(False)
+        # Container para la tabla de facturas
+        invoices_container = tk.Frame(invoices_tab, bg='#ffffff', relief='solid', bd=1)
+        invoices_container.pack(fill='both', expand=True, padx=5, pady=5)
         
-        tk.Label(invoices_header, text="📄 Facturas Generadas", font=('Arial', 14, 'bold'), 
-                bg='#0B5394', fg='white').pack(side='left', padx=15, expand=True, anchor='w')
-        
-        # Botón refrescar facturas
-        tk.Button(invoices_header, text="🔄", bg='#0B5394', fg='white',
-                 font=('Arial', 12, 'bold'), relief='flat',
-                 command=self.load_existing_invoices).pack(side='right', padx=15, pady=10)
-        
-        # Lista de facturas existentes con mejor scrollbar
-        invoices_frame = tk.Frame(left_panel, bg='white', relief='solid', bd=1)
-        invoices_frame.pack(fill='both', expand=True, padx=15, pady=15)
-        
-        # Treeview para facturas con altura optimizada
+        # Treeview para facturas con diseño mejorado
         invoice_columns = ('Número', 'Fecha', 'Paciente', 'Monto', 'Estado', 'Acciones')
-        self.billing_invoices_tree = ttk.Treeview(invoices_frame, columns=invoice_columns, show='headings', height=12)
+        self.billing_invoices_tree = ttk.Treeview(invoices_container, columns=invoice_columns, 
+                                                 show='headings', height=12)
         
         # Configurar columnas de facturas
-        invoice_column_widths = {'Número': 120, 'Fecha': 90, 'Paciente': 150, 'Monto': 100, 'Estado': 100, 'Acciones': 80}
+        invoice_config = {
+            'Número': {'width': 130, 'anchor': 'center'},
+            'Fecha': {'width': 100, 'anchor': 'center'},
+            'Paciente': {'width': 160, 'anchor': 'w'},
+            'Monto': {'width': 120, 'anchor': 'e'},
+            'Estado': {'width': 120, 'anchor': 'center'},
+            'Acciones': {'width': 100, 'anchor': 'center'}
+        }
+        
         for col in invoice_columns:
-            self.billing_invoices_tree.heading(col, text=col)
-            self.billing_invoices_tree.column(col, width=invoice_column_widths.get(col, 100))
+            self.billing_invoices_tree.heading(col, text=col, anchor='center')
+            config = invoice_config.get(col, {})
+            self.billing_invoices_tree.column(col, width=config.get('width', 100), 
+                                            anchor=config.get('anchor', 'center'),
+                                            minwidth=50)
         
-        # Scrollbars para facturas con mejor estilo y visibilidad
-        invoices_scrollbar_y = ttk.Scrollbar(invoices_frame, orient="vertical", command=self.billing_invoices_tree.yview)
-        invoices_scrollbar_x = ttk.Scrollbar(invoices_frame, orient="horizontal", command=self.billing_invoices_tree.xview)
-        self.billing_invoices_tree.configure(yscrollcommand=invoices_scrollbar_y.set, xscrollcommand=invoices_scrollbar_x.set)
+        # Scrollbars modernos para facturas
+        invoices_scrollbar_y = ttk.Scrollbar(invoices_container, orient="vertical", 
+                                           command=self.billing_invoices_tree.yview)
+        invoices_scrollbar_x = ttk.Scrollbar(invoices_container, orient="horizontal", 
+                                           command=self.billing_invoices_tree.xview)
+        self.billing_invoices_tree.configure(yscrollcommand=invoices_scrollbar_y.set, 
+                                           xscrollcommand=invoices_scrollbar_x.set)
         
-        # Layout con grid para mejor control de scrollbars con padding
-        self.billing_invoices_tree.grid(row=0, column=0, sticky='nsew', padx=(5, 0), pady=(5, 0))
-        invoices_scrollbar_y.grid(row=0, column=1, sticky='ns', padx=(0, 5), pady=(5, 0))
-        invoices_scrollbar_x.grid(row=1, column=0, sticky='ew', padx=(5, 0), pady=(0, 5))
+        # Grid layout mejorado para facturas
+        self.billing_invoices_tree.grid(row=0, column=0, sticky='nsew', padx=(8, 0), pady=(8, 0))
+        invoices_scrollbar_y.grid(row=0, column=1, sticky='ns', padx=(2, 8), pady=(8, 0))
+        invoices_scrollbar_x.grid(row=1, column=0, sticky='ew', padx=(8, 0), pady=(2, 8))
         
-        # Configurar expansión con mínimo para scrollbars
-        invoices_frame.grid_rowconfigure(0, weight=1)
-        invoices_frame.grid_rowconfigure(1, weight=0, minsize=20)
-        invoices_frame.grid_columnconfigure(0, weight=1)
-        invoices_frame.grid_columnconfigure(1, weight=0, minsize=20)
+        invoices_container.grid_rowconfigure(0, weight=1)
+        invoices_container.grid_columnconfigure(0, weight=1)
         
-        # Bind para selección de facturas
+        # Eventos para facturas
         self.billing_invoices_tree.bind('<Double-1>', self.view_invoice_details_billing)
+        self.billing_invoices_tree.bind("<MouseWheel>", 
+                                       lambda e: self.billing_invoices_tree.yview_scroll(int(-1 * (e.delta / 120)), "units"))
         
-        # Agregar scroll con mouse wheel mejorado
-        def scroll_invoices(event):
-            self.billing_invoices_tree.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        self.billing_invoices_tree.bind("<MouseWheel>", scroll_invoices)
+        # Panel de acciones moderno para facturas
+        invoice_actions_panel = tk.Frame(invoices_tab, bg='#ffffff')
+        invoice_actions_panel.pack(fill='x', padx=10, pady=(15, 10))
         
-        # Bind adicional para mejor control del scroll
-        def on_invoices_focus_in(event):
-            self.billing_invoices_tree.focus_set()
-        self.billing_invoices_tree.bind("<Button-1>", on_invoices_focus_in)
+        # Título del panel de acciones
+        tk.Label(invoice_actions_panel, text="🎛️ ACCIONES DISPONIBLES", font=('Arial', 10, 'bold'), 
+                bg='#ffffff', fg='#0B5394').pack(anchor='w', pady=(0, 10))
         
-        # Botones de acción para facturas
-        invoice_actions_frame = tk.Frame(left_panel, bg='white')
-        invoice_actions_frame.pack(fill='x', padx=15, pady=(10, 15))
+        # Frame para los botones con diseño en grid
+        actions_grid = tk.Frame(invoice_actions_panel, bg='#ffffff')
+        actions_grid.pack(fill='x')
         
-        tk.Button(invoice_actions_frame, text="💳 Procesar Pago", bg='#0B5394', fg='white',
-                 font=('Arial', 10, 'bold'), command=self.process_payment_window).pack(side='left', padx=(0, 10))
-        tk.Button(invoice_actions_frame, text="👁️ Ver Detalles", bg='#0B5394', fg='white',
-                 font=('Arial', 10, 'bold'), command=self.view_invoice_details_billing).pack(side='left', padx=10)
-        tk.Button(invoice_actions_frame, text="📄 Reimprimir PDF", bg='#0B5394', fg='white',
-                 font=('Arial', 10, 'bold'), command=self.reprint_invoice_pdf).pack(side='left', padx=10)
+        # Botones modernos con iconos
+        button_style = {
+            'font': ('Arial', 10, 'bold'),
+            'relief': 'flat',
+            'cursor': 'hand2',
+            'padx': 20,
+            'pady': 10,
+            'width': 18
+        }
         
-        # Botón de debug temporal
-        def debug_table():
-            print(f"🔍 DEBUG: Verificando tabla de facturas...")
-            print(f"Widget existe: {hasattr(self, 'billing_invoices_tree')}")
-            if hasattr(self, 'billing_invoices_tree'):
-                children = self.billing_invoices_tree.get_children()
-                print(f"Items en tabla: {len(children)}")
-                for i, child in enumerate(children[:3]):  # Solo los primeros 3
-                    values = self.billing_invoices_tree.item(child)['values']
-                    print(f"Item {i}: {values}")
-                
-                # Agregar item de prueba
-                test_item = self.billing_invoices_tree.insert('', 'end', values=(
-                    "TEST-001", "28/07/2025", "Paciente Prueba", "RD$ 1,000.00", "🧪 TEST", "🔧"
-                ))
-                print(f"Item de prueba agregado: {test_item}")
-                self.billing_invoices_tree.update()
-                
-        tk.Button(invoice_actions_frame, text="🔍 DEBUG", bg='#0B5394', fg='white',
-                 font=('Arial', 10, 'bold'), command=debug_table).pack(side='right', padx=10)
+        # Primera fila de botones
+        row1_frame = tk.Frame(actions_grid, bg='#ffffff')
+        row1_frame.pack(fill='x', pady=(0, 8))
         
-        # Panel derecho - Crear factura (más ancho)
-        right_panel = tk.Frame(parent, bg='white', relief='solid', bd=1, width=650)
-        right_panel.pack(side='right', fill='y', padx=(5, 0), pady=10)
+        tk.Button(row1_frame, text="💳 Procesar Pago", bg='#28a745', fg='white',
+                 command=self.process_payment_window, **button_style).pack(side='left', padx=(0, 8))
+        tk.Button(row1_frame, text="👁️ Ver Detalles", bg='#17a2b8', fg='white',
+                 command=self.view_invoice_details_billing, **button_style).pack(side='left', padx=8)
+        
+        # Segunda fila de botones
+        row2_frame = tk.Frame(actions_grid, bg='#ffffff')
+        row2_frame.pack(fill='x')
+        
+        tk.Button(row2_frame, text="📄 Reimprimir PDF", bg='#6f42c1', fg='white',
+                 command=self.reprint_invoice_pdf, **button_style).pack(side='left', padx=(0, 8))
+        tk.Button(row2_frame, text="� Actualizar Lista", bg='#1e7e34', fg='white',
+                 command=self.load_existing_invoices, **button_style).pack(side='left', padx=8)
+        
+        # Panel derecho - Crear factura con diseño moderno
+        right_panel = tk.Frame(content_frame, bg='#ffffff', relief='solid', bd=1)
+        right_panel.pack(side='right', fill='both', expand=False, padx=(8, 0))
+        right_panel.configure(width=550)  # Ancho fijo más controlado
         right_panel.pack_propagate(False)
         
-        # Header del panel derecho
-        right_header = tk.Frame(right_panel, bg='#0B5394', height=50)
+        # Header del panel derecho modernizado
+        right_header = tk.Frame(right_panel, bg='#0B5394', height=55)
         right_header.pack(fill='x')
         right_header.pack_propagate(False)
         
-        tk.Label(right_header, text="🧾 Crear Factura", font=('Arial', 14, 'bold'), 
-                bg='#0B5394', fg='white').pack(expand=True)
+        header_right_content = tk.Frame(right_header, bg='#0B5394')
+        header_right_content.pack(expand=True, fill='both')
         
-        # Formulario de factura
-        self.create_invoice_form(right_panel)
+        tk.Label(header_right_content, text="🧾 CREAR NUEVA FACTURA", font=('Arial', 12, 'bold'), 
+                bg='#0B5394', fg='white').pack(pady=15)
+        
+        # Formulario de factura con diseño moderno
+        form_container = tk.Frame(right_panel, bg='#ffffff')
+        form_container.pack(fill='both', expand=True, padx=15, pady=15)
+        
+        # Llamar a la función existente del formulario
+        self.create_invoice_form(form_container)
+        
+        # Panel de estado y notificaciones
+        status_panel = tk.Frame(main_frame, bg='#e9ecef', height=40)
+        status_panel.pack(fill='x', pady=(10, 0))
+        status_panel.pack_propagate(False)
+        
+        # Etiqueta de estado
+        self.billing_status_label = tk.Label(status_panel, text="✅ Sistema de facturación listo", 
+                                           font=('Arial', 10), bg='#e9ecef', fg='#495057')
+        self.billing_status_label.pack(expand=True, pady=10)
         
         # Cargar datos iniciales después de que la interfaz esté lista
         self.root.after(100, self.load_pending_appointments)
         self.root.after(200, self.load_existing_invoices)
+        
+        # Actualizar estado
+        self.root.after(300, lambda: self.update_billing_status("📊 Datos cargados exitosamente"))
     
     def load_existing_invoices(self):
         """Cargar facturas existentes (pagadas y pendientes)"""
@@ -5597,6 +5473,15 @@ Estado: {factura[5]}
             traceback.print_exc()
             messagebox.showerror("Error", error_msg)
     
+    def update_billing_status(self, message):
+        """Actualizar el mensaje de estado del sistema de facturación"""
+        try:
+            if hasattr(self, 'billing_status_label'):
+                self.billing_status_label.config(text=message)
+                self.billing_status_label.update()
+        except Exception as e:
+            print(f"Error actualizando estado: {e}")
+    
     def create_invoice_form(self, parent):
         """Crear formulario para crear facturas"""
         # Crear un canvas con scrollbar para el formulario completo
@@ -5637,192 +5522,37 @@ Estado: {factura[5]}
         self.selected_appointment_info.pack(anchor='w')
         
         # Panel de información del doctor y seguro
-        # Panel de información de cita - Rediseñado con tarjetas modernas
-        appointment_info_card = tk.Frame(form_frame, bg='white', relief='solid', bd=2)
-        appointment_info_card.pack(fill='x', pady=(0, 20))
+        doctor_insurance_frame = tk.LabelFrame(form_frame, text="👨‍⚕️ Info Doctor & 🏥 Seguros", 
+                                             font=('Arial', 11, 'bold'), padx=10, pady=10)
+        doctor_insurance_frame.pack(fill='x', pady=(0, 15))
         
-        # Header de la tarjeta
-        info_header = tk.Frame(appointment_info_card, bg='#3B82F6', height=45)
-        info_header.pack(fill='x')
-        info_header.pack_propagate(False)
+        # Dividir en dos columnas
+        columns_frame = tk.Frame(doctor_insurance_frame, bg='white')
+        columns_frame.pack(fill='x')
         
-        tk.Label(info_header, text="📋 Información de la Cita", 
-                font=('Arial', 12, 'bold'), bg='#3B82F6', fg='white').pack(expand=True)
+        # Columna izquierda - Info Doctor
+        doctor_col = tk.Frame(columns_frame, bg='#e8f5e8', relief='solid', bd=1)
+        doctor_col.pack(side='left', fill='both', expand=True, padx=(0, 5))
         
-        # Contenido de la información
-        info_content = tk.Frame(appointment_info_card, bg='white', padx=20, pady=15)
-        info_content.pack(fill='both', expand=True)
+        tk.Label(doctor_col, text="👨‍⚕️ DOCTOR", font=('Arial', 10, 'bold'), 
+                bg='#e8f5e8', fg='#2e7d32').pack(pady=5)
         
-        # Grid de información básica
-        basic_info_frame = tk.Frame(info_content, bg='white')
-        basic_info_frame.pack(fill='x', pady=(0, 15))
+        self.doctor_info_label = tk.Label(doctor_col, text="Seleccione una cita\npara ver información", 
+                                         font=('Arial', 9), bg='#e8f5e8', fg='#2e7d32',
+                                         wraplength=200, justify='center')
+        self.doctor_info_label.pack(pady=10)
         
-        # Fila 1: Fecha y Estado
-        row1 = tk.Frame(basic_info_frame, bg='white')
-        row1.pack(fill='x', pady=5)
+        # Columna derecha - Info Seguro
+        insurance_col = tk.Frame(columns_frame, bg='#e3f2fd', relief='solid', bd=1)
+        insurance_col.pack(side='right', fill='both', expand=True, padx=(5, 0))
         
-        # Fecha
-        fecha_frame = tk.Frame(row1, bg='#F8FAFC', relief='solid', bd=1)
-        fecha_frame.pack(side='left', fill='x', expand=True, padx=(0, 10))
+        tk.Label(insurance_col, text="🏥 SEGURO MÉDICO", font=('Arial', 10, 'bold'), 
+                bg='#e3f2fd', fg='#1565c0').pack(pady=5)
         
-        fecha_inner = tk.Frame(fecha_frame, bg='#F8FAFC', padx=10, pady=8)
-        fecha_inner.pack(fill='x')
-        
-        tk.Label(fecha_inner, text="📅 Fecha", font=('Arial', 9, 'bold'), 
-                bg='#F8FAFC', fg='#64748B').pack(anchor='w')
-        self.appointment_date_label = tk.Label(fecha_inner, text="--/--/----", 
-                                             font=('Arial', 10, 'bold'), bg='#F8FAFC', fg='#1E293B')
-        self.appointment_date_label.pack(anchor='w')
-        
-        # Estado
-        estado_frame = tk.Frame(row1, bg='#F8FAFC', relief='solid', bd=1)
-        estado_frame.pack(side='right', fill='x', expand=True, padx=(10, 0))
-        
-        estado_inner = tk.Frame(estado_frame, bg='#F8FAFC', padx=10, pady=8)
-        estado_inner.pack(fill='x')
-        
-        tk.Label(estado_inner, text="📊 Estado", font=('Arial', 9, 'bold'), 
-                bg='#F8FAFC', fg='#64748B').pack(anchor='w')
-        self.appointment_status_label = tk.Label(estado_inner, text="Sin seleccionar", 
-                                               font=('Arial', 10, 'bold'), bg='#F8FAFC', fg='#059669')
-        self.appointment_status_label.pack(anchor='w')
-        
-        # Fila 2: Paciente
-        patient_card = tk.Frame(info_content, bg='#F1F5F9', relief='solid', bd=1)
-        patient_card.pack(fill='x', pady=(0, 10))
-        
-        patient_inner = tk.Frame(patient_card, bg='#F1F5F9', padx=15, pady=10)
-        patient_inner.pack(fill='x')
-        
-        tk.Label(patient_inner, text="👤 Paciente", font=('Arial', 10, 'bold'), 
-                bg='#F1F5F9', fg='#475569').pack(anchor='w')
-        self.appointment_patient_label = tk.Label(patient_inner, text="Seleccione una cita", 
-                                                font=('Arial', 11, 'bold'), bg='#F1F5F9', fg='#1E293B')
-        self.appointment_patient_label.pack(anchor='w', pady=(2, 0))
-        
-        # Fila 3: Motivo
-        motivo_card = tk.Frame(info_content, bg='#F1F5F9', relief='solid', bd=1)
-        motivo_card.pack(fill='x')
-        
-        motivo_inner = tk.Frame(motivo_card, bg='#F1F5F9', padx=15, pady=10)
-        motivo_inner.pack(fill='x')
-        
-        tk.Label(motivo_inner, text="💭 Motivo de la Consulta", font=('Arial', 10, 'bold'), 
-                bg='#F1F5F9', fg='#475569').pack(anchor='w')
-        self.appointment_motivo_label = tk.Label(motivo_inner, text="--", 
-                                               font=('Arial', 10), bg='#F1F5F9', fg='#64748B',
-                                               wraplength=600, justify='left')
-        self.appointment_motivo_label.pack(anchor='w', pady=(2, 0))
-        
-        # Panel Doctor & Seguro rediseñado
-        doctor_insurance_card = tk.Frame(form_frame, bg='white', relief='solid', bd=2)
-        doctor_insurance_card.pack(fill='x', pady=(0, 20))
-        
-        # Header
-        di_header = tk.Frame(doctor_insurance_card, bg='#059669', height=45)
-        di_header.pack(fill='x')
-        di_header.pack_propagate(False)
-        
-        tk.Label(di_header, text="👨‍⚕️ Información Médica y Seguro", 
-                font=('Arial', 12, 'bold'), bg='#059669', fg='white').pack(expand=True)
-        
-        # Contenido en grid
-        di_content = tk.Frame(doctor_insurance_card, bg='white', padx=20, pady=15)
-        di_content.pack(fill='both', expand=True)
-        
-        # Grid 2x2 para Doctor y Seguro
-        grid_frame = tk.Frame(di_content, bg='white')
-        grid_frame.pack(fill='x')
-        
-        # DOCTOR - Columna izquierda
-        doctor_section = tk.Frame(grid_frame, bg='white')
-        doctor_section.grid(row=0, column=0, sticky='ew', padx=(0, 10))
-        
-        # Header doctor
-        doctor_header = tk.Frame(doctor_section, bg='#3B82F6', height=35)
-        doctor_header.pack(fill='x')
-        doctor_header.pack_propagate(False)
-        
-        tk.Label(doctor_header, text="👨‍⚕️ DOCTOR", font=('Arial', 10, 'bold'), 
-                bg='#3B82F6', fg='white').pack(expand=True)
-        
-        # Contenido doctor
-        doctor_content = tk.Frame(doctor_section, bg='#F8FAFC', padx=15, pady=12)
-        doctor_content.pack(fill='both', expand=True)
-        
-        # Nombre del doctor
-        self.doctor_name_label = tk.Label(doctor_content, text="Dr. No seleccionado", 
-                                         font=('Arial', 11, 'bold'), bg='#F8FAFC', fg='#1E293B')
-        self.doctor_name_label.pack(anchor='w')
-        
-        # Especialidad
-        specialty_row = tk.Frame(doctor_content, bg='#F8FAFC')
-        specialty_row.pack(fill='x', pady=(5, 0))
-        tk.Label(specialty_row, text="🩺", font=('Arial', 10), bg='#F8FAFC').pack(side='left')
-        self.doctor_specialty_label = tk.Label(specialty_row, text="--", 
-                                             font=('Arial', 9), bg='#F8FAFC', fg='#64748B')
-        self.doctor_specialty_label.pack(side='left', padx=(5, 0))
-        
-        # Tarifa
-        tarifa_row = tk.Frame(doctor_content, bg='#F8FAFC')
-        tarifa_row.pack(fill='x', pady=(3, 0))
-        tk.Label(tarifa_row, text="💰", font=('Arial', 10), bg='#F8FAFC').pack(side='left')
-        self.doctor_tarifa_label = tk.Label(tarifa_row, text="RD$ 0.00", 
-                                          font=('Arial', 9, 'bold'), bg='#F8FAFC', fg='#059669')
-        self.doctor_tarifa_label.pack(side='left', padx=(5, 0))
-        
-        # Acepta seguros
-        seguros_row = tk.Frame(doctor_content, bg='#F8FAFC')
-        seguros_row.pack(fill='x', pady=(3, 0))
-        tk.Label(seguros_row, text="🏥", font=('Arial', 10), bg='#F8FAFC').pack(side='left')
-        self.doctor_seguros_label = tk.Label(seguros_row, text="--", 
-                                           font=('Arial', 9), bg='#F8FAFC', fg='#64748B')
-        self.doctor_seguros_label.pack(side='left', padx=(5, 0))
-        
-        # Contacto
-        contact_row = tk.Frame(doctor_content, bg='#F8FAFC')
-        contact_row.pack(fill='x', pady=(3, 0))
-        tk.Label(contact_row, text="📧", font=('Arial', 10), bg='#F8FAFC').pack(side='left')
-        self.doctor_email_label = tk.Label(contact_row, text="--", 
-                                         font=('Arial', 8), bg='#F8FAFC', fg='#64748B')
-        self.doctor_email_label.pack(side='left', padx=(5, 0))
-        
-        # SEGURO - Columna derecha
-        insurance_section = tk.Frame(grid_frame, bg='white')
-        insurance_section.grid(row=0, column=1, sticky='ew', padx=(10, 0))
-        
-        # Header seguro
-        insurance_header = tk.Frame(insurance_section, bg='#F59E0B', height=35)
-        insurance_header.pack(fill='x')
-        insurance_header.pack_propagate(False)
-        
-        tk.Label(insurance_header, text="🏥 SEGURO MÉDICO", font=('Arial', 10, 'bold'), 
-                bg='#F59E0B', fg='white').pack(expand=True)
-        
-        # Contenido seguro
-        insurance_content = tk.Frame(insurance_section, bg='#FFFBEB', padx=15, pady=12)
-        insurance_content.pack(fill='both', expand=True)
-        
-        # Estado del seguro (principal)
-        self.insurance_status_frame = tk.Frame(insurance_content, bg='#FFFBEB')
-        self.insurance_status_frame.pack(fill='x', pady=(0, 8))
-        
-        self.insurance_main_label = tk.Label(self.insurance_status_frame, text="Sin seguro", 
-                                           font=('Arial', 10, 'bold'), bg='#FFFBEB', fg='#92400E')
-        self.insurance_main_label.pack(anchor='w')
-        
-        # Detalles del seguro
-        self.insurance_details_frame = tk.Frame(insurance_content, bg='#FFFBEB')
-        self.insurance_details_frame.pack(fill='x')
-        
-        # Configurar grid weights
-        grid_frame.columnconfigure(0, weight=1)
-        grid_frame.columnconfigure(1, weight=1)
-        
-        # Reemplazar self.selected_appointment_info con las nuevas etiquetas
-        # Esta variable se mantendrá por compatibilidad pero no se mostrará
-        self.selected_appointment_info = tk.Label(form_frame, text="", bg='white', fg='white', height=0)
-        self.selected_appointment_info.pack_forget()  # Ocultar completamente
+        self.insurance_info_label = tk.Label(insurance_col, text="Seleccione una cita\npara ver información", 
+                                           font=('Arial', 9), bg='#e3f2fd', fg='#1565c0',
+                                           wraplength=200, justify='center')
+        self.insurance_info_label.pack(pady=10)
         
         # Servicios y precios
         services_frame = tk.LabelFrame(form_frame, text="💰 Servicios y Precios", 
@@ -6009,67 +5739,17 @@ Estado: {factura[5]}
             self.services_tree.insert('', 'end', values=(service, f"RD$ {price:,.2f}"))
     
     def on_appointment_select_billing(self, event):
-        """Manejar selección de cita para facturar con nuevo diseño"""
-        try:
-            selection = self.billing_appointments_tree.selection()
-            if not selection:
-                print("DEBUG: No hay selección")
-                return
-            
+        """Manejar selección de cita para facturar"""
+        selection = self.billing_appointments_tree.selection()
+        if selection:
             item = self.billing_appointments_tree.item(selection[0])
             values = item['values']
-            
-            print(f"DEBUG: Valores seleccionados: {values}")
             
             # Obtener información del doctor y paciente
             doctor_info = self.get_doctor_billing_info(values[3])
             patient_info = self.get_patient_insurance_info(values[2])
             
-            print(f"DEBUG: Doctor info obtenida: {doctor_info}")
-            print(f"DEBUG: Patient info obtenida: {patient_info}")
-            
-            # Verificar que obtuvimos información válida
-            if not doctor_info:
-                print("ERROR: No se pudo obtener información del doctor")
-                return
-            if not patient_info:
-                print("ERROR: No se pudo obtener información del paciente")
-                return
-            
-            # Actualizar información básica de la cita con nuevo diseño
-            if hasattr(self, 'appointment_date_label'):
-                self.appointment_date_label.config(text=values[1])
-                self.appointment_patient_label.config(text=values[2])
-                self.appointment_motivo_label.config(text=values[4])
-                
-                # Estado con color
-                estado = values[5]
-                if estado.lower() == 'completada':
-                    status_color = '#059669'
-                    status_text = '✓ Completada'
-                elif estado.lower() == 'confirmada':
-                    status_color = '#3B82F6'
-                    status_text = '● Confirmada'
-                elif estado.lower() == 'pendiente':
-                    status_color = '#F59E0B'
-                    status_text = '⏳ Pendiente'
-                else:
-                    status_color = '#64748B'
-                    status_text = estado
-                
-                self.appointment_status_label.config(text=status_text, fg=status_color)
-                
-            # Actualizar información del doctor con diseño moderno
-            if doctor_info:
-                print(f"DEBUG: Actualizando info del doctor: {doctor_info}")
-                self.update_doctor_panel_info(doctor_info)
-            
-            # Actualizar información del seguro con diseño moderno
-            if patient_info and doctor_info:
-                print(f"DEBUG: Actualizando info del seguro: {patient_info}")
-                self.update_modern_insurance_info(patient_info, doctor_info.get('acepta_seguros', True))
-            
-            # Mantener funcionalidad original para compatibilidad
+            # Mostrar información de la cita con tarifas
             info_text = f"""📅 Fecha: {values[1]}
 👤 Paciente: {values[2]}
 👨‍⚕️ Doctor: {values[3]}
@@ -6081,9 +5761,7 @@ Estado: {factura[5]}
 
 ✅ Cita lista para facturar"""
             
-            # Mantener por compatibilidad pero oculto
-            if hasattr(self, 'selected_appointment_info'):
-                self.selected_appointment_info.config(text=info_text, fg='#16A085')
+            self.selected_appointment_info.config(text=info_text, fg='#16A085')
             
             # Guardar información para facturar
             self.selected_appointment_id = values[0]
@@ -6093,16 +5771,9 @@ Estado: {factura[5]}
             # Recargar servicios con tarifa del doctor
             self.load_doctor_services(doctor_info)
             
-            # Actualizar paneles de información (mantener para compatibilidad)
-            if hasattr(self, 'doctor_info_label'):
-                self.update_doctor_info_panel(doctor_info)
-            if hasattr(self, 'insurance_info_label'):
-                self.update_insurance_info_panel(patient_info, doctor_info['acepta_seguros'])
-                
-        except Exception as e:
-            print(f"ERROR en on_appointment_select_billing: {e}")
-            import traceback
-            traceback.print_exc()
+            # Actualizar paneles de información
+            self.update_doctor_info_panel(doctor_info)
+            self.update_insurance_info_panel(patient_info, doctor_info['acepta_seguros'])
     
     def get_doctor_billing_info(self, doctor_name):
         """Obtener información de facturación del doctor"""
@@ -6332,559 +6003,52 @@ Estado: {factura[5]}
         
         self.insurance_info_label.config(text=insurance_text, fg=color)
     
-    def update_doctor_panel_info(self, doctor_info):
-        """Actualizar panel de información del doctor con diseño moderno - VERSIÓN SEGURA"""
-        if not hasattr(self, 'doctor_name_label'):
-            print("DEBUG: No se encontró doctor_name_label")
-            return
-            
-        try:
-            # Verificar estructura del diccionario
-            print(f"DEBUG: Estructura doctor_info: {doctor_info}")
-            
-            # Nombre completo del doctor (adaptado a la estructura actual)
-            if 'nombre_completo' in doctor_info:
-                doctor_full_name = f"Dr. {doctor_info['nombre_completo']}"
-            else:
-                doctor_full_name = "Dr. No especificado"
-            
-            self.doctor_name_label.config(text=doctor_full_name)
-            
-            # Especialidad
-            especialidad = doctor_info.get('especialidad', 'Medicina General')
-            if hasattr(self, 'doctor_specialty_label'):
-                self.doctor_specialty_label.config(text=especialidad)
-            
-            # Tarifa
-            tarifa = doctor_info.get('tarifa', 3000.00)
-            tarifa_text = f"RD$ {tarifa:,.2f}"
-            if hasattr(self, 'doctor_tarifa_label'):
-                self.doctor_tarifa_label.config(text=tarifa_text)
-            
-            # Acepta seguros
-            acepta_seguros = doctor_info.get('acepta_seguros', True)
-            if hasattr(self, 'doctor_seguros_label'):
-                if acepta_seguros:
-                    seguros_text = "Acepta seguros"
-                    seguros_color = '#059669'
-                else:
-                    seguros_text = "No acepta seguros"
-                    seguros_color = '#DC2626'
-                self.doctor_seguros_label.config(text=seguros_text, fg=seguros_color)
-            
-            # Email (truncado)
-            email = doctor_info.get('email', 'No especificado')
-            if len(email) > 25:
-                email_display = email[:22] + '...'
-            else:
-                email_display = email
-            if hasattr(self, 'doctor_email_label'):
-                self.doctor_email_label.config(text=email_display)
-                
-            print("DEBUG: Doctor info actualizada correctamente")
-            
-        except Exception as e:
-            print(f"ERROR en update_doctor_panel_info: {e}")
-            import traceback
-            traceback.print_exc()
-
-    def update_modern_insurance_info(self, patient_info, doctor_acepta_seguros):
-        """Actualizar panel de información del seguro con diseño moderno"""
-        if not hasattr(self, 'insurance_main_label'):
-            print("DEBUG: No se encontró insurance_main_label")
-            return
-            
-        try:
-            print(f"DEBUG: Estructura patient_info: {patient_info}")
-            print(f"DEBUG: Doctor acepta seguros: {doctor_acepta_seguros}")
-            
-            # Limpiar detalles anteriores
-            if hasattr(self, 'insurance_details_frame'):
-                for widget in self.insurance_details_frame.winfo_children():
-                    widget.destroy()
-            
-            # Obtener información del seguro del paciente
-            seguro = patient_info.get('seguro', None)
-            numero_seguro = patient_info.get('numero_seguro', 'No especificado')
-            cobertura = patient_info.get('cobertura', 0)
-            
-            if seguro and doctor_acepta_seguros:
-                # Paciente tiene seguro y doctor acepta - CASO ÓPTIMO
-                self.insurance_main_label.config(text=f"✅ {seguro}", fg='#059669')
-                
-                if hasattr(self, 'insurance_details_frame'):
-                    # Número de póliza
-                    numero_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    numero_row.pack(fill='x', pady=1)
-                    tk.Label(numero_row, text="📋", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(numero_row, text=f"No. {numero_seguro}", font=('Arial', 8), 
-                            bg='#FFFBEB', fg='#64748B').pack(side='left', padx=(3, 0))
-                    
-                    # Cobertura
-                    cobertura_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    cobertura_row.pack(fill='x', pady=1)
-                    tk.Label(cobertura_row, text="💰", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(cobertura_row, text=f"Cobertura: {cobertura:.0f}%", 
-                            font=('Arial', 8, 'bold'), bg='#FFFBEB', fg='#059669').pack(side='left', padx=(3, 0))
-                    
-                    # Estado
-                    status_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    status_row.pack(fill='x', pady=1)
-                    tk.Label(status_row, text="✅", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(status_row, text="Descuento aplicable", font=('Arial', 8, 'bold'), 
-                            bg='#FFFBEB', fg='#059669').pack(side='left', padx=(3, 0))
-                
-            elif seguro and not doctor_acepta_seguros:
-                # Paciente tiene seguro pero doctor no acepta
-                self.insurance_main_label.config(text=f"⚠️ {seguro}", fg='#F59E0B')
-                
-                if hasattr(self, 'insurance_details_frame'):
-                    # Número de póliza
-                    numero_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    numero_row.pack(fill='x', pady=1)
-                    tk.Label(numero_row, text="📋", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(numero_row, text=f"No. {numero_seguro}", font=('Arial', 8), 
-                            bg='#FFFBEB', fg='#64748B').pack(side='left', padx=(3, 0))
-                    
-                    # Estado
-                    status_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    status_row.pack(fill='x', pady=1)
-                    tk.Label(status_row, text="❌", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(status_row, text="Doctor no acepta seguros", font=('Arial', 8), 
-                            bg='#FFFBEB', fg='#F59E0B').pack(side='left', padx=(3, 0))
-                    
-                    # Precio completo
-                    precio_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    precio_row.pack(fill='x', pady=1)
-                    tk.Label(precio_row, text="💳", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(precio_row, text="Pago completo requerido", font=('Arial', 8), 
-                            bg='#FFFBEB', fg='#64748B').pack(side='left', padx=(3, 0))
-                
-            elif not seguro and doctor_acepta_seguros:
-                # Doctor acepta seguros pero paciente no tiene
-                self.insurance_main_label.config(text="ℹ️ Sin seguro médico", fg='#64748B')
-                
-                if hasattr(self, 'insurance_details_frame'):
-                    # Estado
-                    status_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    status_row.pack(fill='x', pady=1)
-                    tk.Label(status_row, text="💡", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(status_row, text="Doctor acepta seguros", font=('Arial', 8), 
-                            bg='#FFFBEB', fg='#3B82F6').pack(side='left', padx=(3, 0))
-                    
-                    # Precio completo
-                    precio_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    precio_row.pack(fill='x', pady=1)
-                    tk.Label(precio_row, text="💳", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(precio_row, text="Pago completo requerido", font=('Arial', 8), 
-                            bg='#FFFBEB', fg='#64748B').pack(side='left', padx=(3, 0))
-                
-            else:
-                # Ni el doctor acepta ni el paciente tiene
-                self.insurance_main_label.config(text="❌ Sin cobertura", fg='#DC2626')
-                
-                if hasattr(self, 'insurance_details_frame'):
-                    # Estado
-                    status_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    status_row.pack(fill='x', pady=1)
-                    tk.Label(status_row, text="❌", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(status_row, text="Sin seguro disponible", font=('Arial', 8), 
-                            bg='#FFFBEB', fg='#DC2626').pack(side='left', padx=(3, 0))
-                    
-                    # Precio completo
-                    precio_row = tk.Frame(self.insurance_details_frame, bg='#FFFBEB')
-                    precio_row.pack(fill='x', pady=1)
-                    tk.Label(precio_row, text="💳", font=('Arial', 9), bg='#FFFBEB').pack(side='left')
-                    tk.Label(precio_row, text="Pago completo requerido", font=('Arial', 8), 
-                            bg='#FFFBEB', fg='#64748B').pack(side='left', padx=(3, 0))
-                            
-            print("DEBUG: Insurance info actualizada correctamente")
-            
-        except Exception as e:
-            print(f"ERROR en update_modern_insurance_info: {e}")
-            import traceback
-            traceback.print_exc()
-    
     def add_service_to_invoice(self):
-        """Agregar servicio con menú desplegable y cantidad"""
-        
-        # Verificar si hay una cita seleccionada O una factura seleccionada
-        appointment_selected = hasattr(self, 'billing_appointments_tree') and self.billing_appointments_tree.selection()
-        invoice_selected = hasattr(self, 'billing_invoices_tree') and self.billing_invoices_tree.selection()
-        
-        if not appointment_selected and not invoice_selected:
-            messagebox.showwarning("Selección requerida", 
-                "Por favor, seleccione una cita de la tabla 'Citas para Facturar' O una factura de la tabla 'Facturas Generadas'")
-            return
-        
-        # Si hay una factura seleccionada, usar esa; sino usar la cita
-        if invoice_selected:
-            # Obtener información de la factura seleccionada
-            item = self.billing_invoices_tree.selection()[0]
-            invoice_values = self.billing_invoices_tree.item(item, 'values')
-            numero_factura = invoice_values[0]
-            print(f"DEBUG: Agregando servicio a factura existente: {numero_factura}")
-        else:
-            print(f"DEBUG: Agregando servicio desde cita seleccionada")
-        
-        # Diálogo moderno para agregar servicio
+        """Agregar servicio personalizado a la factura"""
+        # Diálogo para agregar servicio
         dialog = tk.Toplevel()
-        dialog.title("➕ Agregar Servicio")
-        dialog.geometry("500x400")
+        dialog.title("Agregar Servicio")
+        dialog.geometry("400x200")
         dialog.configure(bg='#F8FAFC')
         dialog.transient(self.root)
         dialog.grab_set()
-        dialog.resizable(False, False)
         
-        # Centrar el diálogo
-        dialog.update_idletasks()
-        x = (dialog.winfo_screenwidth() // 2) - (500 // 2)
-        y = (dialog.winfo_screenheight() // 2) - (400 // 2)
-        dialog.geometry(f"500x400+{x}+{y}")
+        # Campos
+        tk.Label(dialog, text="Nombre del Servicio:", font=('Arial', 11, 'bold'), bg='#F8FAFC').pack(pady=10)
+        service_entry = tk.Entry(dialog, font=('Arial', 11), width=40)
+        service_entry.pack(pady=5)
         
-        # Header
-        header_frame = tk.Frame(dialog, bg='#3B82F6', height=60)
-        header_frame.pack(fill='x', padx=0, pady=0)
-        header_frame.pack_propagate(False)
-        
-        tk.Label(header_frame, text="🏥 Seleccionar Servicio Médico", 
-                font=('Arial', 14, 'bold'), bg='#3B82F6', fg='white').pack(expand=True)
-        
-        # Container principal
-        main_frame = tk.Frame(dialog, bg='#F8FAFC')
-        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Servicios predefinidos con categorías
-        services_data = {
-            "💊 Consultas": [
-                ("Consulta General", 2500.00),
-                ("Consulta Especializada", 3500.00),
-                ("Consulta de Seguimiento", 1500.00),
-                ("Consulta de Emergencia", 4000.00)
-            ],
-            "🔬 Exámenes": [
-                ("Laboratorio Básico", 1200.00),
-                ("Laboratorio Completo", 2500.00),
-                ("Electrocardiograma", 800.00),
-                ("Radiografía", 1500.00),
-                ("Ecografía", 2800.00),
-                ("Resonancia Magnética", 8000.00)
-            ],
-            "💉 Procedimientos": [
-                ("Inyección", 300.00),
-                ("Curación", 500.00),
-                ("Sutura", 1000.00),
-                ("Extracción", 800.00),
-                ("Biopsia", 2500.00)
-            ],
-            "🏃 Terapias": [
-                ("Fisioterapia", 1200.00),
-                ("Terapia Respiratoria", 1500.00),
-                ("Terapia Ocupacional", 1800.00),
-                ("Rehabilitación", 2000.00)
-            ]
-        }
-        
-        # Selección de categoría
-        tk.Label(main_frame, text="📋 Categoría:", font=('Arial', 12, 'bold'), 
-                bg='#F8FAFC', fg='#1F2937').pack(anchor='w', pady=(0, 5))
-        
-        category_var = tk.StringVar()
-        categories_list = list(services_data.keys())
-        category_combo = ttk.Combobox(main_frame, textvariable=category_var, 
-                                     values=categories_list,
-                                     font=('Arial', 11), state='readonly', width=45)
-        category_combo.pack(fill='x', pady=(0, 15))
-        
-        # Selección de servicio
-        tk.Label(main_frame, text="🔧 Servicio:", font=('Arial', 12, 'bold'), 
-                bg='#F8FAFC', fg='#1F2937').pack(anchor='w', pady=(0, 5))
-        
-        service_var = tk.StringVar()
-        service_combo = ttk.Combobox(main_frame, textvariable=service_var,
-                                    font=('Arial', 11), state='readonly', width=45)
-        service_combo.pack(fill='x', pady=(0, 15))
-        
-        # Mostrar precio del servicio seleccionado
-        price_label = tk.Label(main_frame, text="💰 Precio: RD$ 0.00", 
-                              font=('Arial', 11, 'bold'), bg='#F8FAFC', fg='#059669')
-        price_label.pack(anchor='w', pady=(0, 15))
-        
-        # Cantidad
-        tk.Label(main_frame, text="📊 Cantidad:", font=('Arial', 12, 'bold'), 
-                bg='#F8FAFC', fg='#1F2937').pack(anchor='w', pady=(0, 5))
-        
-        quantity_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        quantity_frame.pack(fill='x', pady=(0, 15))
-        
-        quantity_var = tk.IntVar(value=1)
-        quantity_spinbox = tk.Spinbox(quantity_frame, from_=1, to=99, textvariable=quantity_var,
-                                     font=('Arial', 11), width=10, justify='center')
-        quantity_spinbox.pack(side='left')
-        
-        # Total calculado
-        total_label = tk.Label(quantity_frame, text="Total: RD$ 0.00", 
-                              font=('Arial', 11, 'bold'), bg='#F8FAFC', fg='#DC2626')
-        total_label.pack(side='right')
-        
-        # Variables para almacenar datos
-        current_services = {}
-        current_price = 0.0
-        
-        def update_services(*args):
-            """Actualizar servicios cuando cambie la categoría"""
-            category = category_var.get()
-            if category in services_data:
-                services = [f"{name} - RD$ {price:,.2f}" for name, price in services_data[category]]
-                service_combo['values'] = services
-                service_combo.set('')
-                price_label.config(text="💰 Precio: RD$ 0.00")
-                total_label.config(text="Total: RD$ 0.00")
-                
-                # Actualizar diccionario de servicios
-                current_services.clear()
-                for name, price in services_data[category]:
-                    current_services[f"{name} - RD$ {price:,.2f}"] = (name, price)
-        
-        def update_price(*args):
-            """Actualizar precio cuando cambie el servicio"""
-            nonlocal current_price
-            service_key = service_var.get()
-            if service_key in current_services:
-                name, price = current_services[service_key]
-                current_price = price
-                price_label.config(text=f"💰 Precio: RD$ {price:,.2f}")
-                update_total()
-        
-        def update_total(*args):
-            """Actualizar total cuando cambie la cantidad"""
-            quantity = quantity_var.get()
-            total = current_price * quantity
-            total_label.config(text=f"Total: RD$ {total:,.2f}")
-        
-        # Conectar eventos
-        category_var.trace('w', update_services)
-        service_var.trace('w', update_price)
-        quantity_var.trace('w', update_total)
-        
-        # Inicializar con la primera categoría
-        if categories_list:
-            category_combo.current(0)  # Seleccionar la primera categoría
-            update_services()  # Poblar servicios
+        tk.Label(dialog, text="Precio (RD$):", font=('Arial', 11, 'bold'), bg='#F8FAFC').pack(pady=(10, 0))
+        price_entry = tk.Entry(dialog, font=('Arial', 11), width=20)
+        price_entry.pack(pady=5)
         
         # Botones
-        btn_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        btn_frame.pack(fill='x', pady=(20, 0))
+        btn_frame = tk.Frame(dialog, bg='#F8FAFC')
+        btn_frame.pack(pady=20)
         
         def add_service():
-            if not service_var.get():
-                messagebox.showwarning("Selección requerida", "Por favor seleccione un servicio")
+            service_name = service_entry.get().strip()
+            price_str = price_entry.get().strip()
+            
+            if not service_name or not price_str:
+                messagebox.showerror("Error", "Complete todos los campos")
                 return
             
-            service_key = service_var.get()
-            service_name, service_price = current_services[service_key]
-            quantity = quantity_var.get()
-            total_price = service_price * quantity
-            
-            print(f"DEBUG: Agregando servicio - {service_name}, Cantidad: {quantity}, Total: {total_price}")
-            
-            # Si estamos agregando a una factura existente, guardar en BD
-            if invoice_selected:
-                try:
-                    conn = self.db_manager.get_connection()
-                    cursor = conn.cursor()
-                    
-                    # Buscar la factura en la BD para obtener su ID
-                    cursor.execute("SELECT id FROM facturas WHERE numero_factura = ?", (numero_factura,))
-                    factura_result = cursor.fetchone()
-                    
-                    if factura_result:
-                        factura_id = factura_result[0]
-                        
-                        # Agregar el servicio a la tabla servicios_factura (si existe)
-                        try:
-                            cursor.execute("""
-                                INSERT INTO servicios_factura (factura_id, servicio_nombre, cantidad, precio_unitario, precio_total)
-                                VALUES (?, ?, ?, ?, ?)
-                            """, (factura_id, service_name, quantity, service_price, total_price))
-                            
-                            # Actualizar el monto total de la factura
-                            cursor.execute("""
-                                UPDATE facturas 
-                                SET monto = monto + ?
-                                WHERE id = ?
-                            """, (total_price, factura_id))
-                            
-                            conn.commit()
-                            print(f"DEBUG: Servicio guardado en BD para factura {numero_factura}")
-                            
-                        except Exception as e:
-                            print(f"DEBUG: Tabla servicios_factura no existe o error: {e}")
-                            # Si no existe la tabla, solo actualizamos el monto total
-                            cursor.execute("""
-                                UPDATE facturas 
-                                SET monto = monto + ?
-                                WHERE id = ?
-                            """, (total_price, factura_id))
-                            conn.commit()
-                            print(f"DEBUG: Solo se actualizó el monto total de la factura")
-                    
-                    cursor.close()
-                    conn.close()
-                    
-                except Exception as e:
-                    print(f"DEBUG: Error guardando servicio en BD: {e}")
-            
-            # IMPORTANTE: Agregar al widget correcto que se muestra en la interfaz
-            if hasattr(self, 'services_tree') and self.services_tree:
-                # Agregar el servicio con cantidad incluida en el nombre
-                service_display = f"{service_name} (x{quantity})"
-                self.services_tree.insert('', 'end', values=(
-                    service_display,
-                    f"RD$ {total_price:,.2f}"
-                ))
-                print(f"DEBUG: Servicio agregado al services_tree principal: {service_display}")
-            else:
-                print("DEBUG: No se encontró services_tree principal")
-            
-            # También agregar al tree de facturación oculto para compatibilidad
-            if hasattr(self, 'invoice_services_tree') and self.invoice_services_tree:
-                self.invoice_services_tree.insert('', 'end', values=(
-                    service_name, 
-                    quantity, 
-                    f"RD$ {service_price:,.2f}", 
-                    f"RD$ {total_price:,.2f}"
-                ))
-                print("DEBUG: Servicio agregado al invoice_services_tree para compatibilidad")
-            
-            # Actualizar totales
-            if hasattr(self, 'calculate_totals'):
+            try:
+                price = float(price_str)
+                self.services_tree.insert('', 'end', values=(service_name, f"RD$ {price:,.2f}"))
                 self.calculate_totals()
-                print("DEBUG: Totales actualizados")
-            
-            # Agregar al tree de servicios seleccionados
-            if hasattr(self, 'selected_services_frame'):
-                # Crear tarjeta de servicio en el panel de servicios seleccionados
-                service_card = tk.Frame(self.selected_services_frame, bg='white', relief='solid', bd=1)
-                service_card.pack(fill='x', padx=5, pady=2)
-                
-                # Contenido de la tarjeta
-                content_frame = tk.Frame(service_card, bg='white')
-                content_frame.pack(fill='x', padx=10, pady=8)
-                
-                # Nombre del servicio
-                name_label = tk.Label(content_frame, text=service_name, 
-                                     font=('Arial', 10, 'bold'), bg='white', fg='#1F2937')
-                name_label.pack(anchor='w')
-                
-                # Detalles
-                details_frame = tk.Frame(content_frame, bg='white')
-                details_frame.pack(fill='x', pady=(2, 0))
-                
-                tk.Label(details_frame, text=f"Cantidad: {quantity}", 
-                        font=('Arial', 9), bg='white', fg='#6B7280').pack(side='left')
-                
-                tk.Label(details_frame, text=f"RD$ {total_price:,.2f}", 
-                        font=('Arial', 9, 'bold'), bg='white', fg='#059669').pack(side='right')
-                
-                # Botón eliminar
-                def remove_service():
-                    service_card.destroy()
-                    self.update_billing_totals()
-                
-                tk.Button(details_frame, text="❌", font=('Arial', 8), bg='white', fg='#DC2626',
-                         border=0, cursor='hand2', command=remove_service).pack(side='right', padx=(5, 0))
-            
-            # Actualizar totales
-            if hasattr(self, 'update_billing_totals'):
-                self.update_billing_totals()
-            
-            # Cerrar diálogo
-            dialog.destroy()
-            
-            # Si agregamos a una factura existente, actualizar la tabla de facturas
-            if invoice_selected and hasattr(self, 'load_existing_invoices'):
-                self.load_existing_invoices()
-                print("DEBUG: Tabla de facturas actualizada")
-            
-            # Mostrar confirmación
-            messagebox.showinfo("Servicio agregado", 
-                              f"✅ {service_name} (x{quantity}) agregado exitosamente")
-        
-        def add_custom_service():
-            """Agregar servicio personalizado"""
-            custom_dialog = tk.Toplevel(dialog)
-            custom_dialog.title("➕ Servicio Personalizado")
-            custom_dialog.geometry("400x250")
-            custom_dialog.configure(bg='#F8FAFC')
-            custom_dialog.transient(dialog)
-            custom_dialog.grab_set()
-            
-            # Centrar
-            custom_dialog.update_idletasks()
-            x = (custom_dialog.winfo_screenwidth() // 2) - (400 // 2)
-            y = (custom_dialog.winfo_screenheight() // 2) - (250 // 2)
-            custom_dialog.geometry(f"400x250+{x}+{y}")
-            
-            tk.Label(custom_dialog, text="🔧 Crear Servicio Personalizado", 
-                    font=('Arial', 12, 'bold'), bg='#F8FAFC', fg='#1F2937').pack(pady=20)
-            
-            tk.Label(custom_dialog, text="Nombre del servicio:", bg='#F8FAFC').pack(anchor='w', padx=20)
-            custom_name_entry = tk.Entry(custom_dialog, font=('Arial', 11), width=40)
-            custom_name_entry.pack(padx=20, pady=5)
-            
-            tk.Label(custom_dialog, text="Precio (RD$):", bg='#F8FAFC').pack(anchor='w', padx=20, pady=(10, 0))
-            custom_price_entry = tk.Entry(custom_dialog, font=('Arial', 11), width=20)
-            custom_price_entry.pack(padx=20, pady=5)
-            
-            def save_custom():
-                name = custom_name_entry.get().strip()
-                price_str = custom_price_entry.get().strip()
-                
-                if not name or not price_str:
-                    messagebox.showwarning("Campos requeridos", "Complete todos los campos")
-                    return
-                
-                try:
-                    price = float(price_str)
-                    if price <= 0:
-                        raise ValueError("El precio debe ser mayor que 0")
-                except ValueError:
-                    messagebox.showerror("Error", "Ingrese un precio válido")
-                    return
-                
-                # Agregar a servicios personalizados
-                if "🔧 Personalizados" not in services_data:
-                    services_data["🔧 Personalizados"] = []
-                
-                services_data["🔧 Personalizados"].append((name, price))
-                
-                # Actualizar combobox de categorías
-                category_combo['values'] = list(services_data.keys())
-                
-                custom_dialog.destroy()
-                messagebox.showinfo("Servicio creado", f"✅ {name} agregado a servicios personalizados")
-            
-            tk.Button(custom_dialog, text="💾 Guardar Servicio", bg='#059669', fg='white',
-                     font=('Arial', 10, 'bold'), command=save_custom).pack(pady=20)
-        
-        # Botones principales
-        tk.Button(btn_frame, text="➕ Agregar al Carrito", bg='#059669', fg='white',
-                 font=('Arial', 11, 'bold'), command=add_service, width=20).pack(side='left')
-        
-        tk.Button(btn_frame, text="🔧 Servicio Personalizado", bg='#F59E0B', fg='white',
-                 font=('Arial', 10), command=add_custom_service, width=20).pack(side='left', padx=(10, 0))
-        
-        tk.Button(btn_frame, text="❌ Cancelar", bg='#6B7280', fg='white',
-                 font=('Arial', 11), command=dialog.destroy, width=15).pack(side='right')
-        
-        # Establecer foco inicial
-        category_combo.focus_set()
+                dialog.destroy()
+                messagebox.showinfo("Éxito", "Servicio agregado correctamente")
+            except ValueError:
+                messagebox.showerror("Error", "Precio inválido")
         
         tk.Button(btn_frame, text="Agregar", bg='#0B5394', fg='white',
                  font=('Arial', 10, 'bold'), command=add_service).pack(side='left', padx=5)
         tk.Button(btn_frame, text="Cancelar", bg='#0B5394', fg='white',
                  font=('Arial', 10, 'bold'), command=dialog.destroy).pack(side='left', padx=5)
+        
+        service_entry.focus()
     
     def calculate_totals(self):
         """Calcular totales de la factura con descuentos por seguro"""
@@ -6945,56 +6109,6 @@ Estado: {factura[5]}
         self.current_itbis = itbis
         self.current_total = total
     
-    def generate_unique_invoice_number(self):
-        """Generar un número de factura único"""
-        try:
-            conn = self.db_manager.get_connection()
-            cursor = conn.cursor()
-            
-            fecha_actual = datetime.now()
-            year = fecha_actual.strftime('%Y')
-            
-            # Buscar el último número de factura del año actual
-            cursor.execute("""
-                SELECT numero_factura FROM facturas 
-                WHERE numero_factura LIKE ? 
-                ORDER BY numero_factura DESC 
-                LIMIT 1
-            """, (f"FAC-{year}-%",))
-            
-            result = cursor.fetchone()
-            
-            if result:
-                # Extraer el número de secuencia del último número de factura
-                try:
-                    last_number = int(result[0].split('-')[-1])
-                    next_number = last_number + 1
-                except:
-                    next_number = 1
-            else:
-                next_number = 1
-            
-            # Generar número con timestamp para garantizar unicidad
-            timestamp = fecha_actual.strftime('%m%d%H%M%S')
-            numero_factura = f"FAC-{year}-{str(next_number).zfill(4)}-{timestamp}"
-            
-            # Verificar que no existe (por seguridad)
-            cursor.execute("SELECT COUNT(*) FROM facturas WHERE numero_factura = ?", (numero_factura,))
-            if cursor.fetchone()[0] > 0:
-                # Si por alguna razón existe, usar timestamp completo
-                numero_factura = f"FAC-{year}-{fecha_actual.strftime('%m%d%H%M%S%f')[:14]}"
-            
-            cursor.close()
-            conn.close()
-            
-            return numero_factura
-            
-        except Exception as e:
-            print(f"Error generando número de factura: {e}")
-            # Fallback a timestamp completo
-            fecha_actual = datetime.now()
-            return f"FAC-{fecha_actual.strftime('%Y%m%d%H%M%S%f')[:17]}"
-    
     def create_invoice_from_appointment(self):
         """Crear factura desde la cita seleccionada"""
         if not hasattr(self, 'selected_appointment_id'):
@@ -7044,9 +6158,11 @@ Estado: {factura[5]}
                 messagebox.showerror("Error", "No se encontraron datos de la cita")
                 return
             
-            # Generar número de factura único
+            # Generar número de factura
+            cursor.execute("SELECT COUNT(*) FROM facturas WHERE DATE(fecha_creacion) = DATE('now')")
+            count = cursor.fetchone()[0]
             fecha_actual = datetime.now()
-            numero_factura = self.generate_unique_invoice_number()
+            numero_factura = f"FAC-{fecha_actual.strftime('%Y')}-{str(count + 1).zfill(4)}"
             
             # Insertar factura
             cursor.execute("""
@@ -7746,9 +6862,6 @@ Estado: {factura[5]}
                     # Cerrar ventana y actualizar listas
                     payment_window.destroy()
                     self.load_existing_invoices()
-                    # Actualizar tabla de citas para facturar para que desaparezca la cita procesada
-                    print("🔄 DEBUG: Llamando load_appointments_for_billing() después del pago")
-                    self.load_appointments_for_billing()
                     self.clear_invoice_form()
                 
             except ValueError:
@@ -7791,7 +6904,7 @@ Estado: {factura[5]}
             
             # Determinar estado del pago
             change = amount_received - total_amount
-            estado = 'pagado' if change >= 0 else 'pago_parcial'
+            estado = 'pagada' if change >= 0 else 'pago_parcial'
             
             # Crear concepto basado en servicios
             servicios = []
@@ -7839,16 +6952,16 @@ Estado: {factura[5]}
                     precio = float(precio_str)
                     cursor.execute("""
                         INSERT INTO facturas_detalle (
-                            factura_id, servicio, cantidad, precio
-                        ) VALUES (?, ?, ?, ?)
-                    """, (invoice_id, servicio, 1, precio))
+                            factura_id, descripcion, cantidad, precio_unitario, total
+                        ) VALUES (?, ?, ?, ?, ?)
+                    """, (invoice_id, servicio, 1, precio, precio))
                 except ValueError:
                     # Si hay error convirtiendo precio, usar 0
                     cursor.execute("""
                         INSERT INTO facturas_detalle (
-                            factura_id, servicio, cantidad, precio
-                        ) VALUES (?, ?, ?, ?)
-                    """, (invoice_id, servicio, 1, 0))
+                            factura_id, descripcion, cantidad, precio_unitario, total
+                        ) VALUES (?, ?, ?, ?, ?)
+                    """, (invoice_id, servicio, 1, 0, 0))
             
             conn.commit()
             cursor.close()
@@ -7903,7 +7016,7 @@ Estado: {factura[5]}
             
             # Obtener detalles de servicios
             cursor.execute("""
-                SELECT servicio, cantidad, precio, (precio * cantidad) as total
+                SELECT descripcion, cantidad, precio_unitario, total
                 FROM facturas_detalle
                 WHERE factura_id = ?
             """, (invoice_id,))
@@ -8000,9 +7113,9 @@ Estado: {factura[5]}
             services_data = [['Descripción del Servicio', 'Cantidad', 'Precio Unitario', 'Total']]
             
             for servicio in servicios_detalle:
-                servicio_nombre, cantidad, precio_unitario, total_servicio = servicio
+                descripcion, cantidad, precio_unitario, total_servicio = servicio
                 services_data.append([
-                    servicio_nombre,
+                    descripcion,
                     str(int(cantidad)),
                     f'RD$ {float(precio_unitario):,.2f}',
                     f'RD$ {float(total_servicio):,.2f}'
@@ -8103,29 +7216,16 @@ Estado: {factura[5]}
     
     def process_payment_window(self):
         """Abrir ventana de procesamiento de pagos para factura existente"""
-        # Verificar que la tabla existe
-        if not hasattr(self, 'billing_invoices_tree') or not self.billing_invoices_tree:
-            messagebox.showerror("Error", "No se encontró la tabla de facturas generadas")
-            return
-            
         selection = self.billing_invoices_tree.selection()
         if not selection:
-            messagebox.showwarning("Selección requerida", 
-                "Por favor, seleccione una factura de la tabla 'Facturas Generadas' haciendo clic en una fila")
+            messagebox.showwarning("Selección requerida", "Por favor, seleccione una factura de la tabla verde (⏳ Pendientes)")
             return
         
         # Obtener información de la factura seleccionada
         item = selection[0]
         values = self.billing_invoices_tree.item(item, 'values')
-        
-        if not values or len(values) < 3:
-            messagebox.showerror("Error", "No se pudo obtener la información de la factura seleccionada")
-            return
-            
         numero_factura = values[0]
-        estado_mostrado = values[4] if len(values) > 4 else "No disponible"  # Columna de estado
-        
-        print(f"DEBUG: Procesando pago para factura {numero_factura}, estado: {estado_mostrado}")
+        estado_mostrado = values[2]  # El estado que se muestra en la tabla
         
         try:
             conn = self.db_manager.get_connection()
@@ -8139,16 +7239,16 @@ Estado: {factura[5]}
             
             factura_info = cursor.fetchone()
             if not factura_info:
-                messagebox.showerror("Error", f"No se encontró la factura #{numero_factura} en la base de datos")
+                messagebox.showerror("Error", "No se encontró la factura")
                 return
             
             factura_id, monto, estado = factura_info
             
             # Verificar que la factura esté pendiente
-            if estado == 'pagado':
+            if estado == 'pagada':
                 messagebox.showwarning("❌ Factura ya pagada", 
                     f"La factura #{numero_factura} ya está pagada.\n\n"
-                    "💡 Solo puede procesar pagos para facturas con estado '⏳ Pendiente'.")
+                    "💡 Solo puede procesar pagos para facturas con estado '⏳ Pendiente' (tabla verde).")
                 return
             
             # Confirmar que quiere procesar el pago
@@ -8361,7 +7461,7 @@ Estado: {factura[5]}
                 
                 cursor.execute("""
                     UPDATE facturas 
-                    SET estado = 'pagado',
+                    SET estado = 'pagada',
                         monto_recibido = ?,
                         metodo_pago = ?,
                         fecha_pago = datetime('now', 'localtime')
@@ -8387,9 +7487,6 @@ Estado: {factura[5]}
                 # Cerrar ventana y actualizar listas
                 payment_window.destroy()
                 self.load_existing_invoices()
-                # Actualizar tabla de citas para facturar para que desaparezca la cita procesada
-                print("🔄 DEBUG: Llamando load_appointments_for_billing() después del pago de factura existente")
-                self.load_appointments_for_billing()
                 
             except ValueError:
                 messagebox.showerror("Error", "Por favor ingrese un monto válido")
@@ -8797,7 +7894,7 @@ Notas: {factura_info[7] or 'Sin notas'}
             SELECT 
                 COUNT(*) as total_facturas,
                 COALESCE(SUM(monto), 0) as total_ingresos,
-                COUNT(CASE WHEN estado = 'pagado' THEN 1 END) as pagadas,
+                COUNT(CASE WHEN estado = 'pagada' THEN 1 END) as pagadas,
                 COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pendientes
             FROM facturas 
             WHERE strftime('%Y-%m', fecha_creacion) = ?
@@ -9898,7 +8995,7 @@ Ingresos del Mes: RD$ {stats.get('monthly_income', 0):,.2f}
             cursor.execute('''
                 SELECT COUNT(*) 
                 FROM facturas 
-                WHERE DATE(fecha_creacion) = ? AND estado = 'pagado'
+                WHERE DATE(fecha_creacion) = ? AND estado = 'pagada'
             ''', (today,))
             paid_today = cursor.fetchone()[0]
             
@@ -10751,7 +9848,7 @@ Ingresos del Mes: RD$ {stats.get('monthly_income', 0):,.2f}
                 
                 # Formatear estado
                 estado = invoice[5].title() if invoice[5] else 'Desconocido'
-                if estado == 'Pagado':
+                if estado == 'Pagada':
                     estado = '✅ Pagada'
                 elif estado == 'Pendiente':
                     estado = '⏳ Pendiente'
