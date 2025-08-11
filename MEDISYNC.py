@@ -65,6 +65,12 @@ class MedisyncApp:
             self.root.title("MEDISYNC - Sistema de Gestión Médica")
             self.root.geometry("500x400")
             self.root.configure(bg='#F8FAFC')
+            # Aplicar tema moderno ttk
+            try:
+                from ui_theme import apply_theme
+                apply_theme(self.root)
+            except Exception as _e:
+                pass
     
     def create_login_window(self):
         """Crear ventana de login moderna y estética"""
@@ -78,6 +84,13 @@ class MedisyncApp:
         # Centrar ventana
         self.center_window(self.root, 750, 850)
         
+        # Aplicar tema ttk
+        try:
+            from ui_theme import apply_theme
+            apply_theme(self.root)
+        except Exception:
+            pass
+
         # Configurar fondo
         self.root.configure(bg='#F8FAFC')
         
@@ -1066,7 +1079,8 @@ class MedisyncApp:
     def get_doctors_list(self):
         """Obtener lista de doctores para el filtro"""
         try:
-            cursor = self.db.connection.cursor()
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
             cursor.execute("""
                 SELECT DISTINCT nombre || ' ' || apellido as doctor_name 
                 FROM usuarios 
@@ -1074,7 +1088,10 @@ class MedisyncApp:
                 ORDER BY nombre, apellido
             """)
             doctors = cursor.fetchall()
-            return [doctor[0] for doctor in doctors]
+            result = [doctor[0] for doctor in doctors]
+            cursor.close()
+            conn.close()
+            return result
         except Exception as e:
             print(f"Error al obtener doctores: {e}")
             return []
@@ -8854,73 +8871,1685 @@ Notas: {factura_info[7] or 'Sin notas'}
             messagebox.showerror("Error", f"Error cargando facturas: {str(e)}")
     
     def create_reports_tab(self, parent):
-        """Crear pestaña de reportes"""
+        """Crear pestaña de reportes con diseño moderno"""
         # Frame principal
         main_frame = tk.Frame(parent, bg='#F8FAFC')
-        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        main_frame.pack(fill='both', expand=True, padx=15, pady=15)
         
-        # Título
-        tk.Label(main_frame, text="Reportes y Estadísticas", 
-                font=('Arial', 16, 'bold'), bg='#F8FAFC').pack(pady=(0, 20))
+        # Header moderno
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=70)
+        header_frame.pack(fill='x', pady=(0, 20))
+        header_frame.pack_propagate(False)
         
-        # Botones de reportes
-        reports_frame = tk.LabelFrame(main_frame, text="Generar Reportes", 
-                                     font=('Arial', 12, 'bold'), padx=20, pady=15)
-        reports_frame.pack(fill='x', pady=10)
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=20, pady=10)
+        
+        tk.Label(header_content, text="📊", font=('Arial', 18), bg='#1E3A8A', fg='white').pack(side='left', pady=8)
+        tk.Label(header_content, text="REPORTES Y ESTADÍSTICAS", 
+                font=('Arial', 14, 'bold'), bg='#1E3A8A', fg='white').pack(side='left', padx=(10, 0), pady=8)
+        tk.Label(header_content, text="Informes detallados del sistema", 
+                font=('Arial', 10), bg='#1E3A8A', fg='#CBD5E1').pack(side='left', padx=(15, 0), pady=8)
+        
+        # Contenido dividido en paneles
+        content_frame = tk.Frame(main_frame, bg='#F8FAFC')
+        content_frame.pack(fill='both', expand=True)
+        
+        # Panel izquierdo: Reportes principales
+        left_panel = tk.Frame(content_frame, bg='#F8FAFC', width=400)
+        left_panel.pack(side='left', fill='y', padx=(0, 15))
+        left_panel.pack_propagate(False)
+        
+        # Panel derecho: Estadísticas y reportes rápidos
+        right_panel = tk.Frame(content_frame, bg='#F8FAFC')
+        right_panel.pack(side='right', fill='both', expand=True)
+        
+        # Reportes principales
+        reports_frame = tk.LabelFrame(
+            left_panel, 
+            text="📋 REPORTES PRINCIPALES", 
+            font=('Arial', 12, 'bold'),
+            bg='#e3f2fd',
+            fg='#1565c0',
+            padx=20, 
+            pady=15
+        )
+        reports_frame.pack(fill='x', pady=(0, 15))
         
         reports_buttons = [
-            ("📊 Reporte de Ingresos Mensual", self.generate_income_report, "#0B5394"),
+            ("� Reporte de Ingresos", self.generate_income_report, "#0B5394"),
             ("📋 Facturas Pendientes", self.generate_pending_invoices_report, "#C0392B"),
             ("👥 Estadísticas de Usuarios", self.generate_users_report, "#16A085"),
-            ("📅 Reporte de Citas", self.generate_appointments_report, "#059669")
+            ("📅 Reporte de Citas", self.generate_appointments_report, "#059669"),
+            ("💰 Estado Financiero", self.generate_financial_report, "#E67E22"),
+            ("🏥 Reporte de Servicios", self.generate_services_report, "#8e44ad")
         ]
         
-        for i, (text, command, color) in enumerate(reports_buttons):
-            btn = tk.Button(reports_frame, text=text, command=command, 
-                           bg=color, fg='white', font=('Arial', 10, 'bold'),
-                           width=25, height=2)
-            btn.grid(row=i//2, column=i%2, padx=10, pady=10)
+        for text, command, color in reports_buttons:
+            btn = tk.Button(
+                reports_frame, 
+                text=text, 
+                command=command,
+                bg=color, 
+                fg='white', 
+                font=('Arial', 10, 'bold'),
+                relief='flat',
+                padx=15,
+                pady=8,
+                cursor='hand2'
+            )
+            btn.pack(fill='x', pady=5)
+            
+            # Efectos hover
+            def on_enter(e, button=btn, original_color=color):
+                button.configure(bg=self.darken_color(original_color))
+            def on_leave(e, button=btn, original_color=color):
+                button.configure(bg=original_color)
+            
+            btn.bind("<Enter>", on_enter)
+            btn.bind("<Leave>", on_leave)
         
-        # Estadísticas rápidas
-        stats_frame = tk.LabelFrame(main_frame, text="Estadísticas Rápidas", 
-                                   font=('Arial', 12, 'bold'), padx=20, pady=15)
-        stats_frame.pack(fill='both', expand=True, pady=10)
+        # Panel de exportación
+        export_frame = tk.LabelFrame(
+            left_panel,
+            text="💾 EXPORTAR DATOS",
+            font=('Arial', 12, 'bold'),
+            bg='#fff3e0',
+            fg='#e65100',
+            padx=20,
+            pady=15
+        )
+        export_frame.pack(fill='x', pady=(0, 15))
         
+        export_buttons = [
+            ("📄 Exportar a PDF", self.export_all_reports_pdf, "#0B5394"),
+            ("📊 Exportar a Excel", self.export_to_excel, "#16A085"),
+            ("📧 Enviar por Email", self.email_reports, "#E67E22")
+        ]
+        
+        for text, command, color in export_buttons:
+            btn = tk.Button(
+                export_frame,
+                text=text,
+                command=command,
+                bg=color,
+                fg='white',
+                font=('Arial', 10, 'bold'),
+                relief='flat',
+                padx=15,
+                pady=6
+            )
+            btn.pack(fill='x', pady=3)
+        
+        # Estadísticas en tiempo real
+        stats_frame = tk.LabelFrame(
+            right_panel,
+            text="📊 ESTADÍSTICAS EN TIEMPO REAL",
+            font=('Arial', 12, 'bold'),
+            bg='#e8f5e8',
+            fg='#2e7d32',
+            padx=20,
+            pady=15
+        )
+        stats_frame.pack(fill='x', pady=(0, 15))
+        
+        # Crear área de estadísticas
+        self.create_stats_display(stats_frame)
+        
+        # Panel de filtros avanzados
+        filters_frame = tk.LabelFrame(
+            right_panel,
+            text="🔍 FILTROS AVANZADOS",
+            font=('Arial', 12, 'bold'),
+            bg='#fce4ec',
+            fg='#c2185b',
+            padx=20,
+            pady=15
+        )
+        filters_frame.pack(fill='x', pady=(0, 15))
+        
+        # Crear controles de filtros
+        self.create_report_filters(filters_frame)
+        
+        # Panel de acceso rápido
+        quick_frame = tk.LabelFrame(
+            right_panel,
+            text="⚡ ACCESO RÁPIDO",
+            font=('Arial', 12, 'bold'),
+            bg='#f3e5f5',
+            fg='#7b1fa2',
+            padx=20,
+            pady=15
+        )
+        quick_frame.pack(fill='both', expand=True)
+        
+        quick_actions = [
+            ("📈 Dashboard Ejecutivo", self.show_executive_dashboard),
+            ("🔄 Actualizar Datos", self.refresh_all_data),
+            ("⚙️ Configurar Reportes", self.configure_reports),
+            ("📋 Plantillas", self.manage_report_templates)
+        ]
+        
+        for text, command in quick_actions:
+            btn = tk.Button(
+                quick_frame,
+                text=text,
+                command=command,
+                bg='#64748B',
+                fg='white',
+                font=('Arial', 9, 'bold'),
+                relief='flat',
+                padx=10,
+                pady=5
+            )
+            btn.pack(fill='x', pady=3)
+
+    def create_stats_display(self, parent):
+        """Crear área de estadísticas en tiempo real"""
         try:
             stats = self.get_system_stats()
             
-            stats_text = f"""
-Total de Usuarios: {stats.get('total_users', 0)}
-Total de Pacientes: {stats.get('total_patients', 0)}
-Citas de Hoy: {stats.get('appointments_today', 0)}
-Facturas Pendientes: {stats.get('pending_invoices', 0)}
-Ingresos del Mes: RD$ {stats.get('monthly_income', 0):,.2f}
-            """
+            # Grid de estadísticas
+            stats_grid = tk.Frame(parent, bg='#e8f5e8')
+            stats_grid.pack(fill='x', pady=10)
             
-            tk.Label(stats_frame, text=stats_text, font=('Arial', 12), 
-                    justify='left', bg='#F8FAFC').pack(pady=10)
+            stats_data = [
+                ("👥 Total Usuarios", stats.get('total_users', 0), "#0B5394"),
+                ("🤒 Total Pacientes", stats.get('total_patients', 0), "#16A085"),
+                ("📅 Citas Hoy", stats.get('appointments_today', 0), "#E67E22"),
+                ("💰 Ingresos Mes", f"₡{stats.get('monthly_income', 0):,.2f}", "#059669"),
+                ("📋 Fact. Pendientes", stats.get('pending_invoices', 0), "#C0392B"),
+                ("👨‍⚕️ Doctores Activos", stats.get('active_doctors', 0), "#8e44ad")
+            ]
+            
+            for i, (label, value, color) in enumerate(stats_data):
+                card = tk.Frame(stats_grid, bg='white', relief='solid', bd=1)
+                card.grid(row=i//2, column=i%2, padx=8, pady=5, sticky='ew')
+                
+                tk.Label(card, text=str(value), font=('Arial', 16, 'bold'), 
+                        fg=color, bg='white').pack(pady=(8, 2))
+                tk.Label(card, text=label, font=('Arial', 9), 
+                        fg='#64748B', bg='white').pack(pady=(0, 8))
+            
+            # Configurar grid
+            stats_grid.grid_columnconfigure(0, weight=1)
+            stats_grid.grid_columnconfigure(1, weight=1)
             
         except Exception as e:
-            tk.Label(stats_frame, text=f"Error cargando estadísticas: {str(e)}", 
-                    fg='red', bg='#F8FAFC').pack()
-    
+            tk.Label(parent, text=f"Error cargando estadísticas: {str(e)}", 
+                    fg='red', bg='#e8f5e8').pack()
+
+    def create_report_filters(self, parent):
+        """Crear controles de filtros para reportes"""
+        # Filtro de fechas
+        date_frame = tk.Frame(parent, bg='#fce4ec')
+        date_frame.pack(fill='x', pady=5)
+        
+        tk.Label(date_frame, text="📅 Período:", font=('Arial', 10, 'bold'),
+                bg='#fce4ec', fg='#c2185b').pack(side='left')
+        
+        self.report_period_filter = ttk.Combobox(
+            date_frame, 
+            values=['Hoy', 'Esta Semana', 'Este Mes', 'Últimos 3 Meses', 'Este Año', 'Personalizado'],
+            state='readonly',
+            width=15
+        )
+        self.report_period_filter.set('Este Mes')
+        self.report_period_filter.pack(side='left', padx=(10, 0))
+        
+        # Filtro de tipo
+        type_frame = tk.Frame(parent, bg='#fce4ec')
+        type_frame.pack(fill='x', pady=5)
+        
+        tk.Label(type_frame, text="📊 Tipo:", font=('Arial', 10, 'bold'),
+                bg='#fce4ec', fg='#c2185b').pack(side='left')
+        
+        self.report_type_filter = ttk.Combobox(
+            type_frame,
+            values=['Todos', 'Financieros', 'Operativos', 'Médicos', 'Administrativos'],
+            state='readonly',
+            width=15
+        )
+        self.report_type_filter.set('Todos')
+        self.report_type_filter.pack(side='left', padx=(10, 0))
+        
+        # Botón aplicar filtros
+        tk.Button(
+            parent,
+            text="🔍 Aplicar Filtros",
+            command=self.apply_report_filters,
+            bg='#c2185b',
+            fg='white',
+            font=('Arial', 10, 'bold'),
+            relief='flat',
+            padx=15,
+            pady=8
+        ).pack(fill='x', pady=(10, 0))
+
+    def darken_color(self, color):
+        """Oscurecer un color hexadecimal para efectos hover"""
+        color = color.lstrip('#')
+        rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
+        darker_rgb = tuple(max(0, int(c * 0.8)) for c in rgb)
+        return '#%02x%02x%02x' % darker_rgb
+
     def generate_income_report(self):
-        """Generar reporte de ingresos"""
-        messagebox.showinfo("Reporte", "Generando reporte de ingresos mensual...")
+        """Generar reporte de ingresos con selección de fechas"""
+        self.show_report_dialog("Reporte de Ingresos", "income")
     
     def generate_pending_invoices_report(self):
         """Generar reporte de facturas pendientes"""
-        messagebox.showinfo("Reporte", "Generando reporte de facturas pendientes...")
+        self.show_report_dialog("Facturas Pendientes", "pending_invoices")
     
     def generate_users_report(self):
         """Generar reporte de usuarios"""
-        messagebox.showinfo("Reporte", "Generando estadísticas de usuarios...")
+        self.show_report_dialog("Estadísticas de Usuarios", "users")
     
     def generate_appointments_report(self):
         """Generar reporte de citas"""
-        messagebox.showinfo("Reporte", "Generando reporte de citas...")
+        self.show_report_dialog("Reporte de Citas", "appointments")
+        
+    def generate_financial_report(self):
+        """Generar reporte financiero completo"""
+        self.show_report_dialog("Estado Financiero", "financial")
+        
+    def generate_services_report(self):
+        """Generar reporte de servicios médicos"""
+        self.show_report_dialog("Reporte de Servicios", "services")
     
-    def create_doctor_menu(self, parent):
+    def show_report_dialog(self, report_title, report_type):
+        """Mostrar diálogo de configuración de reportes con selección de fechas"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title(f"Configurar {report_title}")
+        dialog.geometry("500x600")
+        dialog.configure(bg='#F8FAFC')
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # Centrar ventana
+        dialog.update_idletasks()
+        x = (dialog.winfo_screenwidth() // 2) - (500 // 2)
+        y = (dialog.winfo_screenheight() // 2) - (600 // 2)
+        dialog.geometry(f"500x600+{x}+{y}")
+        
+        # Header
+        header = tk.Frame(dialog, bg='#0B5394', height=70)
+        header.pack(fill='x')
+        header.pack_propagate(False)
+        
+        header_content = tk.Frame(header, bg='#0B5394')
+        header_content.pack(expand=True, fill='both', padx=20, pady=15)
+        
+        tk.Label(header_content, text="📊", font=('Arial', 18), bg='#0B5394', fg='white').pack(side='left')
+        tk.Label(header_content, text=report_title.upper(), 
+                font=('Arial', 14, 'bold'), bg='#0B5394', fg='white').pack(side='left', padx=(10, 0))
+        
+        # Contenido principal
+        content = tk.Frame(dialog, bg='#F8FAFC')
+        content.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Configuración de fechas
+        date_frame = tk.LabelFrame(content, text="📅 Configuración de Fechas", 
+                                  font=('Arial', 12, 'bold'), padx=15, pady=15, bg='#F8FAFC')
+        date_frame.pack(fill='x', pady=(0, 15))
+        
+        # Tipo de período
+        period_frame = tk.Frame(date_frame, bg='#F8FAFC')
+        period_frame.pack(fill='x', pady=5)
+        
+        tk.Label(period_frame, text="Período:", font=('Arial', 10, 'bold'), 
+                bg='#F8FAFC').pack(side='left')
+        
+        period_var = tk.StringVar(value="Este Mes")
+        period_combo = ttk.Combobox(period_frame, textvariable=period_var,
+                                   values=['Hoy', 'Ayer', 'Esta Semana', 'Semana Pasada', 
+                                          'Este Mes', 'Mes Pasado', 'Este Año', 'Año Pasado', 'Personalizado'],
+                                   state='readonly', width=20)
+        period_combo.pack(side='left', padx=(10, 0))
+        
+        # Fechas personalizadas (inicialmente ocultas)
+        custom_frame = tk.Frame(date_frame, bg='#F8FAFC')
+        custom_frame.pack(fill='x', pady=10)
+        custom_frame.pack_forget()  # Ocultar inicialmente
+        
+        # Fecha inicio
+        start_frame = tk.Frame(custom_frame, bg='#F8FAFC')
+        start_frame.pack(fill='x', pady=5)
+        
+        tk.Label(start_frame, text="Fecha Inicio:", font=('Arial', 10), bg='#F8FAFC').pack(side='left')
+        start_date_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
+        start_date_entry = tk.Entry(start_frame, textvariable=start_date_var, width=15)
+        start_date_entry.pack(side='left', padx=(10, 0))
+        
+        if CALENDAR_AVAILABLE:
+            tk.Button(start_frame, text="📅", command=lambda: self.select_date_calendar(start_date_var),
+                     bg='#0B5394', fg='white', font=('Arial', 8)).pack(side='left', padx=5)
+        
+        # Fecha fin
+        end_frame = tk.Frame(custom_frame, bg='#F8FAFC')
+        end_frame.pack(fill='x', pady=5)
+        
+        tk.Label(end_frame, text="Fecha Fin:", font=('Arial', 10), bg='#F8FAFC').pack(side='left')
+        end_date_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
+        end_date_entry = tk.Entry(end_frame, textvariable=end_date_var, width=15)
+        end_date_entry.pack(side='left', padx=(10, 0))
+        
+        if CALENDAR_AVAILABLE:
+            tk.Button(end_frame, text="📅", command=lambda: self.select_date_calendar(end_date_var),
+                     bg='#0B5394', fg='white', font=('Arial', 8)).pack(side='left', padx=5)
+        
+        # Función para mostrar/ocultar fechas personalizadas
+        def on_period_change(*args):
+            if period_var.get() == 'Personalizado':
+                custom_frame.pack(fill='x', pady=10)
+            else:
+                custom_frame.pack_forget()
+        
+        period_var.trace('w', on_period_change)
+        
+        # Opciones de formato
+        format_frame = tk.LabelFrame(content, text="📋 Opciones de Formato", 
+                                    font=('Arial', 12, 'bold'), padx=15, pady=15, bg='#F8FAFC')
+        format_frame.pack(fill='x', pady=(0, 15))
+        
+        # Tipo de salida
+        output_frame = tk.Frame(format_frame, bg='#F8FAFC')
+        output_frame.pack(fill='x', pady=5)
+        
+        tk.Label(output_frame, text="Formato de Salida:", font=('Arial', 10, 'bold'), 
+                bg='#F8FAFC').pack(side='left')
+        
+        output_var = tk.StringVar(value="PDF")
+        output_combo = ttk.Combobox(output_frame, textvariable=output_var,
+                                   values=['PDF', 'Excel', 'Vista Previa'], state='readonly', width=15)
+        output_combo.pack(side='left', padx=(10, 0))
+        
+        # Opciones adicionales según el tipo de reporte
+        options_frame = tk.LabelFrame(content, text="⚙️ Opciones Específicas", 
+                                     font=('Arial', 12, 'bold'), padx=15, pady=15, bg='#F8FAFC')
+        options_frame.pack(fill='x', pady=(0, 15))
+        
+        # Variables para opciones específicas
+        include_charts = tk.BooleanVar(value=True)
+        include_details = tk.BooleanVar(value=True)
+        include_summary = tk.BooleanVar(value=True)
+        
+        tk.Checkbutton(options_frame, text="Incluir Gráficos", variable=include_charts,
+                      font=('Arial', 10), bg='#F8FAFC').pack(anchor='w', pady=2)
+        tk.Checkbutton(options_frame, text="Incluir Detalles", variable=include_details,
+                      font=('Arial', 10), bg='#F8FAFC').pack(anchor='w', pady=2)
+        tk.Checkbutton(options_frame, text="Incluir Resumen", variable=include_summary,
+                      font=('Arial', 10), bg='#F8FAFC').pack(anchor='w', pady=2)
+        
+        # Opciones específicas por tipo de reporte
+        if report_type == "income":
+            tk.Checkbutton(options_frame, text="Desglosar por Método de Pago", 
+                          variable=tk.BooleanVar(value=False),
+                          font=('Arial', 10), bg='#F8FAFC').pack(anchor='w', pady=2)
+        elif report_type == "appointments":
+            tk.Checkbutton(options_frame, text="Agrupar por Doctor", 
+                          variable=tk.BooleanVar(value=True),
+                          font=('Arial', 10), bg='#F8FAFC').pack(anchor='w', pady=2)
+        
+        # Botones de acción
+        buttons_frame = tk.Frame(content, bg='#F8FAFC')
+        buttons_frame.pack(fill='x', pady=(15, 0))
+        
+        def generate_report():
+            """Generar el reporte con las configuraciones seleccionadas"""
+            # Calcular fechas según el período seleccionado
+            start_date, end_date = self.calculate_date_range(period_var.get(), 
+                                                           start_date_var.get(), 
+                                                           end_date_var.get())
+            
+            config = {
+                'report_type': report_type,
+                'title': report_title,
+                'start_date': start_date,
+                'end_date': end_date,
+                'output_format': output_var.get(),
+                'include_charts': include_charts.get(),
+                'include_details': include_details.get(),
+                'include_summary': include_summary.get()
+            }
+            
+            dialog.destroy()
+            
+            # Generar reporte según el formato seleccionado
+            if config['output_format'] == 'Vista Previa':
+                self.show_report_preview(config)
+            else:
+                self.generate_report_file(config)
+        
+        def preview_report():
+            """Mostrar vista previa del reporte"""
+            start_date, end_date = self.calculate_date_range(period_var.get(), 
+                                                           start_date_var.get(), 
+                                                           end_date_var.get())
+            
+            config = {
+                'report_type': report_type,
+                'title': report_title,
+                'start_date': start_date,
+                'end_date': end_date,
+                'output_format': 'Vista Previa',
+                'include_charts': include_charts.get(),
+                'include_details': include_details.get(),
+                'include_summary': include_summary.get()
+            }
+            
+            self.show_report_preview(config)
+        
+        # Botones
+        tk.Button(buttons_frame, text="👁️ Vista Previa", command=preview_report,
+                 bg='#64748B', fg='white', font=('Arial', 10, 'bold'),
+                 padx=20, pady=8).pack(side='left', padx=(0, 10))
+        
+        tk.Button(buttons_frame, text="📊 Generar Reporte", command=generate_report,
+                 bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
+                 padx=20, pady=8).pack(side='left', padx=(0, 10))
+        
+        tk.Button(buttons_frame, text="❌ Cancelar", command=dialog.destroy,
+                 bg='#C0392B', fg='white', font=('Arial', 10, 'bold'),
+                 padx=20, pady=8).pack(side='right')
+
+    def calculate_date_range(self, period, custom_start, custom_end):
+        """Calcular rango de fechas según el período seleccionado"""
+        today = datetime.now()
+        
+        if period == 'Hoy':
+            start_date = today.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'Ayer':
+            yesterday = today - timedelta(days=1)
+            start_date = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = yesterday.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'Esta Semana':
+            start_date = today - timedelta(days=today.weekday())
+            start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'Semana Pasada':
+            start_date = today - timedelta(days=today.weekday() + 7)
+            start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = start_date + timedelta(days=6, hours=23, minutes=59, seconds=59, microseconds=999999)
+        elif period == 'Este Mes':
+            start_date = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'Mes Pasado':
+            first_day_this_month = today.replace(day=1)
+            last_day_last_month = first_day_this_month - timedelta(days=1)
+            start_date = last_day_last_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = last_day_last_month.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'Este Año':
+            start_date = today.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif period == 'Año Pasado':
+            start_date = today.replace(year=today.year-1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = today.replace(year=today.year-1, month=12, day=31, hour=23, minute=59, second=59, microsecond=999999)
+        else:  # Personalizado
+            try:
+                start_date = datetime.strptime(custom_start, '%Y-%m-%d')
+                end_date = datetime.strptime(custom_end, '%Y-%m-%d')
+                end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+            except ValueError:
+                start_date = today.replace(hour=0, minute=0, second=0, microsecond=0)
+                end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        return start_date, end_date
+
+    def select_date_calendar(self, date_var):
+        """Abrir selector de fecha con calendario"""
+        if not CALENDAR_AVAILABLE:
+            return
+        
+        try:
+            from tkinter import simpledialog
+            date_str = simpledialog.askstring("Fecha", "Ingrese fecha (YYYY-MM-DD):", 
+                                            initialvalue=date_var.get())
+            if date_str:
+                # Validar formato de fecha
+                try:
+                    datetime.strptime(date_str, '%Y-%m-%d')
+                    date_var.set(date_str)
+                except ValueError:
+                    messagebox.showerror("Error", "Formato de fecha inválido. Use YYYY-MM-DD")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error seleccionando fecha: {str(e)}")
+
+    def show_report_preview(self, config):
+        """Mostrar vista previa del reporte en una ventana"""
+        preview_window = tk.Toplevel(self.root)
+        preview_window.title(f"Vista Previa - {config['title']}")
+        preview_window.geometry("900x700")
+        preview_window.configure(bg='#F8FAFC')
+        
+        # Centrar ventana
+        preview_window.update_idletasks()
+        x = (preview_window.winfo_screenwidth() // 2) - (900 // 2)
+        y = (preview_window.winfo_screenheight() // 2) - (700 // 2)
+        preview_window.geometry(f"900x700+{x}+{y}")
+        
+        # Header de la vista previa
+        header = tk.Frame(preview_window, bg='#1E3A8A', height=60)
+        header.pack(fill='x')
+        header.pack_propagate(False)
+        
+        header_content = tk.Frame(header, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=20, pady=15)
+        
+        tk.Label(header_content, text="👁️", font=('Arial', 16), bg='#1E3A8A', fg='white').pack(side='left')
+        tk.Label(header_content, text=f"VISTA PREVIA - {config['title'].upper()}", 
+                font=('Arial', 12, 'bold'), bg='#1E3A8A', fg='white').pack(side='left', padx=(10, 0))
+        
+        # Botones en el header
+        buttons_header = tk.Frame(header_content, bg='#1E3A8A')
+        buttons_header.pack(side='right')
+        
+        tk.Button(buttons_header, text="📄 Generar PDF", 
+                 command=lambda: self.generate_pdf_from_preview(config),
+                 bg='#0B5394', fg='white', font=('Arial', 9, 'bold')).pack(side='left', padx=5)
+        
+        tk.Button(buttons_header, text="📊 Generar Excel", 
+                 command=lambda: self.generate_excel_from_preview(config),
+                 bg='#16A085', fg='white', font=('Arial', 9, 'bold')).pack(side='left', padx=5)
+        
+        tk.Button(buttons_header, text="❌ Cerrar", 
+                 command=preview_window.destroy,
+                 bg='#C0392B', fg='white', font=('Arial', 9, 'bold')).pack(side='left', padx=5)
+        
+        # Área de contenido con scroll
+        content_frame = tk.Frame(preview_window, bg='white')
+        content_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # Canvas para scroll
+        canvas = tk.Canvas(content_frame, bg='white')
+        scrollbar = ttk.Scrollbar(content_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg='white')
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Generar contenido del reporte
+        self.generate_report_content(scrollable_frame, config)
+        
+        # Habilitar scroll con mouse
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+
+    def generate_report_content(self, parent, config):
+        """Generar contenido visual del reporte"""
+        try:
+            # Header del reporte
+            self.create_report_header(parent, config)
+            
+            # Separador
+            tk.Frame(parent, bg='#E5E7EB', height=2).pack(fill='x', pady=10)
+            
+            # Resumen ejecutivo
+            if config['include_summary']:
+                self.create_report_summary(parent, config)
+            
+            # Contenido principal según el tipo de reporte
+            if config['report_type'] == 'income':
+                self.create_income_report_content(parent, config)
+            elif config['report_type'] == 'pending_invoices':
+                self.create_pending_invoices_content(parent, config)
+            elif config['report_type'] == 'users':
+                self.create_users_report_content(parent, config)
+            elif config['report_type'] == 'appointments':
+                self.create_appointments_report_content(parent, config)
+            elif config['report_type'] == 'financial':
+                self.create_financial_report_content(parent, config)
+            elif config['report_type'] == 'services':
+                self.create_services_report_content(parent, config)
+            
+            # Footer del reporte
+            self.create_report_footer(parent, config)
+            
+        except Exception as e:
+            tk.Label(parent, text=f"Error generando reporte: {str(e)}", 
+                    fg='red', font=('Arial', 12)).pack(pady=20)
+
+    def create_report_header(self, parent, config):
+        """Crear header del reporte"""
+        header_frame = tk.Frame(parent, bg='white')
+        header_frame.pack(fill='x', pady=(0, 20))
+        
+        # Logo y título principal
+        title_frame = tk.Frame(header_frame, bg='white')
+        title_frame.pack(fill='x')
+        
+        tk.Label(title_frame, text="🏥 MEDISYNC", font=('Arial', 20, 'bold'), 
+                fg='#1E3A8A', bg='white').pack(side='left')
+        tk.Label(title_frame, text="Sistema de Gestión Médica", font=('Arial', 12), 
+                fg='#64748B', bg='white').pack(side='left', padx=(10, 0))
+        
+        # Fecha y hora de generación
+        generation_time = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        tk.Label(title_frame, text=f"Generado: {generation_time}", font=('Arial', 10), 
+                fg='#64748B', bg='white').pack(side='right')
+        
+        # Título del reporte
+        tk.Label(header_frame, text=config['title'], font=('Arial', 18, 'bold'), 
+                fg='#1E3A8A', bg='white').pack(pady=10)
+        
+        # Período del reporte
+        period_text = f"Período: {config['start_date'].strftime('%d/%m/%Y')} - {config['end_date'].strftime('%d/%m/%Y')}"
+        tk.Label(header_frame, text=period_text, font=('Arial', 12), 
+                fg='#059669', bg='white').pack()
+
+    def create_report_summary(self, parent, config):
+        """Crear resumen ejecutivo del reporte"""
+        summary_frame = tk.LabelFrame(parent, text="📊 Resumen Ejecutivo", 
+                                     font=('Arial', 14, 'bold'), padx=20, pady=15, bg='white')
+        summary_frame.pack(fill='x', pady=(0, 20))
+        
+        try:
+            # Obtener datos para el resumen según el tipo de reporte
+            summary_data = self.get_report_summary_data(config)
+            
+            # Grid de métricas principales
+            metrics_frame = tk.Frame(summary_frame, bg='white')
+            metrics_frame.pack(fill='x')
+            
+            for i, (label, value, color) in enumerate(summary_data):
+                metric_card = tk.Frame(metrics_frame, bg='#F8FAFC', relief='solid', bd=1)
+                metric_card.grid(row=i//3, column=i%3, padx=10, pady=10, sticky='ew')
+                
+                tk.Label(metric_card, text=str(value), font=('Arial', 16, 'bold'), 
+                        fg=color, bg='#F8FAFC').pack(pady=(10, 5))
+                tk.Label(metric_card, text=label, font=('Arial', 10), 
+                        fg='#64748B', bg='#F8FAFC').pack(pady=(0, 10))
+            
+            # Configurar expansión del grid
+            for i in range(3):
+                metrics_frame.grid_columnconfigure(i, weight=1)
+                
+        except Exception as e:
+            tk.Label(summary_frame, text=f"Error en resumen: {str(e)}", 
+                    fg='red', bg='white').pack()
+
+    def create_income_report_content(self, parent, config):
+        """Crear contenido específico del reporte de ingresos"""
+        content_frame = tk.LabelFrame(parent, text="💰 Análisis de Ingresos", 
+                                     font=('Arial', 14, 'bold'), padx=20, pady=15, bg='white')
+        content_frame.pack(fill='x', pady=(0, 20))
+        
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Consulta de ingresos por período
+            cursor.execute("""
+                SELECT DATE(fecha_creacion) as fecha, SUM(monto) as total_dia, COUNT(*) as num_facturas
+                FROM facturas 
+                WHERE fecha_creacion BETWEEN ? AND ? AND estado IN ('pagada', 'pago_parcial')
+                GROUP BY DATE(fecha_creacion)
+                ORDER BY fecha
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            
+            income_data = cursor.fetchall()
+            
+            if income_data:
+                # Tabla de ingresos diarios
+                table_frame = tk.Frame(content_frame, bg='white')
+                table_frame.pack(fill='x', pady=10)
+                
+                # Headers
+                headers = ['Fecha', 'Ingresos', 'Facturas', 'Promedio']
+                header_frame = tk.Frame(table_frame, bg='#1E3A8A')
+                header_frame.pack(fill='x')
+                
+                for header in headers:
+                    tk.Label(header_frame, text=header, font=('Arial', 12, 'bold'), 
+                            fg='white', bg='#1E3A8A', width=15).pack(side='left', padx=1, pady=8)
+                
+                # Datos
+                total_income = 0
+                total_invoices = 0
+                
+                for fecha, total_dia, num_facturas in income_data:
+                    row_frame = tk.Frame(table_frame, bg='#F8FAFC')
+                    row_frame.pack(fill='x')
+                    
+                    promedio = total_dia / num_facturas if num_facturas > 0 else 0
+                    total_income += total_dia
+                    total_invoices += num_facturas
+                    
+                    values = [
+                        datetime.fromisoformat(fecha).strftime('%d/%m/%Y'),
+                        f"₡{total_dia:,.2f}",
+                        str(num_facturas),
+                        f"₡{promedio:,.2f}"
+                    ]
+                    
+                    for value in values:
+                        tk.Label(row_frame, text=value, font=('Arial', 10), 
+                                fg='#1E293B', bg='#F8FAFC', width=15).pack(side='left', padx=1, pady=5)
+                
+                # Totales
+                total_frame = tk.Frame(table_frame, bg='#059669')
+                total_frame.pack(fill='x')
+                
+                total_avg = total_income / total_invoices if total_invoices > 0 else 0
+                total_values = [
+                    'TOTAL',
+                    f"₡{total_income:,.2f}",
+                    str(total_invoices),
+                    f"₡{total_avg:,.2f}"
+                ]
+                
+                for value in total_values:
+                    tk.Label(total_frame, text=value, font=('Arial', 12, 'bold'), 
+                            fg='white', bg='#059669', width=15).pack(side='left', padx=1, pady=8)
+            else:
+                tk.Label(content_frame, text="No hay datos de ingresos para el período seleccionado", 
+                        font=('Arial', 12), fg='#64748B', bg='white').pack(pady=20)
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            tk.Label(content_frame, text=f"Error cargando datos: {str(e)}", 
+                    fg='red', bg='white').pack()
+
+    def create_appointments_report_content(self, parent, config):
+        """Crear contenido del reporte de citas"""
+        content_frame = tk.LabelFrame(parent, text="📅 Análisis de Citas", 
+                                     font=('Arial', 14, 'bold'), padx=20, pady=15, bg='white')
+        content_frame.pack(fill='x', pady=(0, 20))
+        
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Citas por estado
+            cursor.execute("""
+                SELECT estado, COUNT(*) as cantidad
+                FROM citas 
+                WHERE fecha_hora BETWEEN ? AND ?
+                GROUP BY estado
+                ORDER BY cantidad DESC
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            
+            status_data = cursor.fetchall()
+            
+            if status_data:
+                # Tabla de estados
+                table_frame = tk.Frame(content_frame, bg='white')
+                table_frame.pack(fill='x', pady=10)
+                
+                tk.Label(table_frame, text="Distribución por Estado", font=('Arial', 12, 'bold'), 
+                        fg='#1E3A8A', bg='white').pack(pady=(0, 10))
+                
+                for estado, cantidad in status_data:
+                    row_frame = tk.Frame(table_frame, bg='#F8FAFC')
+                    row_frame.pack(fill='x', pady=2)
+                    
+                    tk.Label(row_frame, text=f"{estado.title()}:", font=('Arial', 10, 'bold'), 
+                            fg='#1E293B', bg='#F8FAFC', width=15, anchor='w').pack(side='left')
+                    tk.Label(row_frame, text=str(cantidad), font=('Arial', 10), 
+                            fg='#059669', bg='#F8FAFC', width=10, anchor='e').pack(side='right')
+            
+            # Citas por doctor
+            cursor.execute("""
+                SELECT u.nombre || ' ' || u.apellido as doctor, COUNT(*) as cantidad
+                FROM citas c
+                JOIN usuarios u ON c.doctor_id = u.id
+                WHERE c.fecha_hora BETWEEN ? AND ?
+                GROUP BY u.id, u.nombre, u.apellido
+                ORDER BY cantidad DESC
+                LIMIT 10
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            
+            doctor_data = cursor.fetchall()
+            
+            if doctor_data:
+                doctor_frame = tk.Frame(content_frame, bg='white')
+                doctor_frame.pack(fill='x', pady=(20, 0))
+                
+                tk.Label(doctor_frame, text="Top 10 Doctores por Citas", font=('Arial', 12, 'bold'), 
+                        fg='#1E3A8A', bg='white').pack(pady=(0, 10))
+                
+                for doctor, cantidad in doctor_data:
+                    row_frame = tk.Frame(doctor_frame, bg='#F8FAFC')
+                    row_frame.pack(fill='x', pady=2)
+                    
+                    tk.Label(row_frame, text=f"Dr. {doctor}:", font=('Arial', 10), 
+                            fg='#1E293B', bg='#F8FAFC', width=25, anchor='w').pack(side='left')
+                    tk.Label(row_frame, text=str(cantidad), font=('Arial', 10, 'bold'), 
+                            fg='#059669', bg='#F8FAFC', width=10, anchor='e').pack(side='right')
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            tk.Label(content_frame, text=f"Error cargando datos: {str(e)}", 
+                    fg='red', bg='white').pack()
+
+    def create_users_report_content(self, parent, config):
+        """Crear contenido del reporte de usuarios"""
+        content_frame = tk.LabelFrame(parent, text="👥 Análisis de Usuarios", 
+                                     font=('Arial', 14, 'bold'), padx=20, pady=15, bg='white')
+        content_frame.pack(fill='x', pady=(0, 20))
+        
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Usuarios por rol
+            cursor.execute("""
+                SELECT rol, COUNT(*) as cantidad
+                FROM usuarios 
+                GROUP BY rol
+                ORDER BY cantidad DESC
+            """)
+            
+            role_data = cursor.fetchall()
+            
+            if role_data:
+                table_frame = tk.Frame(content_frame, bg='white')
+                table_frame.pack(fill='x', pady=10)
+                
+                tk.Label(table_frame, text="Distribución por Rol", font=('Arial', 12, 'bold'), 
+                        fg='#1E3A8A', bg='white').pack(pady=(0, 10))
+                
+                total_users = sum(cantidad for _, cantidad in role_data)
+                
+                for rol, cantidad in role_data:
+                    percentage = (cantidad / total_users) * 100 if total_users > 0 else 0
+                    
+                    row_frame = tk.Frame(table_frame, bg='#F8FAFC')
+                    row_frame.pack(fill='x', pady=2)
+                    
+                    tk.Label(row_frame, text=f"{rol.title()}:", font=('Arial', 10, 'bold'), 
+                            fg='#1E293B', bg='#F8FAFC', width=15, anchor='w').pack(side='left')
+                    tk.Label(row_frame, text=f"{cantidad} ({percentage:.1f}%)", font=('Arial', 10), 
+                            fg='#059669', bg='#F8FAFC', width=15, anchor='e').pack(side='right')
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            tk.Label(content_frame, text=f"Error cargando datos: {str(e)}", 
+                    fg='red', bg='white').pack()
+
+    def create_pending_invoices_content(self, parent, config):
+        """Crear contenido del reporte de facturas pendientes"""
+        content_frame = tk.LabelFrame(parent, text="📋 Facturas Pendientes", 
+                                     font=('Arial', 14, 'bold'), padx=20, pady=15, bg='white')
+        content_frame.pack(fill='x', pady=(0, 20))
+        
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT f.numero_factura, f.fecha_creacion, 
+                       u.nombre || ' ' || u.apellido as paciente,
+                       f.monto, f.estado
+                FROM facturas f
+                JOIN usuarios u ON f.paciente_id = u.id
+                WHERE f.estado = 'pendiente' 
+                AND f.fecha_creacion BETWEEN ? AND ?
+                ORDER BY f.fecha_creacion DESC
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            
+            pending_data = cursor.fetchall()
+            
+            if pending_data:
+                # Crear tabla de facturas pendientes
+                table_frame = tk.Frame(content_frame, bg='white')
+                table_frame.pack(fill='x', pady=10)
+                
+                # Headers
+                headers = ['Número', 'Fecha', 'Paciente', 'Monto', 'Días Pendiente']
+                header_frame = tk.Frame(table_frame, bg='#C0392B')
+                header_frame.pack(fill='x')
+                
+                for header in headers:
+                    tk.Label(header_frame, text=header, font=('Arial', 11, 'bold'), 
+                            fg='white', bg='#C0392B', width=15).pack(side='left', padx=1, pady=8)
+                
+                total_pending = 0
+                
+                for numero, fecha_str, paciente, monto, estado in pending_data:
+                    row_frame = tk.Frame(table_frame, bg='#FFEBEE')
+                    row_frame.pack(fill='x')
+                    
+                    fecha_creacion = datetime.fromisoformat(fecha_str)
+                    dias_pendiente = (datetime.now() - fecha_creacion).days
+                    total_pending += monto
+                    
+                    values = [
+                        numero,
+                        fecha_creacion.strftime('%d/%m/%Y'),
+                        paciente[:20] + '...' if len(paciente) > 20 else paciente,
+                        f"₡{monto:,.2f}",
+                        f"{dias_pendiente} días"
+                    ]
+                    
+                    for value in values:
+                        tk.Label(row_frame, text=str(value), font=('Arial', 9), 
+                                fg='#1E293B', bg='#FFEBEE', width=15).pack(side='left', padx=1, pady=3)
+                
+                # Total
+                total_frame = tk.Frame(table_frame, bg='#C0392B')
+                total_frame.pack(fill='x')
+                
+                tk.Label(total_frame, text=f"TOTAL PENDIENTE: ₡{total_pending:,.2f}", 
+                        font=('Arial', 12, 'bold'), fg='white', bg='#C0392B').pack(pady=8)
+            else:
+                tk.Label(content_frame, text="¡Excelente! No hay facturas pendientes en este período", 
+                        font=('Arial', 12), fg='#059669', bg='white').pack(pady=20)
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            tk.Label(content_frame, text=f"Error cargando datos: {str(e)}", 
+                    fg='red', bg='white').pack()
+
+    def create_financial_report_content(self, parent, config):
+        """Crear contenido del reporte financiero"""
+        content_frame = tk.LabelFrame(parent, text="💰 Estado Financiero", 
+                                     font=('Arial', 14, 'bold'), padx=20, pady=15, bg='white')
+        content_frame.pack(fill='x', pady=(0, 20))
+        
+        try:
+            cursor = self.db_manager.connection.cursor()
+            
+            # Obtener ingresos
+            cursor.execute("""
+                SELECT SUM(monto) as total_ingresos
+                FROM facturas 
+                WHERE estado = 'pagada' 
+                AND fecha_pago BETWEEN ? AND ?
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            ingresos_result = cursor.fetchone()
+            total_ingresos = ingresos_result[0] if ingresos_result[0] else 0
+            
+            # Obtener facturas pendientes
+            cursor.execute("""
+                SELECT SUM(monto) as total_pendiente
+                FROM facturas 
+                WHERE estado = 'pendiente' 
+                AND fecha_creacion BETWEEN ? AND ?
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            pendientes_result = cursor.fetchone()
+            total_pendiente = pendientes_result[0] if pendientes_result[0] else 0
+            
+            # Obtener número de transacciones
+            cursor.execute("""
+                SELECT COUNT(*) as num_facturas_pagadas
+                FROM facturas 
+                WHERE estado = 'pagada' 
+                AND fecha_pago BETWEEN ? AND ?
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            num_pagadas = cursor.fetchone()[0]
+            
+            cursor.execute("""
+                SELECT COUNT(*) as num_facturas_pendientes
+                FROM facturas 
+                WHERE estado = 'pendiente' 
+                AND fecha_creacion BETWEEN ? AND ?
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            num_pendientes = cursor.fetchone()[0]
+            
+            # Frame de métricas principales
+            metrics_frame = tk.Frame(content_frame, bg='white')
+            metrics_frame.pack(fill='x', pady=(0, 20))
+            
+            # Ingresos
+            income_card = tk.Frame(metrics_frame, bg='#10B981', relief='raised', bd=2)
+            income_card.pack(side='left', fill='both', expand=True, padx=(0, 10))
+            tk.Label(income_card, text="💰 INGRESOS TOTALES", font=('Arial', 10, 'bold'), 
+                    fg='white', bg='#10B981').pack(pady=(10, 5))
+            tk.Label(income_card, text=f"₡{total_ingresos:,.2f}", font=('Arial', 14, 'bold'), 
+                    fg='white', bg='#10B981').pack(pady=(0, 5))
+            tk.Label(income_card, text=f"{num_pagadas} facturas pagadas", font=('Arial', 9), 
+                    fg='white', bg='#10B981').pack(pady=(0, 10))
+            
+            # Pendientes
+            pending_card = tk.Frame(metrics_frame, bg='#EF4444', relief='raised', bd=2)
+            pending_card.pack(side='left', fill='both', expand=True, padx=(5, 5))
+            tk.Label(pending_card, text="⏳ CUENTAS POR COBRAR", font=('Arial', 10, 'bold'), 
+                    fg='white', bg='#EF4444').pack(pady=(10, 5))
+            tk.Label(pending_card, text=f"₡{total_pendiente:,.2f}", font=('Arial', 14, 'bold'), 
+                    fg='white', bg='#EF4444').pack(pady=(0, 5))
+            tk.Label(pending_card, text=f"{num_pendientes} facturas pendientes", font=('Arial', 9), 
+                    fg='white', bg='#EF4444').pack(pady=(0, 10))
+            
+            # Total neto
+            total_neto = total_ingresos + total_pendiente
+            total_card = tk.Frame(metrics_frame, bg='#0B5394', relief='raised', bd=2)
+            total_card.pack(side='left', fill='both', expand=True, padx=(10, 0))
+            tk.Label(total_card, text="📊 FACTURACIÓN TOTAL", font=('Arial', 10, 'bold'), 
+                    fg='white', bg='#0B5394').pack(pady=(10, 5))
+            tk.Label(total_card, text=f"₡{total_neto:,.2f}", font=('Arial', 14, 'bold'), 
+                    fg='white', bg='#0B5394').pack(pady=(0, 5))
+            tk.Label(total_card, text=f"{num_pagadas + num_pendientes} facturas totales", font=('Arial', 9), 
+                    fg='white', bg='#0B5394').pack(pady=(0, 10))
+            
+            # Análisis de eficiencia de cobro
+            if total_neto > 0:
+                efficiency_frame = tk.Frame(content_frame, bg='white')
+                efficiency_frame.pack(fill='x', pady=(10, 0))
+                
+                tk.Label(efficiency_frame, text="📈 Análisis de Eficiencia de Cobro", 
+                        font=('Arial', 12, 'bold'), fg='#1E293B', bg='white').pack(anchor='w')
+                
+                cobro_percentage = (total_ingresos / total_neto) * 100
+                pendiente_percentage = (total_pendiente / total_neto) * 100
+                
+                # Barra de progreso visual
+                progress_frame = tk.Frame(efficiency_frame, bg='white')
+                progress_frame.pack(fill='x', pady=10)
+                
+                # Barra de cobrado
+                cobrado_width = int((cobro_percentage / 100) * 300)
+                if cobrado_width > 0:
+                    cobrado_bar = tk.Frame(progress_frame, bg='#10B981', height=25)
+                    cobrado_bar.pack(side='left', fill='y')
+                    cobrado_bar.config(width=cobrado_width)
+                    tk.Label(cobrado_bar, text=f"Cobrado: {cobro_percentage:.1f}%", 
+                            font=('Arial', 9, 'bold'), fg='white', bg='#10B981').pack(pady=3)
+                
+                # Barra de pendiente
+                pendiente_width = int((pendiente_percentage / 100) * 300)
+                if pendiente_width > 0:
+                    pendiente_bar = tk.Frame(progress_frame, bg='#EF4444', height=25)
+                    pendiente_bar.pack(side='left', fill='y')
+                    pendiente_bar.config(width=pendiente_width)
+                    tk.Label(pendiente_bar, text=f"Pendiente: {pendiente_percentage:.1f}%", 
+                            font=('Arial', 9, 'bold'), fg='white', bg='#EF4444').pack(pady=3)
+                
+                # Recomendaciones
+                recommendations_frame = tk.Frame(content_frame, bg='#F8F9FA', relief='sunken', bd=1)
+                recommendations_frame.pack(fill='x', pady=(15, 0))
+                
+                tk.Label(recommendations_frame, text="💡 Recomendaciones", 
+                        font=('Arial', 11, 'bold'), fg='#1E293B', bg='#F8F9FA').pack(anchor='w', padx=10, pady=(10, 5))
+                
+                if pendiente_percentage > 30:
+                    tk.Label(recommendations_frame, text="• Alto porcentaje de cuentas por cobrar - revisar procesos de cobro", 
+                            font=('Arial', 10), fg='#DC2626', bg='#F8F9FA').pack(anchor='w', padx=20)
+                elif pendiente_percentage > 15:
+                    tk.Label(recommendations_frame, text="• Porcentaje moderado de cuentas por cobrar - seguimiento regular", 
+                            font=('Arial', 10), fg='#F59E0B', bg='#F8F9FA').pack(anchor='w', padx=20)
+                else:
+                    tk.Label(recommendations_frame, text="• Excelente eficiencia de cobro - mantener procesos actuales", 
+                            font=('Arial', 10), fg='#059669', bg='#F8F9FA').pack(anchor='w', padx=20)
+                
+                if num_pendientes > 0:
+                    tk.Label(recommendations_frame, text=f"• Revisar {num_pendientes} facturas pendientes para acelerar cobro", 
+                            font=('Arial', 10), fg='#7C3AED', bg='#F8F9FA').pack(anchor='w', padx=20, pady=(0, 10))
+            
+        except Exception as e:
+            tk.Label(content_frame, text=f"Error cargando datos financieros: {str(e)}", 
+                    font=('Arial', 12), fg='red', bg='white').pack(pady=20)
+
+    def create_services_report_content(self, parent, config):
+        """Crear contenido del reporte de servicios"""
+        content_frame = tk.LabelFrame(parent, text="🏥 Análisis de Servicios", 
+                                     font=('Arial', 14, 'bold'), padx=20, pady=15, bg='white')
+        content_frame.pack(fill='x', pady=(0, 20))
+        
+        try:
+            cursor = self.db_manager.connection.cursor()
+            
+            # Obtener estadísticas de citas por estado
+            cursor.execute("""
+                SELECT estado, COUNT(*) as cantidad
+                FROM citas 
+                WHERE fecha BETWEEN ? AND ?
+                GROUP BY estado
+                ORDER BY cantidad DESC
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            citas_estado = cursor.fetchall()
+            
+            # Obtener servicios más solicitados (basado en motivo de citas)
+            cursor.execute("""
+                SELECT motivo, COUNT(*) as cantidad
+                FROM citas 
+                WHERE fecha BETWEEN ? AND ? AND motivo IS NOT NULL AND motivo != ''
+                GROUP BY motivo
+                ORDER BY cantidad DESC
+                LIMIT 10
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            servicios_populares = cursor.fetchall()
+            
+            # Obtener análisis por doctor
+            cursor.execute("""
+                SELECT u.nombre_completo, COUNT(c.id) as num_citas, 
+                       AVG(f.monto) as promedio_factura
+                FROM citas c
+                JOIN usuarios u ON c.doctor_id = u.id
+                LEFT JOIN facturas f ON f.paciente_id = c.paciente_id 
+                    AND DATE(f.fecha_creacion) = DATE(c.fecha)
+                WHERE c.fecha BETWEEN ? AND ?
+                GROUP BY c.doctor_id, u.nombre_completo
+                ORDER BY num_citas DESC
+            """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+            doctor_stats = cursor.fetchall()
+            
+            # Frame principal con dos columnas
+            main_frame = tk.Frame(content_frame, bg='white')
+            main_frame.pack(fill='x', pady=(0, 20))
+            
+            # Columna izquierda - Estados de citas
+            left_frame = tk.Frame(main_frame, bg='white')
+            left_frame.pack(side='left', fill='both', expand=True, padx=(0, 10))
+            
+            tk.Label(left_frame, text="📊 Estados de Citas", font=('Arial', 12, 'bold'), 
+                    fg='#1E293B', bg='white').pack(anchor='w', pady=(0, 10))
+            
+            if citas_estado:
+                total_citas = sum(cantidad for _, cantidad in citas_estado)
+                
+                for estado, cantidad in citas_estado:
+                    porcentaje = (cantidad / total_citas) * 100
+                    
+                    # Determinar color según estado
+                    color = '#10B981' if estado == 'confirmada' else \
+                           '#EF4444' if estado == 'cancelada' else \
+                           '#F59E0B' if estado == 'pendiente' else '#6B7280'
+                    
+                    estado_frame = tk.Frame(left_frame, bg=color, relief='raised', bd=1)
+                    estado_frame.pack(fill='x', pady=2)
+                    
+                    info_frame = tk.Frame(estado_frame, bg=color)
+                    info_frame.pack(fill='x', padx=10, pady=5)
+                    
+                    tk.Label(info_frame, text=estado.capitalize(), font=('Arial', 10, 'bold'), 
+                            fg='white', bg=color).pack(side='left')
+                    tk.Label(info_frame, text=f"{cantidad} ({porcentaje:.1f}%)", font=('Arial', 10), 
+                            fg='white', bg=color).pack(side='right')
+            
+            # Columna derecha - Servicios populares
+            right_frame = tk.Frame(main_frame, bg='white')
+            right_frame.pack(side='right', fill='both', expand=True, padx=(10, 0))
+            
+            tk.Label(right_frame, text="🎯 Servicios Más Solicitados", font=('Arial', 12, 'bold'), 
+                    fg='#1E293B', bg='white').pack(anchor='w', pady=(0, 10))
+            
+            if servicios_populares:
+                for i, (motivo, cantidad) in enumerate(servicios_populares[:5]):
+                    # Gradiente de colores
+                    colors = ['#0B5394', '#16A085', '#E67E22', '#8E44AD', '#E74C3C']
+                    color = colors[i % len(colors)]
+                    
+                    servicio_frame = tk.Frame(right_frame, bg=color, relief='raised', bd=1)
+                    servicio_frame.pack(fill='x', pady=2)
+                    
+                    info_frame = tk.Frame(servicio_frame, bg=color)
+                    info_frame.pack(fill='x', padx=10, pady=5)
+                    
+                    # Truncar texto si es muy largo
+                    motivo_display = motivo[:25] + '...' if len(motivo) > 25 else motivo
+                    
+                    tk.Label(info_frame, text=motivo_display, font=('Arial', 9, 'bold'), 
+                            fg='white', bg=color).pack(side='left')
+                    tk.Label(info_frame, text=f"{cantidad}", font=('Arial', 9), 
+                            fg='white', bg=color).pack(side='right')
+            
+            # Análisis por doctor
+            if doctor_stats:
+                doctor_frame = tk.Frame(content_frame, bg='white')
+                doctor_frame.pack(fill='x', pady=(15, 0))
+                
+                tk.Label(doctor_frame, text="👨‍⚕️ Rendimiento por Doctor", font=('Arial', 12, 'bold'), 
+                        fg='#1E293B', bg='white').pack(anchor='w', pady=(0, 10))
+                
+                # Headers de tabla
+                header_frame = tk.Frame(doctor_frame, bg='#0B5394')
+                header_frame.pack(fill='x')
+                
+                headers = ['Doctor', 'Citas Atendidas', 'Promedio Facturación']
+                header_widths = [30, 15, 20]
+                
+                for header, width in zip(headers, header_widths):
+                    tk.Label(header_frame, text=header, font=('Arial', 10, 'bold'), 
+                            fg='white', bg='#0B5394', width=width).pack(side='left', padx=1, pady=8)
+                
+                # Datos de doctores
+                for doctor, num_citas, promedio in doctor_stats[:5]:  # Top 5 doctores
+                    row_frame = tk.Frame(doctor_frame, bg='#F8F9FA')
+                    row_frame.pack(fill='x')
+                    
+                    promedio_display = f"₡{promedio:,.2f}" if promedio else "N/A"
+                    
+                    values = [
+                        doctor[:28] + '...' if len(doctor) > 28 else doctor,
+                        str(num_citas),
+                        promedio_display
+                    ]
+                    
+                    for value, width in zip(values, header_widths):
+                        tk.Label(row_frame, text=value, font=('Arial', 9), 
+                                fg='#1E293B', bg='#F8F9FA', width=width).pack(side='left', padx=1, pady=4)
+            
+            # Resumen de actividad
+            summary_frame = tk.Frame(content_frame, bg='#EEF2FF', relief='sunken', bd=1)
+            summary_frame.pack(fill='x', pady=(15, 0))
+            
+            tk.Label(summary_frame, text="📋 Resumen de Actividad", font=('Arial', 11, 'bold'), 
+                    fg='#1E293B', bg='#EEF2FF').pack(anchor='w', padx=10, pady=(10, 5))
+            
+            if citas_estado:
+                total_citas = sum(cantidad for _, cantidad in citas_estado)
+                confirmadas = next((cantidad for estado, cantidad in citas_estado if estado == 'confirmada'), 0)
+                
+                tk.Label(summary_frame, text=f"• Total de citas programadas: {total_citas}", 
+                        font=('Arial', 10), fg='#374151', bg='#EEF2FF').pack(anchor='w', padx=20)
+                tk.Label(summary_frame, text=f"• Citas confirmadas: {confirmadas} ({(confirmadas/total_citas)*100:.1f}%)", 
+                        font=('Arial', 10), fg='#374151', bg='#EEF2FF').pack(anchor='w', padx=20)
+                
+                if servicios_populares:
+                    servicio_top = servicios_populares[0][0] if servicios_populares else "N/A"
+                    tk.Label(summary_frame, text=f"• Servicio más solicitado: {servicio_top}", 
+                            font=('Arial', 10), fg='#374151', bg='#EEF2FF').pack(anchor='w', padx=20)
+                
+                if doctor_stats:
+                    doctor_top = doctor_stats[0][0] if doctor_stats else "N/A"
+                    tk.Label(summary_frame, text=f"• Doctor con más citas: {doctor_top}", 
+                            font=('Arial', 10), fg='#374151', bg='#EEF2FF').pack(anchor='w', padx=20, pady=(0, 10))
+            
+        except Exception as e:
+            tk.Label(content_frame, text=f"Error cargando datos de servicios: {str(e)}", 
+                    font=('Arial', 12), fg='red', bg='white').pack(pady=20)
+
+    def create_report_footer(self, parent, config):
+        """Crear footer del reporte"""
+        footer_frame = tk.Frame(parent, bg='white')
+        footer_frame.pack(fill='x', pady=(20, 0))
+        
+        # Separador
+        tk.Frame(footer_frame, bg='#E5E7EB', height=2).pack(fill='x', pady=(0, 15))
+        
+        # Información del footer
+        footer_text = f"""
+Este reporte fue generado automáticamente por MEDISYNC
+Fecha de generación: {datetime.now().strftime('%d/%m/%Y a las %H:%M:%S')}
+Período analizado: {config['start_date'].strftime('%d/%m/%Y')} - {config['end_date'].strftime('%d/%m/%Y')}
+        
+Para consultas sobre este reporte, contacte al departamento de administración.
+© 2025 MEDISYNC - Sistema de Gestión Médica Integral
+        """
+        
+        tk.Label(footer_frame, text=footer_text.strip(), font=('Arial', 9), 
+                fg='#64748B', bg='white', justify='center').pack()
+
+    def get_report_summary_data(self, config):
+        """Obtener datos de resumen según el tipo de reporte"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            summary_data = []
+            
+            if config['report_type'] == 'income':
+                # Total de ingresos
+                cursor.execute("""
+                    SELECT SUM(monto), COUNT(*)
+                    FROM facturas 
+                    WHERE fecha_creacion BETWEEN ? AND ? AND estado IN ('pagada', 'pago_parcial')
+                """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+                
+                result = cursor.fetchone()
+                total_income = result[0] if result[0] else 0
+                total_invoices = result[1] if result[1] else 0
+                avg_invoice = total_income / total_invoices if total_invoices > 0 else 0
+                
+                summary_data = [
+                    ("Total de Ingresos", f"₡{total_income:,.2f}", "#059669"),
+                    ("Facturas Pagadas", total_invoices, "#0B5394"),
+                    ("Promedio por Factura", f"₡{avg_invoice:,.2f}", "#E67E22")
+                ]
+                
+            elif config['report_type'] == 'appointments':
+                cursor.execute("""
+                    SELECT COUNT(*), 
+                           SUM(CASE WHEN estado = 'completada' THEN 1 ELSE 0 END),
+                           SUM(CASE WHEN estado = 'cancelada' THEN 1 ELSE 0 END)
+                    FROM citas 
+                    WHERE fecha_hora BETWEEN ? AND ?
+                """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+                
+                result = cursor.fetchone()
+                total_appointments = result[0] if result[0] else 0
+                completed = result[1] if result[1] else 0
+                cancelled = result[2] if result[2] else 0
+                completion_rate = (completed / total_appointments * 100) if total_appointments > 0 else 0
+                
+                summary_data = [
+                    ("Total de Citas", total_appointments, "#0B5394"),
+                    ("Citas Completadas", completed, "#059669"),
+                    ("Tasa de Completación", f"{completion_rate:.1f}%", "#E67E22")
+                ]
+            
+            # Agregar más tipos según sea necesario
+            
+            cursor.close()
+            conn.close()
+            
+            return summary_data
+            
+        except Exception as e:
+            return [("Error", str(e), "#C0392B")]
+
+    def generate_pdf_from_preview(self, config):
+        """Generar PDF del reporte desde la vista previa"""
+        try:
+            # Verificar si reportlab está disponible
+            try:
+                from reportlab.lib.pagesizes import letter, A4
+                from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+                from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                from reportlab.lib.units import inch
+                from reportlab.lib import colors
+                from reportlab.pdfgen import canvas
+            except ImportError:
+                messagebox.showerror("Error", "ReportLab no está instalado. Instalando...")
+                self.install_reportlab_for_reports()
+                return
+            
+            # Crear directorio para reportes
+            reports_dir = "reportes_pdf"
+            if not os.path.exists(reports_dir):
+                os.makedirs(reports_dir)
+            
+            # Generar nombre de archivo
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            report_type_name = config['title'].replace(' ', '_')
+            filename = f"Reporte_{report_type_name}_{timestamp}.pdf"
+            filepath = os.path.join(reports_dir, filename)
+            
+            # Crear el PDF
+            doc = SimpleDocTemplate(filepath, pagesize=A4, rightMargin=72, leftMargin=72, 
+                                   topMargin=72, bottomMargin=18)
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Estilo personalizado para el título
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=18,
+                spaceAfter=30,
+                textColor=colors.darkblue,
+                alignment=1,  # Centrado
+                fontName='Helvetica-Bold'
+            )
+            
+            # Header de la clínica
+            story.append(Paragraph("🏥 MEDISYNC - Sistema de Gestión Médica", title_style))
+            story.append(Spacer(1, 20))
+            
+            # Título del reporte
+            story.append(Paragraph(config['title'], styles['Heading1']))
+            story.append(Spacer(1, 12))
+            
+            # Información del período
+            period_text = f"Período: {config['start_date'].strftime('%d/%m/%Y')} - {config['end_date'].strftime('%d/%m/%Y')}"
+            story.append(Paragraph(period_text, styles['Normal']))
+            story.append(Paragraph(f"Generado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}", styles['Normal']))
+            story.append(Spacer(1, 30))
+            
+            # Obtener datos del reporte
+            report_data = self.get_report_data_for_pdf(config)
+            
+            # Resumen ejecutivo
+            if config['include_summary']:
+                story.append(Paragraph("📊 Resumen Ejecutivo", styles['Heading2']))
+                summary_data = self.get_report_summary_data(config)
+                
+                summary_table_data = [['Métrica', 'Valor']]
+                for label, value, _ in summary_data:
+                    summary_table_data.append([label, str(value)])
+                
+                summary_table = Table(summary_table_data, colWidths=[3*inch, 2*inch])
+                summary_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 12),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                
+                story.append(summary_table)
+                story.append(Spacer(1, 30))
+            
+            # Contenido detallado
+            if config['include_details'] and report_data:
+                story.append(Paragraph("📋 Información Detallada", styles['Heading2']))
+                
+                # Crear tabla con los datos
+                if config['report_type'] == 'income':
+                    headers = ['Fecha', 'Ingresos', 'Facturas', 'Promedio']
+                elif config['report_type'] == 'appointments':
+                    headers = ['Fecha', 'Total Citas', 'Completadas', 'Canceladas']
+                elif config['report_type'] == 'pending_invoices':
+                    headers = ['Número Factura', 'Paciente', 'Monto', 'Días Pendiente']
+                else:
+                    headers = ['Descripción', 'Valor']
+                
+                table_data = [headers]
+                for row in report_data[:20]:  # Limitar a 20 filas para el PDF
+                    table_data.append([str(cell) for cell in row])
+                
+                data_table = Table(table_data)
+                data_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                
+                story.append(data_table)
+                story.append(Spacer(1, 30))
+            
+            # Footer
+            footer_text = f"""
+            Este reporte fue generado automáticamente por MEDISYNC
+            Fecha de generación: {datetime.now().strftime('%d/%m/%Y a las %H:%M:%S')}
+            © 2025 MEDISYNC - Sistema de Gestión Médica Integral
+            """
+            story.append(Paragraph(footer_text, styles['Normal']))
+            
+            # Construir el PDF
+            doc.build(story)
+            
+            # Mostrar mensaje de éxito y abrir PDF
+            result = messagebox.askquestion(
+                "PDF Generado Exitosamente", 
+                f"Reporte guardado como: {filename}\n\n¿Desea abrir el PDF ahora?",
+                icon='question'
+            )
+            
+            if result == 'yes':
+                try:
+                    os.startfile(filepath)  # Windows
+                except:
+                    try:
+                        os.system(f'open "{filepath}"')  # macOS
+                    except:
+                        try:
+                            os.system(f'xdg-open "{filepath}"')  # Linux
+                        except:
+                            messagebox.showinfo("PDF Guardado", f"Archivo guardado en:\n{os.path.abspath(filepath)}")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error generando PDF: {str(e)}")
+
+    def generate_excel_from_preview(self, config):
+        """Generar archivo Excel del reporte"""
+        try:
+            messagebox.showinfo("Excel", "Función de exportación a Excel en desarrollo.\nPor ahora use la función PDF.")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error generando Excel: {str(e)}")
+
+    def get_report_data_for_pdf(self, config):
+        """Obtener datos del reporte para PDF"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            if config['report_type'] == 'income':
+                cursor.execute("""
+                    SELECT DATE(fecha_creacion) as fecha, SUM(monto) as total_dia, 
+                           COUNT(*) as num_facturas
+                    FROM facturas 
+                    WHERE fecha_creacion BETWEEN ? AND ? AND estado IN ('pagada', 'pago_parcial')
+                    GROUP BY DATE(fecha_creacion)
+                    ORDER BY fecha
+                """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+                
+                data = cursor.fetchall()
+                formatted_data = []
+                for fecha, total, count in data:
+                    promedio = total / count if count > 0 else 0
+                    formatted_data.append([
+                        datetime.fromisoformat(fecha).strftime('%d/%m/%Y'),
+                        f"₡{total:,.2f}",
+                        str(count),
+                        f"₡{promedio:,.2f}"
+                    ])
+                return formatted_data
+                
+            elif config['report_type'] == 'appointments':
+                cursor.execute("""
+                    SELECT DATE(fecha_hora) as fecha, COUNT(*) as total,
+                           SUM(CASE WHEN estado = 'completada' THEN 1 ELSE 0 END) as completadas,
+                           SUM(CASE WHEN estado = 'cancelada' THEN 1 ELSE 0 END) as canceladas
+                    FROM citas 
+                    WHERE fecha_hora BETWEEN ? AND ?
+                    GROUP BY DATE(fecha_hora)
+                    ORDER BY fecha
+                """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+                
+                data = cursor.fetchall()
+                formatted_data = []
+                for fecha, total, completadas, canceladas in data:
+                    formatted_data.append([
+                        datetime.fromisoformat(fecha).strftime('%d/%m/%Y'),
+                        str(total),
+                        str(completadas),
+                        str(canceladas)
+                    ])
+                return formatted_data
+                
+            elif config['report_type'] == 'pending_invoices':
+                cursor.execute("""
+                    SELECT f.numero_factura, u.nombre || ' ' || u.apellido as paciente, 
+                           f.monto, f.fecha_creacion
+                    FROM facturas f
+                    JOIN usuarios u ON f.paciente_id = u.id
+                    WHERE f.estado = 'pendiente' 
+                    AND f.fecha_creacion BETWEEN ? AND ?
+                    ORDER BY f.fecha_creacion DESC
+                """, (config['start_date'].isoformat(), config['end_date'].isoformat()))
+                
+                data = cursor.fetchall()
+                formatted_data = []
+                for numero, paciente, monto, fecha_str in data:
+                    fecha_creacion = datetime.fromisoformat(fecha_str)
+                    dias_pendiente = (datetime.now() - fecha_creacion).days
+                    formatted_data.append([
+                        numero,
+                        paciente,
+                        f"₡{monto:,.2f}",
+                        f"{dias_pendiente} días"
+                    ])
+                return formatted_data
+            
+            cursor.close()
+            conn.close()
+            return []
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error obteniendo datos: {str(e)}")
+            return []
+
+    def install_reportlab_for_reports(self):
+        """Instalar ReportLab para reportes"""
+        try:
+            import subprocess
+            import sys
+            
+            result = messagebox.askquestion("Instalar ReportLab", 
+                                          "¿Desea instalar ReportLab para generar reportes en PDF?")
+            if result == 'yes':
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "reportlab"])
+                messagebox.showinfo("Instalación completada", 
+                                   "ReportLab instalado correctamente.\nYa puede generar reportes PDF.")
+        except Exception as e:
+            messagebox.showerror("Error de instalación", 
+                                f"No se pudo instalar ReportLab automáticamente.\n{str(e)}")
+
+    def generate_report_file(self, config):
+        """Generar archivo de reporte según el formato especificado"""
+        if config['output_format'] == 'PDF':
+            self.generate_pdf_from_preview(config)
+        elif config['output_format'] == 'Excel':
+            self.generate_excel_from_preview(config)
+        else:
+            messagebox.showinfo("Formato no soportado", "Formato de salida no implementado")
+
+    # Funciones auxiliares para el sistema de reportes
+    def apply_report_filters(self):
+        """Aplicar filtros a los reportes"""
+        period = self.report_period_filter.get()
+        report_type = self.report_type_filter.get()
+        
+        messagebox.showinfo("Filtros", f"Filtros aplicados:\nPeríodo: {period}\nTipo: {report_type}")
+
+    def export_all_reports_pdf(self):
+        """Exportar todos los reportes a PDF"""
+        messagebox.showinfo("Exportar", "Exportando todos los reportes disponibles...")
+
+    def export_to_excel(self):
+        """Exportar datos a Excel"""
+        messagebox.showinfo("Excel", "Función de exportación a Excel en desarrollo")
+
+    def email_reports(self):
+        """Enviar reportes por email"""
+        messagebox.showinfo("Email", "Función de envío por email en desarrollo")
+
+    def show_executive_dashboard(self):
+        """Mostrar dashboard ejecutivo"""
+        messagebox.showinfo("Dashboard", "Dashboard ejecutivo en desarrollo")
+
+    def refresh_all_data(self):
+        """Actualizar todos los datos"""
+        self.create_stats_display(self.stats_frame if hasattr(self, 'stats_frame') else None)
+        messagebox.showinfo("Actualizado", "✅ Datos actualizados correctamente")
+
+    def configure_reports(self):
+        """Configurar opciones de reportes"""
+        messagebox.showinfo("Configuración", "Configuración de reportes en desarrollo")
+
+    def manage_report_templates(self):
+        """Gestionar plantillas de reportes"""
+        messagebox.showinfo("Plantillas", "Gestión de plantillas en desarrollo")
         """Crear menú para doctores"""
         # Crear notebook con pestañas específicas para doctores
         self.notebook = ttk.Notebook(parent)
@@ -8983,35 +10612,29 @@ Ingresos del Mes: RD$ {stats.get('monthly_income', 0):,.2f}
         self.create_secretaria_reports(reports_frame)
     
     def create_paciente_menu(self, parent):
-        """Crear menú para pacientes"""
-        # Crear notebook con pestañas específicas para pacientes
+        """Crear menú para pacientes (4 pestañas: Dashboard, Citas, Historial, Configuración)"""
         self.notebook = ttk.Notebook(parent)
         self.notebook.pack(fill='both', expand=True)
-        
-        # Pestaña 1: Mi Dashboard
+
+        # Pestaña 1: Dashboard
         dashboard_frame = ttk.Frame(self.notebook)
-        self.notebook.add(dashboard_frame, text="📊 Mi Dashboard")
+        self.notebook.add(dashboard_frame, text="📊 Dashboard")
         self.create_patient_dashboard(dashboard_frame)
-        
-        # Pestaña 2: Mis Citas
+
+        # Pestaña 2: Citas
         appointments_frame = ttk.Frame(self.notebook)
-        self.notebook.add(appointments_frame, text="📅 Mis Citas")
+        self.notebook.add(appointments_frame, text="📅 Citas")
         self.create_patient_appointments(appointments_frame)
-        
-        # Pestaña 3: Mi Historial Médico
+
+        # Pestaña 3: Historial
         medical_frame = ttk.Frame(self.notebook)
-        self.notebook.add(medical_frame, text="📋 Mi Historial")
+        self.notebook.add(medical_frame, text="📋 Historial")
         self.create_patient_medical_history(medical_frame)
-        
-        # Pestaña 4: Mis Facturas
-        billing_frame = ttk.Frame(self.notebook)
-        self.notebook.add(billing_frame, text="💰 Mis Facturas")
-        self.create_patient_billing(billing_frame)
-        
-        # Pestaña 5: Mi Perfil
-        profile_frame = ttk.Frame(self.notebook)
-        self.notebook.add(profile_frame, text="👤 Mi Perfil")
-        self.create_patient_profile(profile_frame)
+
+        # Pestaña 4: Configuración
+        settings_frame = ttk.Frame(self.notebook)
+        self.notebook.add(settings_frame, text="⚙️ Configuración")
+        self.create_patient_settings(settings_frame)
     
     def logout(self):
         """Cerrar sesión"""
@@ -10285,73 +11908,83 @@ Ingresos del Mes: RD$ {stats.get('monthly_income', 0):,.2f}
                     fg='red').pack()
     
     def create_patient_appointments(self, parent):
-        """Mis citas para pacientes"""
+        """Citas del paciente con calendario interactivo y lista"""
         main_frame = tk.Frame(parent, bg='#F8FAFC')
-        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Header
-        header_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        header_frame.pack(fill='x', pady=(0, 20))
-        
-        tk.Label(header_frame, text="Mis Citas Médicas", 
-                font=('Arial', 16, 'bold'), bg='#F8FAFC').pack(side='left')
-        
-        tk.Button(header_frame, text="📅 Solicitar Nueva Cita", bg='#0B5394', fg='white',
-                 font=('Arial', 10, 'bold'), command=self.request_new_appointment).pack(side='right')
-        
-        # Filtros
-        filters_frame = tk.LabelFrame(main_frame, text="Filtros", font=('Arial', 11, 'bold'), 
-                                    padx=10, pady=10)
-        filters_frame.pack(fill='x', pady=(0, 20))
-        
-        filters_row = tk.Frame(filters_frame)
-        filters_row.pack()
-        
-        tk.Label(filters_row, text="Mostrar:", font=('Arial', 10)).grid(row=0, column=0, padx=5)
-        self.patient_appointment_filter = ttk.Combobox(filters_row, 
-                                                     values=['Todas', 'Próximas', 'Pasadas', 'Este Mes'], 
-                                                     state='readonly', width=12)
+        main_frame.pack(fill='both', expand=True, padx=15, pady=15)
+
+        # Header moderno
+        header = tk.Frame(main_frame, bg='#0B5394', height=60)
+        header.pack(fill='x', pady=(0, 10))
+        header.pack_propagate(False)
+        tk.Label(header, text="📅 MIS CITAS", font=('Arial', 14, 'bold'), fg='white', bg='#0B5394').pack(side='left', padx=15)
+        ttk.Button(header, text="➕ Agendar Cita", command=self.open_patient_schedule_dialog, style='Primary.TButton').pack(side='right', padx=10)
+        ttk.Button(header, text="🔄 Actualizar", command=self.load_patient_appointments, style='Primary.TButton').pack(side='right')
+
+        # Panel dividido: Calendario + Lista
+        content = tk.Frame(main_frame, bg='#F8FAFC')
+        content.pack(fill='both', expand=True)
+
+        left = tk.Frame(content, bg='white', relief='solid', bd=1, width=360)
+        left.pack(side='left', fill='y', padx=(0, 10))
+        left.pack_propagate(False)
+
+        right = tk.Frame(content, bg='white', relief='solid', bd=1)
+        right.pack(side='left', fill='both', expand=True)
+
+        # Calendario
+        cal_header = tk.Frame(left, bg='#0B5394', height=40)
+        cal_header.pack(fill='x')
+        cal_header.pack_propagate(False)
+        tk.Label(cal_header, text="Calendario", font=('Arial', 11, 'bold'), fg='white', bg='#0B5394').pack(pady=8)
+
+        cal_container = tk.Frame(left, bg='white')
+        cal_container.pack(fill='both', expand=True, padx=10, pady=10)
+
+        self.patient_cal_date = tk.StringVar()
+        if CALENDAR_AVAILABLE:
+            self.patient_calendar = Calendar(cal_container, selectmode='day', date_pattern='dd/mm/yyyy')
+            self.patient_calendar.pack(fill='both', expand=True)
+            def on_cal_select(event=None):
+                self.patient_cal_date.set(self.patient_calendar.get_date())
+                self.load_patient_appointments()
+            self.patient_calendar.bind("<<CalendarSelected>>", on_cal_select)
+        else:
+            tk.Label(cal_container, text="tkcalendar no instalado. Use Filtros.", bg='white').pack(pady=10)
+            date_entry = tk.Entry(cal_container, textvariable=self.patient_cal_date)
+            date_entry.pack(pady=5)
+            ttk.Button(cal_container, text='Filtrar', command=self.load_patient_appointments, style='Primary.TButton').pack()
+
+        # Filtros rápidos
+        filters = tk.Frame(left, bg='white')
+        filters.pack(fill='x', padx=10, pady=(0, 10))
+        tk.Label(filters, text="Mostrar:", bg='white').pack(side='left')
+        self.patient_appointment_filter = ttk.Combobox(filters, values=['Todas', 'Próximas', 'Pasadas', 'Este Mes'], state='readonly', width=12)
         self.patient_appointment_filter.set('Próximas')
-        self.patient_appointment_filter.grid(row=0, column=1, padx=5)
-        self.patient_appointment_filter.bind('<<ComboboxSelected>>', self.filter_patient_appointments)
-        
-        # Tabla de citas
-        columns = ('Fecha', 'Hora', 'Doctor', 'Especialidad', 'Motivo', 'Estado', 'Notas')
-        self.patient_appointments_tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=12)
-        
-        # Configurar headers
-        column_widths = {'Fecha': 100, 'Hora': 80, 'Doctor': 150, 'Especialidad': 120, 
-                        'Motivo': 200, 'Estado': 100, 'Notas': 150}
-        
-        for col in columns:
-            self.patient_appointments_tree.heading(col, text=col)
-            self.patient_appointments_tree.column(col, width=column_widths.get(col, 100))
-        
-        # Scrollbar
-        scrollbar_y = ttk.Scrollbar(main_frame, orient="vertical", command=self.patient_appointments_tree.yview)
-        self.patient_appointments_tree.configure(yscrollcommand=scrollbar_y.set)
-        
-        # Pack
-        self.patient_appointments_tree.pack(side='left', fill='both', expand=True)
-        scrollbar_y.pack(side='right', fill='y')
-        
-        # Botones de acción
-        actions_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        actions_frame.pack(fill='x', pady=(10, 0))
-        
-        appointment_actions = [
-            ("👁️ Ver Detalles", self.view_my_appointment_details, "#0B5394"),
-            ("❌ Cancelar Cita", self.cancel_my_appointment, "#C0392B"),
-            ("📞 Contactar Clínica", self.contact_clinic, "#E67E22"),
-            ("📋 Descargar Comprobante", self.download_appointment_receipt, "#16A085")
-        ]
-        
-        for text, command, color in appointment_actions:
-            btn = tk.Button(actions_frame, text=text, command=command, 
-                           bg=color, fg='white', font=('Arial', 9, 'bold'))
-            btn.pack(side='left', padx=5, pady=5)
-        
-        # Cargar datos
+        self.patient_appointment_filter.pack(side='left', padx=5)
+        self.patient_appointment_filter.bind('<<ComboboxSelected>>', lambda e: self.load_patient_appointments())
+
+        # Lista de citas
+        list_header = tk.Frame(right, bg='#0B5394', height=40)
+        list_header.pack(fill='x')
+        list_header.pack_propagate(False)
+        tk.Label(list_header, text="Mis Citas", font=('Arial', 11, 'bold'), fg='white', bg='#0B5394').pack(pady=8)
+
+        columns = ('ID','Fecha','Hora','Doctor','Motivo','Estado')
+        self.patient_appointments_tree = ttk.Treeview(right, columns=columns, show='headings', height=14)
+        for c in columns:
+            self.patient_appointments_tree.heading(c, text=c)
+            self.patient_appointments_tree.column(c, width=110 if c in ('Fecha','Doctor','Motivo') else 80)
+        vs = ttk.Scrollbar(right, orient='vertical', command=self.patient_appointments_tree.yview)
+        self.patient_appointments_tree.configure(yscrollcommand=vs.set)
+        self.patient_appointments_tree.pack(side='left', fill='both', expand=True, padx=(10,0), pady=10)
+        vs.pack(side='right', fill='y', pady=10)
+
+        actions = tk.Frame(main_frame, bg='#F8FAFC')
+        actions.pack(fill='x', pady=(8,0))
+        ttk.Button(actions, text='👁️ Ver Detalles', style='Primary.TButton', command=self.view_my_appointment_details).pack(side='left', padx=5)
+        ttk.Button(actions, text='❌ Cancelar', style='Primary.TButton', command=self.cancel_my_appointment).pack(side='left', padx=5)
+
+        # Cargar
         self.load_patient_appointments()
     
     def create_patient_medical_history(self, parent):
@@ -10409,9 +12042,35 @@ Ingresos del Mes: RD$ {stats.get('monthly_income', 0):,.2f}
         tk.Label(filters_row, text="Doctor:", font=('Arial', 10)).grid(row=0, column=2, padx=5)
         self.history_doctor_filter = ttk.Combobox(filters_row, state='readonly', width=15)
         self.history_doctor_filter.grid(row=0, column=3, padx=5)
-        
-        tk.Button(filters_row, text="🔍 Filtrar", bg='#0B5394', fg='white',
-                 command=self.filter_medical_history).grid(row=0, column=4, padx=10)
+        # Poblar doctores del historial del paciente ("Todos" + "id - Nombre Apellido")
+        try:
+            conn = self.db_manager.get_connection(); cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT du.id, du.nombre, du.apellido
+                FROM historial_medico hm
+                JOIN usuarios du ON du.id = hm.doctor_id
+                WHERE hm.paciente_id = ?
+                GROUP BY du.id, du.nombre, du.apellido
+                ORDER BY du.nombre, du.apellido
+                """,
+                (self.current_user.id,),
+            )
+            doctors = [f"{r[0]} - {r[1]} {r[2]}" for r in cur.fetchall()]
+            self.history_doctor_filter['values'] = ['Todos'] + doctors
+            self.history_doctor_filter.set('Todos')
+            cur.close(); conn.close()
+        except Exception:
+            # Fallback simple
+            self.history_doctor_filter['values'] = ['Todos']
+            self.history_doctor_filter.set('Todos')
+
+        ttk.Button(
+            filters_row,
+            text="🔍 Filtrar",
+            style='Primary.TButton',
+            command=self.filter_medical_history,
+        ).grid(row=0, column=4, padx=10)
         
         # Tabla de historial médico
         columns = ('Fecha', 'Doctor', 'Diagnóstico', 'Tratamiento', 'Medicamentos', 'Observaciones')
@@ -10438,18 +12097,303 @@ Ingresos del Mes: RD$ {stats.get('monthly_income', 0):,.2f}
         actions_frame.pack(fill='x', pady=(10, 0))
         
         history_actions = [
-            ("👁️ Ver Detalle Completo", self.view_history_detail, "#0B5394"),
-            ("🖨️ Imprimir Historial", self.print_my_history, "#16A085"),
-            ("📥 Exportar PDF", self.export_history_pdf, "#E67E22"),
-            ("📧 Enviar por Email", self.email_my_history, "#1abc9c")
+            ("👁️ Ver Detalle Completo", self.view_history_detail),
+            ("🖨️ Imprimir Historial", self.print_my_history),
+            ("📥 Exportar PDF", self.export_history_pdf),
+            ("📧 Enviar por Email", self.email_my_history)
         ]
-        
-        for text, command, color in history_actions:
-            btn = tk.Button(actions_frame, text=text, command=command, 
-                           bg=color, fg='white', font=('Arial', 9, 'bold'))
-            btn.pack(side='left', padx=5, pady=5)
+
+        for text, command in history_actions:
+            ttk.Button(actions_frame, text=text, command=command, style='Primary.TButton').pack(side='left', padx=5, pady=5)
         
         # Cargar datos
+        self.load_patient_medical_history()
+
+    def create_patient_settings(self, parent):
+        """Configuración del paciente (perfil básico editable)"""
+        main = tk.Frame(parent, bg='#F8FAFC')
+        main.pack(fill='both', expand=True, padx=20, pady=20)
+
+        header = tk.Frame(main, bg='#0B5394', height=60)
+        header.pack(fill='x', pady=(0, 15))
+        header.pack_propagate(False)
+        tk.Label(header, text='⚙️ CONFIGURACIÓN DE PERFIL', font=('Arial', 14, 'bold'), fg='white', bg='#0B5394').pack(pady=12)
+
+        form = tk.Frame(main, bg='white', relief='solid', bd=1)
+        form.pack(fill='x', padx=10, pady=10)
+
+        data = self.get_patient_profile_data()
+        fields = [
+            ('Nombre', 'nombre'),
+            ('Apellido', 'apellido'),
+            ('Email', 'email'),
+            ('Teléfono', 'telefono'),
+            ('Dirección', 'direccion'),
+        ]
+        self.patient_settings_vars = {}
+        for label, key in fields:
+            row = tk.Frame(form, bg='white')
+            row.pack(fill='x', padx=15, pady=8)
+            tk.Label(row, text=f"{label}:", width=16, anchor='w', font=('Arial', 10, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
+            var = tk.StringVar(value=str(data.get(key, '') or ''))
+            self.patient_settings_vars[key] = var
+            tk.Entry(row, textvariable=var, font=('Arial', 10), relief='solid', bd=1).pack(side='left', fill='x', expand=True)
+
+        save = tk.Frame(main, bg='#F8FAFC')
+        save.pack(fill='x', pady=10)
+        tk.Button(save, text='💾 Guardar Cambios', bg='#16A085', fg='white', font=('Arial', 11, 'bold'), command=self.save_patient_settings).pack(side='left')
+
+    def save_patient_settings(self):
+        try:
+            if not self.current_user:
+                return
+            conn = self.db_manager.get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE usuarios SET nombre=?, apellido=?, email=?, telefono=?, direccion=?, fecha_actualizacion=CURRENT_TIMESTAMP WHERE id=?",
+                (
+                    self.patient_settings_vars['nombre'].get().strip(),
+                    self.patient_settings_vars['apellido'].get().strip(),
+                    self.patient_settings_vars['email'].get().strip(),
+                    self.patient_settings_vars['telefono'].get().strip(),
+                    self.patient_settings_vars['direccion'].get().strip(),
+                    self.current_user.id,
+                ),
+            )
+            conn.commit()
+            cur.close(); conn.close()
+            messagebox.showinfo('Perfil', '✅ Cambios guardados')
+        except Exception as e:
+            messagebox.showerror('Perfil', f'Error guardando cambios: {e}')
+
+    def open_patient_schedule_dialog(self):
+        """Diálogo ligero para que el paciente agende su cita"""
+        win = tk.Toplevel(self.root)
+        win.title('Agendar Cita')
+        win.geometry('520x430')
+        win.configure(bg='#F8FAFC')
+        win.transient(self.root); win.grab_set()
+
+        top = tk.Frame(win, bg='#0B5394', height=50)
+        top.pack(fill='x')
+        top.pack_propagate(False)
+        tk.Label(top, text='Agendar nueva cita', fg='white', bg='#0B5394', font=('Arial', 12, 'bold')).pack(pady=10)
+
+        body = tk.Frame(win, bg='#F8FAFC')
+        body.pack(fill='both', expand=True, padx=15, pady=15)
+
+        # Doctor
+        tk.Label(body, text='Doctor', bg='#F8FAFC', fg='#1E3A8A', font=('Arial', 10, 'bold')).pack(anchor='w')
+        doctors = self.db_manager.get_all_doctors()
+        doctor_values = [f"{d['id']} - Dr. {d['nombre']} {d['apellido']}" for d in doctors]
+        doc_var = tk.StringVar(); doc_combo = ttk.Combobox(body, values=doctor_values, state='readonly')
+        doc_combo.pack(fill='x', pady=(4,10))
+
+        # Fecha
+        tk.Label(body, text='Fecha', bg='#F8FAFC', fg='#1E3A8A', font=('Arial', 10, 'bold')).pack(anchor='w')
+        date_var = tk.StringVar()
+        if CALENDAR_AVAILABLE:
+            cal = Calendar(body, selectmode='day', date_pattern='dd/mm/yyyy')
+            cal.pack(fill='x', pady=5)
+        else:
+            tk.Entry(body, textvariable=date_var).pack(fill='x', pady=5)
+
+        # Hora
+        tk.Label(body, text='Hora (HH:MM)', bg='#F8FAFC', fg='#1E3A8A', font=('Arial', 10, 'bold')).pack(anchor='w')
+        time_var = tk.StringVar(); tk.Entry(body, textvariable=time_var).pack(fill='x', pady=(4,10))
+
+        # Motivo
+        tk.Label(body, text='Motivo', bg='#F8FAFC', fg='#1E3A8A', font=('Arial', 10, 'bold')).pack(anchor='w')
+        motivo_var = tk.StringVar(); tk.Entry(body, textvariable=motivo_var).pack(fill='x', pady=(4,10))
+
+        def submit():
+            try:
+                doctor_sel = doc_combo.get()
+                if not doctor_sel:
+                    messagebox.showwarning('Cita', 'Seleccione un doctor'); return
+                doctor_id = int(doctor_sel.split(' - ')[0])
+                fecha = cal.get_date() if CALENDAR_AVAILABLE else date_var.get().strip()
+                hora = time_var.get().strip()
+                if not fecha or not hora:
+                    messagebox.showwarning('Cita','Ingrese fecha y hora'); return
+                if self.check_appointment_conflict(fecha, hora, doctor_id):
+                    if not messagebox.askyesno('Conflicto', 'Ya existe una cita en ese horario. ¿Continuar?'):
+                        return
+                data = {
+                    'paciente_id': self.current_user.id,
+                    'doctor_id': doctor_id,
+                    'motivo': motivo_var.get().strip() or 'Consulta',
+                    'estado': 'pendiente',
+                    'fecha_cita': fecha,
+                    'hora_cita': hora,
+                    'observaciones': ''
+                }
+                res = self.db_manager.create_appointment(data)
+                if res:
+                    messagebox.showinfo('Cita','✅ Cita creada')
+                    self.load_patient_appointments()
+                    win.destroy()
+                else:
+                    messagebox.showerror('Cita','No se pudo crear la cita')
+            except Exception as e:
+                messagebox.showerror('Cita', f'Error: {e}')
+
+        tk.Button(body, text='Guardar', bg='#16A085', fg='white', command=submit).pack(side='left', pady=5)
+        tk.Button(body, text='Cancelar', bg='#0B5394', fg='white', command=win.destroy).pack(side='right', pady=5)
+
+    def load_patient_appointments(self):
+        """Carga las citas del paciente aplicando filtros simples y fecha seleccionada del calendario"""
+        try:
+            if not hasattr(self, 'patient_appointments_tree'):
+                return
+            # limpiar
+            for i in self.patient_appointments_tree.get_children():
+                self.patient_appointments_tree.delete(i)
+
+            conn = self.db_manager.get_connection(); cur = conn.cursor()
+            where = "WHERE c.paciente_id = ?"; params = [self.current_user.id]
+
+            # Filtro por fecha del calendario
+            sel_date = getattr(self, 'patient_cal_date', tk.StringVar()).get()
+            if sel_date:
+                try:
+                    d,m,y = sel_date.split('/')
+                    iso = f"{y}-{m.zfill(2)}-{d.zfill(2)}"
+                    where += " AND DATE(c.fecha_hora) = ?"; params.append(iso)
+                except:
+                    pass
+
+            # Ejecutar
+            cur.execute(f"""
+                SELECT c.id, DATE(c.fecha_hora), TIME(c.fecha_hora), u.nombre || ' ' || u.apellido as doctor_nombre,
+                       c.motivo, c.estado
+                FROM citas c
+                JOIN usuarios u ON u.id = c.doctor_id
+                {where}
+                ORDER BY c.fecha_hora DESC
+            """, params)
+
+            rows = cur.fetchall()
+            # Filtrado rápido
+            mode = getattr(self, 'patient_appointment_filter', None)
+            now_iso = datetime.now().isoformat(sep=' ')
+            for r in rows:
+                fecha = r[1] or ''
+                hora = r[2] or ''
+                dt_iso = f"{fecha} {hora}".strip()
+                keep = True
+                if mode:
+                    val = mode.get()
+                    if val == 'Próximas' and dt_iso < now_iso:
+                        keep = False
+                    if val == 'Pasadas' and dt_iso >= now_iso:
+                        keep = False
+                    if val == 'Este Mes':
+                        month = datetime.now().strftime('%Y-%m')
+                        keep = (r[1] or '').startswith(month)
+                if keep:
+                    self.patient_appointments_tree.insert('', 'end', values=r)
+
+            cur.close(); conn.close()
+        except Exception as e:
+            messagebox.showerror('Citas', f'Error cargando citas: {e}')
+
+    def view_my_appointment_details(self):
+        sel = self.patient_appointments_tree.selection()
+        if not sel:
+            return
+        vals = self.patient_appointments_tree.item(sel[0])['values']
+        txt = f"""🗓️ CITA
+
+ID: {vals[0]}
+Fecha: {vals[1]} {vals[2]}
+Doctor: {vals[3]}
+Motivo: {vals[4]}
+Estado: {vals[5]}"""
+        messagebox.showinfo('Detalle de Cita', txt)
+
+    def cancel_my_appointment(self):
+        sel = self.patient_appointments_tree.selection()
+        if not sel:
+            return
+        appt_id = self.patient_appointments_tree.item(sel[0])['values'][0]
+        if messagebox.askyesno('Cancelar', '¿Desea cancelar esta cita?'):
+            if self.db_manager.update_appointment_status(appt_id, 'cancelada'):
+                self.load_patient_appointments()
+                messagebox.showinfo('Cancelar', 'Cita cancelada')
+            else:
+                messagebox.showerror('Cancelar', 'No se pudo cancelar la cita')
+
+    def load_patient_medical_history(self):
+        """Llenar el tree de historial del paciente"""
+        try:
+            if not hasattr(self, 'patient_history_tree'):
+                return
+            for i in self.patient_history_tree.get_children():
+                self.patient_history_tree.delete(i)
+            conn = self.db_manager.get_connection(); cur = conn.cursor()
+
+            # Construir filtros dinámicos
+            where = ["hm.paciente_id = ?"]
+            params = [self.current_user.id]
+
+            # Filtro por período
+            period = getattr(self, 'history_period_filter', None)
+            if period:
+                val = period.get()
+                today = datetime.now().date()
+                if val == 'Este Año':
+                    where.append("strftime('%Y', hm.fecha_consulta) = ?")
+                    params.append(str(today.year))
+                elif val == 'Últimos 6 Meses':
+                    start = (today.replace(day=1) - timedelta(days=180)).strftime('%Y-%m-%d')
+                    where.append("DATE(hm.fecha_consulta) >= ?")
+                    params.append(start)
+                elif val == 'Últimos 3 Meses':
+                    start = (today.replace(day=1) - timedelta(days=90)).strftime('%Y-%m-%d')
+                    where.append("DATE(hm.fecha_consulta) >= ?")
+                    params.append(start)
+
+            # Filtro por doctor
+            doctor_cb = getattr(self, 'history_doctor_filter', None)
+            if doctor_cb and doctor_cb.get() and doctor_cb.get() != 'Todos':
+                try:
+                    doctor_id = int(doctor_cb.get().split(' - ')[0])
+                    where.append("hm.doctor_id = ?")
+                    params.append(doctor_id)
+                except Exception:
+                    pass
+
+            where_clause = ' AND '.join(where)
+            cur.execute(
+                f"""
+                SELECT hm.fecha_consulta,
+                       du.nombre || ' ' || du.apellido as doctor,
+                       COALESCE(hm.diagnostico,''),
+                       COALESCE(hm.tratamiento,''),
+                       COALESCE(hm.medicamentos,''),
+                       COALESCE(hm.observaciones,'')
+                FROM historial_medico hm
+                JOIN usuarios du ON du.id = hm.doctor_id
+                WHERE {where_clause}
+                ORDER BY hm.fecha_consulta DESC
+                """,
+                params,
+            )
+            for row in cur.fetchall():
+                # formatear fecha
+                fecha = row[0]
+                try:
+                    fecha = datetime.fromisoformat(str(fecha)).strftime('%d/%m/%Y')
+                except:
+                    pass
+                self.patient_history_tree.insert('', 'end', values=(fecha, row[1], row[2], row[3], row[4], row[5]))
+            cur.close(); conn.close()
+        except Exception as e:
+            messagebox.showerror('Historial', f'Error cargando historial: {e}')
+
+    def filter_medical_history(self, event=None):
+        """Aplicar filtros a la tabla de historial médico del paciente"""
         self.load_patient_medical_history()
     
     def create_patient_billing(self, parent):
@@ -11197,35 +13141,101 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
             return []
     
     def get_patient_info(self):
-        """Obtener información del paciente actual"""
+        """Obtener información del paciente actual con detección robusta de esquema."""
         try:
             conn = self.db_manager.get_connection()
             cursor = conn.cursor()
-            
+
             patient_id = self.current_user.id
-            
-            cursor.execute("""
-                SELECT u.*, p.numero_expediente, p.seguro_id, p.contacto_emergencia, 
-                       p.telefono_emergencia, s.nombre as seguro_nombre
-                FROM usuarios u
-                LEFT JOIN pacientes p ON u.id = p.id
-                LEFT JOIN seguros_medicos s ON p.seguro_id = s.id
-                WHERE u.id = ?
-            """, (patient_id,))
-            
+
+            # Base sin datos de seguro (si todo falla)
+            base_sql = (
+                "SELECT u.*, p.numero_expediente, p.contacto_emergencia, p.telefono_emergencia "
+                "FROM usuarios u LEFT JOIN pacientes p ON u.id = p.id WHERE u.id = ?"
+            )
+
+            # 1) Intentar usando seguro_medico_id
+            try:
+                sql = (
+                    "SELECT u.*, p.numero_expediente, p.contacto_emergencia, p.telefono_emergencia, "
+                    "p.seguro_medico_id as seguro_medico_id, s.nombre as seguro_nombre "
+                    "FROM usuarios u LEFT JOIN pacientes p ON u.id = p.id "
+                    "LEFT JOIN seguros_medicos s ON p.seguro_medico_id = s.id WHERE u.id = ?"
+                )
+                cursor.execute(sql, (patient_id,))
+            except Exception:
+                # 2) Intentar usando seguro_id (muy legado)
+                try:
+                    sql = (
+                        "SELECT u.*, p.numero_expediente, p.contacto_emergencia, p.telefono_emergencia, "
+                        "p.seguro_id as seguro_medico_id, s.nombre as seguro_nombre "
+                        "FROM usuarios u LEFT JOIN pacientes p ON u.id = p.id "
+                        "LEFT JOIN seguros_medicos s ON p.seguro_id = s.id WHERE u.id = ?"
+                    )
+                    cursor.execute(sql, (patient_id,))
+                except Exception:
+                    # 3) Intentar usando texto del seguro_medico
+                    try:
+                        sql = (
+                            "SELECT u.*, p.numero_expediente, p.contacto_emergencia, p.telefono_emergencia, "
+                            "p.seguro_medico as seguro_nombre "
+                            "FROM usuarios u LEFT JOIN pacientes p ON u.id = p.id WHERE u.id = ?"
+                        )
+                        cursor.execute(sql, (patient_id,))
+                    except Exception:
+                        # 4) Último recurso: sin info de seguro
+                        cursor.execute(base_sql, (patient_id,))
+
             row = cursor.fetchone()
             if row:
-                patient_data = dict(zip([col[0] for col in cursor.description], row))
+                try:
+                    patient_data = dict(row)
+                except Exception:
+                    patient_data = dict(zip([col[0] for col in cursor.description], row))
             else:
                 patient_data = {}
-            
+
             cursor.close()
             conn.close()
             return patient_data
-            
         except Exception as e:
             print(f"Error obteniendo información del paciente: {e}")
             return {}
+
+    # ----- Acciones del historial del paciente (stubs seguros) -----
+    def view_history_detail(self):
+        """Mostrar detalle del registro seleccionado del historial"""
+        try:
+            if not hasattr(self, 'patient_history_tree'):
+                return
+            sel = self.patient_history_tree.selection()
+            if not sel:
+                messagebox.showinfo('Historial', 'Seleccione un registro para ver el detalle')
+                return
+            vals = self.patient_history_tree.item(sel[0]).get('values', [])
+            detalle = (
+                f"Fecha: {vals[0] if len(vals)>0 else ''}\n"
+                f"Doctor: {vals[1] if len(vals)>1 else ''}\n"
+                f"Diagnóstico: {vals[2] if len(vals)>2 else ''}\n"
+                f"Tratamiento: {vals[3] if len(vals)>3 else ''}\n"
+                f"Medicamentos: {vals[4] if len(vals)>4 else ''}\n"
+                f"Observaciones: {vals[5] if len(vals)>5 else ''}"
+            )
+            messagebox.showinfo('Detalle de Historial', detalle)
+        except Exception as e:
+            messagebox.showerror('Historial', f'Error mostrando detalle: {e}')
+
+    def print_my_history(self):
+        """Imprimir historial (stub básico)"""
+        messagebox.showinfo('Historial', 'Impresión del historial próximamente disponible')
+
+    def export_history_pdf(self):
+        """Exportar historial a PDF (stub básico)"""
+        messagebox.showinfo('Historial', 'Exportación a PDF próximamente disponible')
+
+    def email_my_history(self):
+        """Enviar historial por email (stub básico)"""
+        messagebox.showinfo('Historial', 'Envío por email próximamente disponible')
     
     def get_patient_upcoming_appointments(self):
         """Obtener próximas citas del paciente"""
@@ -13908,17 +15918,38 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                     result = cursor.fetchone()
                     numero_expediente = result[0] if result else self.generate_expediente_number()
                 
-                cursor.execute("""
-                    INSERT INTO pacientes (id, numero_expediente, seguro_medico, 
-                                         contacto_emergencia, telefono_emergencia)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (
-                    user_id, 
-                    numero_expediente,
-                    form_vars.get('seguro_medico', tk.StringVar()).get().strip() or None,
-                    form_vars.get('contacto_emergencia', tk.StringVar()).get().strip() or None,
-                    form_vars.get('telefono_emergencia', tk.StringVar()).get().strip() or None
-                ))
+                # Parsear seguro desde el combobox (formato: "id|nombre")
+                seguro_combo_val = (form_vars.get('seguro_id', tk.StringVar()).get() or '').strip()
+                seguro_id_val = None
+                seguro_nombre_val = None
+                if '|' in seguro_combo_val:
+                    parts = seguro_combo_val.split('|', 1)
+                    seguro_id_val = int(parts[0]) if parts[0].isdigit() else None
+                    seguro_nombre_val = parts[1].strip()
+                elif seguro_combo_val.isdigit():
+                    seguro_id_val = int(seguro_combo_val)
+                elif seguro_combo_val:
+                    # Si vino texto directo (fallback), guardarlo como nombre
+                    seguro_nombre_val = seguro_combo_val
+
+                tiene_seguro = 1 if (seguro_id_val and seguro_id_val != 4) or (seguro_nombre_val and seguro_nombre_val.lower() != 'sin seguro') else 0
+
+                cursor.execute(
+                    """
+                    INSERT INTO pacientes (id, numero_expediente, seguro_medico, seguro_medico_id,
+                                           contacto_emergencia, telefono_emergencia, tiene_seguro)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        user_id,
+                        numero_expediente,
+                        seguro_nombre_val,
+                        seguro_id_val,
+                        form_vars.get('contacto_emergencia', tk.StringVar()).get().strip() or None,
+                        form_vars.get('telefono_emergencia', tk.StringVar()).get().strip() or None,
+                        tiene_seguro,
+                    ),
+                )
             
             conn.commit()
             cursor.close()
@@ -14500,8 +16531,6 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
     def view_my_bills(self): messagebox.showinfo("Acción", "Ver mis facturas - En desarrollo")
     def update_my_profile(self): messagebox.showinfo("Acción", "Actualizar perfil - En desarrollo")
     def request_new_appointment(self): messagebox.showinfo("Acción", "Solicitar nueva cita - En desarrollo")
-    def filter_patient_appointments(self, event=None): messagebox.showinfo("Acción", "Filtrar citas - En desarrollo")
-    def load_patient_appointments(self): messagebox.showinfo("Acción", "Cargar mis citas - En desarrollo")
     
     # NUEVAS FUNCIONES PARA FORMULARIO MEJORADO
     def select_date_enhanced(self, var):
