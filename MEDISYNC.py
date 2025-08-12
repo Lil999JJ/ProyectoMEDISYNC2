@@ -13598,160 +13598,207 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             raise Exception(f"Error generando PDF: {str(e)}")
 
     def create_patient_settings(self, parent):
-        """Configuración del paciente con diseño moderno similar al admin"""
+        """Configuración del paciente - Diseño simplificado y limpio"""
         # Frame principal
         main_frame = tk.Frame(parent, bg='#F8FAFC')
         main_frame.pack(fill='both', expand=True)
         
-        # Header principal con gradiente visual
-        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=80)
+        # Header simplificado
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=70)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
         
-        # Contenido del header
-        header_content = tk.Frame(header_frame, bg='#1E3A8A')
-        header_content.pack(expand=True, fill='both', padx=30, pady=15)
+        # Contenido del header centrado
+        tk.Label(header_frame, text="⚙️ Configuración de Mi Perfil", 
+                font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(expand=True)
         
-        # Título principal
-        title_frame = tk.Frame(header_content, bg='#1E3A8A')
-        title_frame.pack(side='left', fill='y')
-        
-        tk.Label(title_frame, text="⚙️ Configuración de Mi Perfil", 
-                font=('Arial', 20, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
-        tk.Label(title_frame, text="Administra tu información personal y preferencias", 
-                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
-        
-        # Contenido principal
+        # Contenido principal - SIN SCROLL - Ajustado para mostrar todo
         content_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        content_frame.pack(fill='both', expand=True, padx=30, pady=30)
+        content_frame.pack(fill='both', expand=True, padx=30, pady=20)
         
         # Obtener datos del paciente
         data = self.get_patient_profile_data()
         
-        # Panel de información personal
-        personal_panel = tk.LabelFrame(content_frame, text="👤 Información Personal", 
-                                     font=('Arial', 14, 'bold'), padx=30, pady=20, 
-                                     bg='white', relief='solid', bd=1)
-        personal_panel.pack(fill='x', pady=(0, 30))
+        # Layout en dos columnas para aprovechar el espacio
+        columns_frame = tk.Frame(content_frame, bg='#F8FAFC')
+        columns_frame.pack(fill='both', expand=True)
         
-        # Grid para formulario personal
-        personal_grid = tk.Frame(personal_panel, bg='white')
-        personal_grid.pack(fill='x')
+        # Columna izquierda - Información personal
+        left_column = tk.Frame(columns_frame, bg='white', relief='solid', bd=1)
+        left_column.pack(side='left', fill='both', expand=True, padx=(0, 20))
         
-        # Configurar campos del formulario
+        # Título de la columna izquierda
+        left_title = tk.Frame(left_column, bg='#3B82F6', height=50)
+        left_title.pack(fill='x')
+        left_title.pack_propagate(False)
+        
+        tk.Label(left_title, text="📝 Información Personal", 
+                font=('Arial', 14, 'bold'), bg='#3B82F6', fg='white').pack(expand=True)
+        
+        # Formulario de datos personales - más compacto
+        personal_form = tk.Frame(left_column, bg='white')
+        personal_form.pack(fill='both', expand=True, padx=20, pady=15)
+        
+        # Configurar campos del formulario en dos columnas
         personal_fields = [
-            ('👤 Nombre:', 'nombre', 0, 0),
-            ('👤 Apellido:', 'apellido', 0, 2),
-            ('📧 Email:', 'email', 1, 0),
-            ('📞 Teléfono:', 'telefono', 1, 2),
-            ('🏠 Dirección:', 'direccion', 2, 0)
+            [('Nombre *', 'nombre'), ('Apellido *', 'apellido')],  # Primera fila
+            [('Email *', 'email'), ('Teléfono', 'telefono')],     # Segunda fila
+            [('Dirección', 'direccion'), None]                     # Tercera fila (dirección ocupa toda la fila)
         ]
         
         self.patient_settings_vars = {}
         
-        for label, key, row, col in personal_fields:
-            # Label
-            tk.Label(personal_grid, text=label, font=('Arial', 11, 'bold'), 
-                    bg='white', fg='#1E3A8A').grid(row=row*2, column=col, sticky='w', 
-                                                   padx=(0, 10), pady=(10, 5))
+        for row_fields in personal_fields:
+            # Frame para cada fila
+            row_frame = tk.Frame(personal_form, bg='white')
+            row_frame.pack(fill='x', pady=6)
             
-            # Entry
-            var = tk.StringVar(value=str(data.get(key, '') or ''))
-            self.patient_settings_vars[key] = var
-            
-            entry = tk.Entry(personal_grid, textvariable=var, font=('Arial', 10), 
-                           relief='solid', bd=1, width=25 if key != 'direccion' else 60)
-            
-            if key == 'direccion':
-                entry.grid(row=row*2+1, column=col, columnspan=4, sticky='ew', 
-                          padx=(0, 10), pady=(0, 15))
-            else:
-                entry.grid(row=row*2+1, column=col, sticky='ew', 
-                          padx=(0, 10), pady=(0, 15))
+            for i, field_data in enumerate(row_fields):
+                if field_data is None:
+                    continue
+                    
+                label, key = field_data
+                
+                # Frame para cada campo (columna)
+                if key == 'direccion':
+                    # Dirección ocupa toda la fila
+                    field_frame = tk.Frame(row_frame, bg='white')
+                    field_frame.pack(fill='x')
+                else:
+                    # Campos normales en columnas
+                    field_frame = tk.Frame(row_frame, bg='white')
+                    field_frame.pack(side='left', fill='both', expand=True, padx=(0, 10) if i == 0 else (0, 0))
+                
+                # Label del campo
+                tk.Label(field_frame, text=label, font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w', pady=(0, 3))
+                
+                # Entry del campo
+                var = tk.StringVar(value=str(data.get(key, '') or ''))
+                self.patient_settings_vars[key] = var
+                
+                entry = tk.Entry(field_frame, textvariable=var, font=('Arial', 10), 
+                               relief='solid', bd=1, bg='#F9FAFB')
+                entry.pack(fill='x', ipady=5)
+                
+                # Estilo para campos requeridos
+                if '*' in label:
+                    entry.configure(highlightbackground='#EF4444', highlightcolor='#3B82F6', highlightthickness=1)
         
-        # Configurar grid weights
-        for i in range(4):
-            personal_grid.columnconfigure(i, weight=1)
+        # Columna derecha - Preferencias y acciones
+        right_column = tk.Frame(columns_frame, bg='white', relief='solid', bd=1)
+        right_column.pack(side='right', fill='both', expand=True)
         
-        # Panel de preferencias
-        preferences_panel = tk.LabelFrame(content_frame, text="🎨 Preferencias de la Cuenta", 
-                                        font=('Arial', 14, 'bold'), padx=30, pady=20, 
-                                        bg='white', relief='solid', bd=1)
-        preferences_panel.pack(fill='x', pady=(0, 30))
+        # Título de la columna derecha
+        right_title = tk.Frame(right_column, bg='#8B5CF6', height=50)
+        right_title.pack(fill='x')
+        right_title.pack_propagate(False)
         
-        # Grid para preferencias
-        pref_grid = tk.Frame(preferences_panel, bg='white')
-        pref_grid.pack(fill='x')
+        tk.Label(right_title, text="⚙️ Preferencias y Configuración", 
+                font=('Arial', 14, 'bold'), bg='#8B5CF6', fg='white').pack(expand=True)
         
-        # Notificaciones por email
-        tk.Label(pref_grid, text="📧 Notificaciones por Email:", 
-                font=('Arial', 11, 'bold'), bg='white', fg='#1E3A8A').grid(row=0, column=0, sticky='w', pady=10)
+        # Contenido de la columna derecha - más compacto
+        right_content = tk.Frame(right_column, bg='white')
+        right_content.pack(fill='both', expand=True, padx=20, pady=15)
+        
+        # Sección de preferencias - más compacta
+        pref_section = tk.Frame(right_content, bg='white')
+        pref_section.pack(fill='x', pady=(0, 15))
+        
+        tk.Label(pref_section, text="📧 Notificaciones", 
+                font=('Arial', 11, 'bold'), bg='white', fg='#374151').pack(anchor='w', pady=(0, 8))
+        
+        # Checkbox para notificaciones
         self.email_notifications_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(pref_grid, text="Recibir recordatorios de citas", 
+        notification_frame = tk.Frame(pref_section, bg='white')
+        notification_frame.pack(fill='x', pady=4)
+        
+        tk.Checkbutton(notification_frame, text="Recibir recordatorios por email", 
                       variable=self.email_notifications_var, font=('Arial', 10),
-                      bg='white', fg='#374151').grid(row=0, column=1, sticky='w', padx=10)
+                      bg='white', fg='#6B7280').pack(anchor='w')
         
-        # Recordatorios
-        tk.Label(pref_grid, text="⏰ Recordatorios:", 
-                font=('Arial', 11, 'bold'), bg='white', fg='#1E3A8A').grid(row=1, column=0, sticky='w', pady=10)
+        # Combobox para tiempo de recordatorio
+        reminder_section = tk.Frame(pref_section, bg='white')
+        reminder_section.pack(fill='x', pady=8)
+        
+        tk.Label(reminder_section, text="⏰ Tiempo de recordatorio:", 
+                font=('Arial', 10, 'bold'), bg='white', fg='#374151').pack(anchor='w', pady=(0, 4))
+        
         self.reminder_time_var = tk.StringVar(value="24 horas antes")
-        reminder_combo = ttk.Combobox(pref_grid, textvariable=self.reminder_time_var,
+        reminder_combo = ttk.Combobox(reminder_section, textvariable=self.reminder_time_var,
                                     values=["1 hora antes", "2 horas antes", "24 horas antes", "48 horas antes"],
-                                    state='readonly', width=20, font=('Arial', 10))
-        reminder_combo.grid(row=1, column=1, sticky='w', padx=10)
+                                    state='readonly', width=25, font=('Arial', 10))
+        reminder_combo.pack(anchor='w', pady=5)
         
-        # Panel de información de cuenta
-        account_panel = tk.LabelFrame(content_frame, text="🔐 Información de la Cuenta", 
-                                    font=('Arial', 14, 'bold'), padx=30, pady=20, 
-                                    bg='white', relief='solid', bd=1)
-        account_panel.pack(fill='x', pady=(0, 30))
+        # Separador más pequeño
+        separator = tk.Frame(right_content, bg='#E5E7EB', height=1)
+        separator.pack(fill='x', pady=10)
         
-        # Grid para información de cuenta
-        account_grid = tk.Frame(account_panel, bg='white')
-        account_grid.pack(fill='x')
+        # Sección de seguridad - más compacta
+        security_section = tk.Frame(right_content, bg='white')
+        security_section.pack(fill='x', pady=(0, 15))
         
-        account_info = [
-            ("👤 Usuario:", f"{data.get('nombre', '')} {data.get('apellido', '')}"),
-            ("🆔 ID de Paciente:", str(data.get('id', 'N/A'))),
-            ("📅 Fecha de Registro:", data.get('fecha_creacion', 'N/A')),
-            ("🔄 Última Actualización:", data.get('fecha_actualizacion', 'N/A'))
-        ]
+        tk.Label(security_section, text="🔐 Seguridad de la Cuenta", 
+                font=('Arial', 11, 'bold'), bg='white', fg='#374151').pack(anchor='w', pady=(0, 8))
         
-        for i, (label, value) in enumerate(account_info):
-            row = i // 2
-            col = (i % 2) * 2
-            
-            tk.Label(account_grid, text=label, font=('Arial', 11, 'bold'), 
-                    bg='white', fg='#1E3A8A').grid(row=row, column=col, sticky='w', 
-                                                   padx=(0, 15), pady=10)
-            tk.Label(account_grid, text=value, font=('Arial', 11), 
-                    bg='white', fg='#059669').grid(row=row, column=col+1, sticky='w', 
-                                                   padx=(0, 40), pady=10)
+        # Botón cambiar contraseña - más compacto
+        password_btn = tk.Button(security_section, text="🔑 Cambiar Contraseña", 
+                               command=self.change_patient_password,
+                               bg='#6366F1', fg='white', font=('Arial', 10, 'bold'),
+                               relief='flat', bd=0, padx=15, pady=6, cursor='hand2')
+        password_btn.pack(anchor='w', pady=3)
         
-        # Panel de acciones
-        actions_panel = tk.Frame(main_frame, bg='#F8FAFC')
-        actions_panel.pack(fill='x', padx=30, pady=(0, 30))
+        # Panel de acciones principales - más compacto
+        actions_panel = tk.Frame(content_frame, bg='white', relief='solid', bd=2)
+        actions_panel.pack(fill='x', pady=(15, 0))
         
-        actions_inner = tk.Frame(actions_panel, bg='white', relief='solid', bd=1)
-        actions_inner.pack(fill='x', pady=10)
-        
-        actions_content = tk.Frame(actions_inner, bg='white')
+        actions_content = tk.Frame(actions_panel, bg='white')
         actions_content.pack(fill='x', padx=20, pady=15)
         
-        tk.Label(actions_content, text="⚡ Acciones Disponibles", 
-                font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
+        # Botón principal de guardar - prominente pero compacto
+        save_frame = tk.Frame(actions_content, bg='white')
+        save_frame.pack()
         
-        # Botones de acción
-        settings_actions = [
-            ("💾 Guardar Cambios", self.save_patient_settings, "#16A085"),
-            ("🔑 Cambiar Contraseña", self.change_patient_password, "#0B5394"),
-            ("📥 Exportar Datos", lambda: messagebox.showinfo("Exportar", "Función en desarrollo"), "#E67E22")
-        ]
-
-        for text, command, color in settings_actions:
-            tk.Button(actions_content, text=text, command=command,
-                     bg=color, fg='white', font=('Arial', 10, 'bold'),
-                     relief='flat', bd=0, padx=15, pady=8, cursor='hand2').pack(side='right', padx=5)
+        save_btn = tk.Button(save_frame, text="💾 GUARDAR CAMBIOS", 
+                           command=self.save_patient_settings,
+                           bg='#10B981', fg='white', font=('Arial', 12, 'bold'),
+                           relief='flat', bd=0, padx=30, pady=12, cursor='hand2')
+        save_btn.pack()
+        
+        # Nota informativa - más compacta
+        note_frame = tk.Frame(content_frame, bg='#FEF3C7', relief='solid', bd=1)
+        note_frame.pack(fill='x', pady=(5, 0))
+        
+        tk.Label(note_frame, text="ℹ️ Los campos marcados con (*) son obligatorios", 
+                font=('Arial', 9), bg='#FEF3C7', fg='#92400E').pack(pady=5)
+        
+        # Panel de botones de acción prominente
+        buttons_panel = tk.Frame(content_frame, bg='white', relief='solid', bd=1)
+        buttons_panel.pack(fill='x', pady=10)
+        
+        buttons_frame = tk.Frame(buttons_panel, bg='white')
+        buttons_frame.pack(pady=20)
+        
+        # Botón principal de guardar - más prominente
+        save_btn = tk.Button(buttons_frame, text="� Guardar Cambios", 
+                           command=self.save_patient_settings,
+                           bg='#10B981', fg='white', font=('Arial', 12, 'bold'),
+                           relief='flat', bd=0, padx=30, pady=12, cursor='hand2')
+        save_btn.pack(side='left', padx=10)
+        
+        # Botones secundarios
+        password_btn = tk.Button(buttons_frame, text="🔑 Cambiar Contraseña", 
+                               command=self.change_patient_password,
+                               bg='#6B7280', fg='white', font=('Arial', 10),
+                               relief='flat', bd=0, padx=20, pady=8, cursor='hand2')
+        password_btn.pack(side='left', padx=10)
+        
+        # Nota de campos requeridos
+        note_frame = tk.Frame(content_frame, bg='#FEF3C7')
+        note_frame.pack(fill='x', pady=(10, 0))
+        
+        tk.Label(note_frame, text="ℹ️ Los campos marcados con (*) son obligatorios", 
+                font=('Arial', 9), bg='#FEF3C7', fg='#92400E').pack(pady=10)
 
     def save_patient_settings(self):
         """Guardar configuración del paciente con validaciones mejoradas"""
@@ -13793,58 +13840,102 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             messagebox.showerror('Perfil', f'Error guardando cambios: {e}')
 
     def change_patient_password(self):
-        """Diálogo para cambiar contraseña del paciente"""
+        """Diálogo moderno para cambiar contraseña del paciente"""
+        print("🔧 DEBUG: Iniciando función change_patient_password")
+        
         dialog = tk.Toplevel(self.root)
-        dialog.title('Cambiar Contraseña')
-        dialog.geometry('400x300')
+        dialog.title('🔐 Cambiar Mi Contraseña - NUEVA VERSION')
+        dialog.geometry('520x750')  # Alargado significativamente más para mostrar botones
         dialog.configure(bg='#F8FAFC')
         dialog.transient(self.root)
         dialog.grab_set()
+        dialog.resizable(False, False)
         
         # Centrar diálogo
-        dialog.geometry("+%d+%d" % (self.root.winfo_rootx() + 200, self.root.winfo_rooty() + 100))
+        x = self.root.winfo_rootx() + (self.root.winfo_width() - 520) // 2
+        y = self.root.winfo_rooty() + (self.root.winfo_height() - 750) // 2
+        dialog.geometry(f"520x750+{x}+{y}")
         
-        # Header
-        header_frame = tk.Frame(dialog, bg='#1E3A8A', height=60)
+        # Header moderno
+        header_frame = tk.Frame(dialog, bg='#3B82F6', height=70)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
-        tk.Label(header_frame, text='🔑 Cambiar Contraseña', 
-                font=('Arial', 14, 'bold'), bg='#1E3A8A', fg='white').pack(pady=15)
         
-        # Contenido
+        # Icono y título del header
+        header_content = tk.Frame(header_frame, bg='#3B82F6')
+        header_content.pack(expand=True, fill='both', padx=20, pady=15)
+        
+        tk.Label(header_content, text='� Cambiar Contraseña', 
+                font=('Arial', 16, 'bold'), bg='#3B82F6', fg='white').pack(side='left')
+        
+        # Botón cerrar
+        close_btn = tk.Button(header_content, text='✕', command=dialog.destroy,
+                             bg='#3B82F6', fg='white', font=('Arial', 12, 'bold'),
+                             relief='flat', bd=0, padx=8, pady=4, cursor='hand2')
+        close_btn.pack(side='right')
+        
+        # Contenido principal
         content_frame = tk.Frame(dialog, bg='#F8FAFC')
-        content_frame.pack(fill='both', expand=True, padx=30, pady=20)
+        content_frame.pack(fill='both', expand=True, padx=30, pady=30)  # Aumentado el padding vertical
         
-        # Campos
-        fields_frame = tk.Frame(content_frame, bg='white', relief='solid', bd=1)
-        fields_frame.pack(fill='x', pady=(0, 20))
+        # Panel de campos
+        fields_panel = tk.Frame(content_frame, bg='white', relief='solid', bd=1)
+        fields_panel.pack(fill='x', pady=(0, 25))
         
-        # Variables
+        # Título del panel
+        title_frame = tk.Frame(fields_panel, bg='#F1F5F9', height=40)
+        title_frame.pack(fill='x')
+        title_frame.pack_propagate(False)
+        
+        tk.Label(title_frame, text='📝 Información de Seguridad', 
+                font=('Arial', 12, 'bold'), bg='#F1F5F9', fg='#374151').pack(expand=True)
+        
+        # Contenido de campos
+        fields_content = tk.Frame(fields_panel, bg='white')
+        fields_content.pack(fill='both', expand=True, padx=25, pady=20)
+        
+        # Variables para los campos
         current_pwd_var = tk.StringVar()
         new_pwd_var = tk.StringVar()
         confirm_pwd_var = tk.StringVar()
         
-        # Contraseña actual
-        tk.Label(fields_frame, text='Contraseña Actual:', 
-                font=('Arial', 10, 'bold'), bg='white', fg='#1E3A8A').pack(anchor='w', padx=15, pady=(15, 5))
-        tk.Entry(fields_frame, textvariable=current_pwd_var, show='*', 
-                font=('Arial', 10), relief='solid', bd=1).pack(fill='x', padx=15, pady=(0, 10))
+        # Función para crear campos con estilo
+        def create_password_field(parent, label_text, variable, row_num):
+            # Frame del campo
+            field_frame = tk.Frame(parent, bg='white')
+            field_frame.pack(fill='x', pady=12)
+            
+            # Label
+            tk.Label(field_frame, text=label_text, 
+                    font=('Arial', 11, 'bold'), bg='white', fg='#374151').pack(anchor='w', pady=(0, 6))
+            
+            # Entry con estilo
+            entry = tk.Entry(field_frame, textvariable=variable, show='●', 
+                           font=('Arial', 11), relief='solid', bd=1, bg='#F9FAFB',
+                           highlightthickness=2, highlightcolor='#3B82F6')
+            entry.pack(fill='x', ipady=10)
+            
+            return entry
         
-        # Nueva contraseña
-        tk.Label(fields_frame, text='Nueva Contraseña:', 
-                font=('Arial', 10, 'bold'), bg='white', fg='#1E3A8A').pack(anchor='w', padx=15, pady=(0, 5))
-        tk.Entry(fields_frame, textvariable=new_pwd_var, show='*', 
-                font=('Arial', 10), relief='solid', bd=1).pack(fill='x', padx=15, pady=(0, 10))
+        # Crear campos
+        current_entry = create_password_field(fields_content, "🔒 Contraseña Actual:", current_pwd_var, 0)
+        new_entry = create_password_field(fields_content, "🔑 Nueva Contraseña:", new_pwd_var, 1)
+        confirm_entry = create_password_field(fields_content, "✅ Confirmar Nueva Contraseña:", confirm_pwd_var, 2)
         
-        # Confirmar contraseña
-        tk.Label(fields_frame, text='Confirmar Nueva Contraseña:', 
-                font=('Arial', 10, 'bold'), bg='white', fg='#1E3A8A').pack(anchor='w', padx=15, pady=(0, 5))
-        tk.Entry(fields_frame, textvariable=confirm_pwd_var, show='*', 
-                font=('Arial', 10), relief='solid', bd=1).pack(fill='x', padx=15, pady=(0, 15))
+        # Requisitos de contraseña
+        req_frame = tk.Frame(fields_content, bg='#FEF3C7', relief='solid', bd=1)
+        req_frame.pack(fill='x', pady=(15, 0))
         
-        # Botones
-        buttons_frame = tk.Frame(content_frame, bg='#F8FAFC')
-        buttons_frame.pack(fill='x')
+        tk.Label(req_frame, text="📋 Requisitos de la nueva contraseña:", 
+                font=('Arial', 10, 'bold'), bg='#FEF3C7', fg='#92400E').pack(anchor='w', padx=10, pady=(8, 4))
+        tk.Label(req_frame, text="• Mínimo 6 caracteres", 
+                font=('Arial', 9), bg='#FEF3C7', fg='#92400E').pack(anchor='w', padx=20, pady=1)
+        tk.Label(req_frame, text="• Debe ser diferente a la actual", 
+                font=('Arial', 9), bg='#FEF3C7', fg='#92400E').pack(anchor='w', padx=20, pady=(1, 8))
+        
+        # Panel de botones modernos - SÚPER PROMINENTE
+        buttons_panel = tk.Frame(content_frame, bg='#D1D5DB', relief='solid', bd=3)
+        buttons_panel.pack(fill='x', pady=(40, 20))  # Muchísimo más espacio superior e inferior
         
         def save_password():
             try:
@@ -13852,26 +13943,46 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                 new = new_pwd_var.get().strip()
                 confirm = confirm_pwd_var.get().strip()
                 
-                if not all([current, new, confirm]):
-                    messagebox.showerror('Error', 'Todos los campos son obligatorios')
+                # Validaciones mejoradas
+                if not current:
+                    messagebox.showerror('Error', '🔒 Debe ingresar su contraseña actual')
+                    current_entry.focus()
+                    return
+                
+                if not new:
+                    messagebox.showerror('Error', '🔑 Debe ingresar la nueva contraseña')
+                    new_entry.focus()
+                    return
+                
+                if not confirm:
+                    messagebox.showerror('Error', '✅ Debe confirmar la nueva contraseña')
+                    confirm_entry.focus()
                     return
                 
                 if new != confirm:
-                    messagebox.showerror('Error', 'Las contraseñas nuevas no coinciden')
+                    messagebox.showerror('Error', '❌ Las contraseñas nuevas no coinciden')
+                    confirm_entry.focus()
                     return
                 
                 if len(new) < 6:
-                    messagebox.showerror('Error', 'La nueva contraseña debe tener al menos 6 caracteres')
+                    messagebox.showerror('Error', '⚠️ La nueva contraseña debe tener al menos 6 caracteres')
+                    new_entry.focus()
+                    return
+                
+                if current == new:
+                    messagebox.showerror('Error', '🔄 La nueva contraseña debe ser diferente a la actual')
+                    new_entry.focus()
                     return
                 
                 # Verificar contraseña actual
                 conn = self.db_manager.get_connection()
                 cur = conn.cursor()
                 cur.execute("SELECT password FROM usuarios WHERE id = ?", (self.current_user.id,))
-                stored_password = cur.fetchone()[0]
+                result = cur.fetchone()
                 
-                if stored_password != current:
-                    messagebox.showerror('Error', 'La contraseña actual es incorrecta')
+                if not result or result[0] != current:
+                    messagebox.showerror('Error', '🚫 La contraseña actual es incorrecta')
+                    current_entry.focus()
                     cur.close(); conn.close()
                     return
                 
@@ -13881,18 +13992,33 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                 conn.commit()
                 cur.close(); conn.close()
                 
-                messagebox.showinfo('Éxito', '✅ Contraseña cambiada exitosamente')
+                messagebox.showinfo('Éxito', '✅ Contraseña cambiada exitosamente\n\nSu contraseña ha sido actualizada correctamente.')
                 dialog.destroy()
                 
             except Exception as e:
-                messagebox.showerror('Error', f'Error cambiando contraseña: {e}')
+                messagebox.showerror('Error', f'❌ Error cambiando contraseña:\n{str(e)}')
         
-        tk.Button(buttons_frame, text='💾 Guardar', command=save_password,
-                 bg='#16A085', fg='white', font=('Arial', 10, 'bold'),
-                 relief='flat', padx=20, pady=8).pack(side='left')
-        tk.Button(buttons_frame, text='❌ Cancelar', command=dialog.destroy,
-                 bg='#E74C3C', fg='white', font=('Arial', 10, 'bold'),
-                 relief='flat', padx=20, pady=8).pack(side='left', padx=(10, 0))
+        # Botones con estilo moderno DIRECTOS EN EL PANEL
+        print("🔧 DEBUG: Creando botones DIRECTAMENTE")
+        
+        save_btn = tk.Button(buttons_panel, text='💾 GUARDAR NUEVA CONTRASEÑA', command=save_password,
+                           bg='#059669', fg='white', font=('Arial', 14, 'bold'),
+                           relief='raised', bd=5, padx=40, pady=20, cursor='hand2')
+        save_btn.pack(pady=(20, 10))  # Botón de guardar
+        
+        cancel_btn = tk.Button(buttons_panel, text='❌ CANCELAR OPERACIÓN', command=dialog.destroy,
+                             bg='#DC2626', fg='white', font=('Arial', 14, 'bold'),
+                             relief='raised', bd=5, padx=40, pady=20, cursor='hand2')
+        cancel_btn.pack(pady=(0, 20))  # Botón de cancelar
+        
+        print(f"🔧 DEBUG: Botones creados DIRECTAMENTE - Save: {save_btn}, Cancel: {cancel_btn}")
+        
+        # Forzar que se muestren
+        buttons_panel.update()
+        dialog.update()
+        
+        # Focus inicial en el primer campo
+        current_entry.focus()
 
     def open_patient_schedule_dialog(self):
         """Formulario completo y rediseñado para agendar nueva cita"""
@@ -16448,38 +16574,6 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             messagebox.showerror("Error", f"Error al cargar las facturas: {str(e)}")
             if 'conn' in locals():
                 conn.close()
-
-            for invoice in invoices:
-                fecha = invoice[1]
-                if fecha:
-                    try:
-                        dt = datetime.fromisoformat(fecha)
-                        fecha = dt.strftime('%d/%m/%Y')
-                    except:
-                        pass
-                
-                # Formatear estado
-                estado = invoice[5].title() if invoice[5] else 'Desconocido'
-                if estado == 'Pagado':
-                    estado = '✅ Pagada'
-                elif estado == 'Pendiente':
-                    estado = '⏳ Pendiente'
-                elif estado == 'Pago_Parcial':
-                    estado = '🔸 Parcial'
-                
-                tree_widget.insert('', 'end', values=(
-                    invoice[0] or 'N/A',
-                    fecha,
-                    invoice[2] or 'N/A',
-                    invoice[3] or 'Consulta médica',
-                    f"RD${float(invoice[4] or 0):,.2f}",
-                    estado
-                ))
-            
-            conn.close()
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Error cargando mis facturas: {str(e)}")
     
     def refresh_patient_billing(self):
         """Actualizar datos de facturación del paciente"""
