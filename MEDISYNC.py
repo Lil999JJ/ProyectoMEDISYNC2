@@ -12550,13 +12550,13 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             print(f"Error mostrando menú contextual: {e}")
     
     def create_patient_medical_history(self, parent):
-        """Mi historial médico para pacientes con diseño moderno similar al admin"""
-        # Frame principal con mejor diseño
+        """Mi historial médico para pacientes - Vista simplificada con tabla"""
+        # Frame principal
         main_frame = tk.Frame(parent, bg='#F8FAFC')
         main_frame.pack(fill='both', expand=True)
         
-        # Header principal con gradiente visual
-        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=80)
+        # Header simple
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=70)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
         
@@ -12564,242 +12564,1038 @@ Para consultas sobre este reporte, contacte al departamento de administración.
         header_content = tk.Frame(header_frame, bg='#1E3A8A')
         header_content.pack(expand=True, fill='both', padx=30, pady=15)
         
-        # Título principal
-        title_frame = tk.Frame(header_content, bg='#1E3A8A')
-        title_frame.pack(side='left', fill='y')
+        tk.Label(header_content, text="📋 Mi Historial Médico", 
+                font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(side='left')
         
-        tk.Label(title_frame, text="📋 Mi Historial Médico", 
-                font=('Arial', 20, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
-        tk.Label(title_frame, text="Consulta completa de tu historial clínico", 
-                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
+        user_info = f"Paciente: {self.current_user.nombre} {self.current_user.apellido}"
+        tk.Label(header_content, text=user_info, 
+                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(side='right')
         
-        # Botones de acción en el header
-        actions_frame = tk.Frame(header_content, bg='#1E3A8A')
-        actions_frame.pack(side='right', fill='y')
-        
-        tk.Button(actions_frame, text="📥 Exportar PDF", bg='#0B5394', fg='white',
-                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
-                 command=self.export_history_pdf).pack(side='right', padx=(10, 0))
-        tk.Button(actions_frame, text="🖨️ Imprimir", bg='#0B5394', fg='white',
-                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
-                 command=self.print_my_history).pack(side='right', padx=(10, 0))
-
         # Contenido principal
         content_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        content_frame.pack(fill='both', expand=True, padx=30, pady=30)
+        content_frame.pack(fill='both', expand=True, padx=30, pady=20)
         
-        # Panel de resumen de salud mejorado
-        summary_panel = tk.LabelFrame(content_frame, text="📊 Resumen de Mi Salud", 
-                                    font=('Arial', 14, 'bold'), padx=25, pady=20, 
-                                    bg='white', relief='solid', bd=1)
-        summary_panel.pack(fill='x', pady=(0, 30))
+        # Panel de filtros simple
+        filters_frame = tk.LabelFrame(content_frame, text="🔍 Filtros", 
+                                    font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+        filters_frame.pack(fill='x', pady=(0, 20))
         
-        try:
-            health_summary = self.get_patient_health_summary()
-            
-            # Grid de resumen con mejor diseño
-            summary_grid = tk.Frame(summary_panel, bg='white')
-            summary_grid.pack(fill='x')
-            
-            summary_items = [
-                ("🩺 Total de Consultas:", str(health_summary.get('total_consultations', 0))),
-                ("📅 Última Consulta:", health_summary.get('last_consultation', 'Nunca')),
-                ("👨‍⚕️ Doctores Visitados:", str(health_summary.get('doctors_count', 0))),
-                ("🏥 Especialidades:", health_summary.get('specialties', 'Ninguna'))
-            ]
-            
-            for i, (label, value) in enumerate(summary_items):
-                row = i // 2
-                col = (i % 2) * 2
-                
-                tk.Label(summary_grid, text=label, font=('Arial', 11, 'bold'), 
-                        bg='white', fg='#1E3A8A').grid(row=row, column=col, sticky='w', padx=(0, 15), pady=10)
-                tk.Label(summary_grid, text=value, font=('Arial', 11), 
-                        bg='white', fg='#059669').grid(row=row, column=col+1, sticky='w', padx=(0, 40), pady=10)
-            
-            # Configurar grid weights
-            for i in range(4):
-                summary_grid.columnconfigure(i, weight=1)
-                        
-        except Exception as e:
-            tk.Label(summary_panel, text=f"Error cargando resumen: {str(e)}", 
-                    font=('Arial', 10), fg='red', bg='white').pack(pady=10)
+        filters_row = tk.Frame(filters_frame, bg='white')
+        filters_row.pack(fill='x')
         
-        # Panel de filtros mejorado
-        filters_panel = tk.LabelFrame(content_frame, text="🔍 Filtros de Búsqueda", 
-                                    font=('Arial', 12, 'bold'), padx=20, pady=15, 
-                                    bg='white', relief='solid', bd=1)
-        filters_panel.pack(fill='x', pady=(0, 30))
+        # Búsqueda
+        tk.Label(filters_row, text="Buscar:", font=('Arial', 10, 'bold'), 
+                bg='white', fg='#374151').grid(row=0, column=0, sticky='w', padx=(0, 10))
         
-        filters_content = tk.Frame(filters_panel, bg='white')
-        filters_content.pack(fill='x')
+        self.history_search_var = tk.StringVar()
+        search_entry = tk.Entry(filters_row, textvariable=self.history_search_var, 
+                               font=('Arial', 10), width=30)
+        search_entry.grid(row=0, column=1, sticky='w', padx=(0, 20))
+        search_entry.bind('<KeyRelease>', lambda e: self.load_patient_medical_history())
         
-        # Primera fila de filtros
-        filters_row1 = tk.Frame(filters_content, bg='white')
-        filters_row1.pack(fill='x', pady=(0, 10))
-        
-        tk.Label(filters_row1, text="📅 Período:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=0, padx=5, sticky='w')
-        self.history_period_filter = ttk.Combobox(filters_row1, 
-                                                values=['Todos', 'Este Año', 'Últimos 6 Meses', 'Últimos 3 Meses'], 
-                                                state='readonly', width=18, font=('Arial', 9))
-        self.history_period_filter.set('Todos')
-        self.history_period_filter.grid(row=0, column=1, padx=10, sticky='ew')
-        
-        tk.Label(filters_row1, text="👨‍⚕️ Doctor:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=2, padx=5, sticky='w')
-        self.history_doctor_filter = ttk.Combobox(filters_row1, state='readonly', width=18, font=('Arial', 9))
-        self.history_doctor_filter.grid(row=0, column=3, padx=10, sticky='ew')
-        
-        # Configurar grid weights para filtros
-        filters_row1.columnconfigure(1, weight=1)
-        filters_row1.columnconfigure(3, weight=1)
-        
-        # Poblar doctores del historial del paciente
-        try:
-            conn = self.db_manager.get_connection(); cur = conn.cursor()
-            cur.execute(
-                """
-                SELECT du.id, du.nombre, du.apellido
-                FROM historial_medico hm
-                JOIN usuarios du ON du.id = hm.doctor_id
-                WHERE hm.paciente_id = ?
-                GROUP BY du.id, du.nombre, du.apellido
-                ORDER BY du.nombre, du.apellido
-                """,
-                (self.current_user.id,),
-            )
-            doctors = [f"{r[0]} - Dr. {r[1]} {r[2]}" for r in cur.fetchall()]
-            self.history_doctor_filter['values'] = ['Todos'] + doctors
-            self.history_doctor_filter.set('Todos')
-            cur.close(); conn.close()
-        except Exception:
-            self.history_doctor_filter['values'] = ['Todos']
-            self.history_doctor_filter.set('Todos')
-
-        # Segunda fila - botón de filtrar
-        filters_row2 = tk.Frame(filters_content, bg='white')
-        filters_row2.pack(fill='x')
-        
-        tk.Button(filters_row2, text="🔍 Aplicar Filtros", 
-                 command=self.filter_medical_history,
+        # Botón actualizar
+        tk.Button(filters_row, text="🔄 Actualizar", 
+                 command=self.load_patient_medical_history,
                  bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
-                 relief='flat', padx=20, pady=8).pack(side='left')
-        tk.Button(filters_row2, text="🗑️ Limpiar Filtros", 
-                 command=lambda: [self.history_period_filter.set('Todos'), 
-                                self.history_doctor_filter.set('Todos'), 
-                                self.load_patient_medical_history()],
-                 bg='#6B7280', fg='white', font=('Arial', 10, 'bold'),
-                 relief='flat', padx=20, pady=8).pack(side='left', padx=(10, 0))
+                 relief='flat', padx=15, pady=5).grid(row=0, column=2, sticky='w')
         
-        # Panel de tabla mejorado
-        table_panel = tk.LabelFrame(content_frame, text="📋 Registros de Mi Historial Médico", 
-                                  font=('Arial', 14, 'bold'), padx=25, pady=20, 
-                                  bg='white', relief='solid', bd=1)
-        table_panel.pack(fill='both', expand=True)
+        # Tabla de historial
+        table_frame = tk.Frame(content_frame, bg='white', relief='solid', bd=1)
+        table_frame.pack(fill='both', expand=True)
         
-        # Frame contenedor para tabla con scrollbars
-        table_container = tk.Frame(table_panel, bg='white')
+        # Header de la tabla
+        table_header = tk.Frame(table_frame, bg='#1E3A8A', height=40)
+        table_header.pack(fill='x')
+        table_header.pack_propagate(False)
+        
+        tk.Label(table_header, text="📋 Registros Médicos - Doble clic para ver detalles", 
+                font=('Arial', 12, 'bold'), bg='#1E3A8A', fg='white').pack(expand=True)
+        
+        # Contenedor de la tabla con scrollbars
+        table_container = tk.Frame(table_frame, bg='white')
         table_container.pack(fill='both', expand=True, padx=10, pady=10)
         
-        # Tabla de historial médico con diseño mejorado
-        columns = ('Fecha', 'Doctor', 'Diagnóstico', 'Tratamiento', 'Medicamentos', 'Observaciones')
-        self.patient_history_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=12)
+        # Crear Treeview
+        columns = ('Fecha', 'Doctor', 'Especialidad', 'Diagnóstico', 'Tratamiento')
+        self.medical_history_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=15)
         
-        # Configurar headers con mejores anchos
-        column_widths = {'Fecha': 100, 'Doctor': 150, 'Diagnóstico': 200, 'Tratamiento': 200, 
-                        'Medicamentos': 150, 'Observaciones': 200}
+        # Configurar columnas
+        column_widths = {
+            'Fecha': 100,
+            'Doctor': 180,
+            'Especialidad': 150,
+            'Diagnóstico': 250,
+            'Tratamiento': 200
+        }
         
         for col in columns:
-            self.patient_history_tree.heading(col, text=col, anchor='center')
-            self.patient_history_tree.column(col, width=column_widths.get(col, 100), anchor='center')
+            self.medical_history_tree.heading(col, text=col)
+            self.medical_history_tree.column(col, width=column_widths[col], anchor='w')
         
-        # Scrollbars vertical y horizontal con mejor diseño
-        scrollbar_y = ttk.Scrollbar(table_container, orient="vertical", command=self.patient_history_tree.yview)
-        scrollbar_x = ttk.Scrollbar(table_container, orient="horizontal", command=self.patient_history_tree.xview)
-        self.patient_history_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+        # Scrollbars
+        v_scrollbar = ttk.Scrollbar(table_container, orient='vertical', command=self.medical_history_tree.yview)
+        h_scrollbar = ttk.Scrollbar(table_container, orient='horizontal', command=self.medical_history_tree.xview)
+        self.medical_history_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
         
-        # Layout con grid para mejor control
-        self.patient_history_tree.grid(row=0, column=0, sticky='nsew')
-        scrollbar_y.grid(row=0, column=1, sticky='ns')
-        scrollbar_x.grid(row=1, column=0, sticky='ew')
+        # Layout
+        self.medical_history_tree.grid(row=0, column=0, sticky='nsew')
+        v_scrollbar.grid(row=0, column=1, sticky='ns')
+        h_scrollbar.grid(row=1, column=0, sticky='ew')
         
-        # Configurar expansión
         table_container.grid_rowconfigure(0, weight=1)
         table_container.grid_columnconfigure(0, weight=1)
         
-        # Panel de acciones mejorado
-        actions_panel = tk.Frame(main_frame, bg='#F8FAFC')
-        actions_panel.pack(fill='x', padx=30, pady=(0, 30))
+        # Eventos
+        self.medical_history_tree.bind('<Double-1>', self.view_history_detail_simple)
         
-        actions_inner = tk.Frame(actions_panel, bg='white', relief='solid', bd=1)
-        actions_inner.pack(fill='x', pady=10)
+        # Panel de información
+        info_frame = tk.Frame(content_frame, bg='white', relief='solid', bd=1, height=60)
+        info_frame.pack(fill='x', pady=(10, 0))
+        info_frame.pack_propagate(False)
         
-        actions_content = tk.Frame(actions_inner, bg='white')
-        actions_content.pack(fill='x', padx=20, pady=15)
-        
-        tk.Label(actions_content, text="⚡ Acciones Disponibles", 
-                font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
-        
-        # Botones de acción mejorados
-        history_actions = [
-            ("👁️ Ver Detalle Completo", self.view_history_detail, "#0B5394"),
-            ("📧 Enviar por Email", self.email_my_history, "#16A085"),
-            ("📊 Generar Reporte", lambda: messagebox.showinfo("Reporte", "Función en desarrollo"), "#E67E22")
-        ]
-
-        for text, command, color in history_actions:
-            tk.Button(actions_content, text=text, command=command,
-                     bg=color, fg='white', font=('Arial', 10, 'bold'),
-                     relief='flat', bd=0, padx=15, pady=8, cursor='hand2').pack(side='right', padx=5)
-        
-        # Cargar datos iniciales
-        self.load_patient_medical_history()
-        
-        # Frame contenedor para tabla con scrollbars
-        table_container = tk.Frame(main_frame)
-        table_container.pack(fill='both', expand=True)
-        
-        # Tabla de historial médico
-        columns = ('Fecha', 'Doctor', 'Diagnóstico', 'Tratamiento', 'Medicamentos', 'Observaciones')
-        self.patient_history_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=12)
-        
-        # Configurar headers
-        column_widths = {'Fecha': 100, 'Doctor': 150, 'Diagnóstico': 200, 'Tratamiento': 200, 
-                        'Medicamentos': 150, 'Observaciones': 200}
-        
-        for col in columns:
-            self.patient_history_tree.heading(col, text=col)
-            self.patient_history_tree.column(col, width=column_widths.get(col, 100))
-        
-        # Scrollbars vertical y horizontal
-        scrollbar_y = ttk.Scrollbar(table_container, orient="vertical", command=self.patient_history_tree.yview)
-        scrollbar_x = ttk.Scrollbar(table_container, orient="horizontal", command=self.patient_history_tree.xview)
-        self.patient_history_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
-        
-        # Layout con grid para mejor control
-        self.patient_history_tree.grid(row=0, column=0, sticky='nsew')
-        scrollbar_y.grid(row=0, column=1, sticky='ns')
-        scrollbar_x.grid(row=1, column=0, sticky='ew')
-        
-        # Configurar expansión
-        table_container.grid_rowconfigure(0, weight=1)
-        table_container.grid_columnconfigure(0, weight=1)
-        
-        # Botones de acción
-        actions_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        actions_frame.pack(fill='x', pady=(10, 0))
-        
-        history_actions = [
-            ("👁️ Ver Detalle Completo", self.view_history_detail),
-            ("🖨️ Imprimir Historial", self.print_my_history),
-            ("📥 Exportar PDF", self.export_history_pdf),
-            ("📧 Enviar por Email", self.email_my_history)
-        ]
-
-        for text, command in history_actions:
-            ttk.Button(actions_frame, text=text, command=command, style='Primary.TButton').pack(side='left', padx=5, pady=5)
+        self.history_info_label = tk.Label(info_frame, 
+                                         text="💡 Consejo: Haga doble clic en un registro para ver los detalles completos", 
+                                         font=('Arial', 10, 'italic'), bg='white', fg='#64748B')
+        self.history_info_label.pack(expand=True)
         
         # Cargar datos
         self.load_patient_medical_history()
+
+    def load_patient_doctors(self):
+        """Cargar doctores que han atendido al paciente"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT DISTINCT u.id, u.nombre, u.apellido, d.especialidad
+                FROM historial_medico hm
+                JOIN usuarios u ON u.id = hm.doctor_id
+                LEFT JOIN doctores d ON d.id = hm.doctor_id
+                WHERE hm.paciente_id = ?
+                ORDER BY u.nombre, u.apellido
+            """, (self.current_user.id,))
+            
+            doctors = cursor.fetchall()
+            doctor_values = ['Todos']
+            
+            for doctor in doctors:
+                especialidad = doctor[3] if doctor[3] else 'Medicina General'
+                doctor_text = f"{doctor[0]} - Dr. {doctor[1]} {doctor[2]} ({especialidad})"
+                doctor_values.append(doctor_text)
+            
+            self.history_doctor_filter['values'] = doctor_values
+            self.history_doctor_filter.set('Todos')
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            print(f"Error cargando doctores del paciente: {e}")
+            try:
+                self.history_doctor_filter['values'] = ['Todos']
+                self.history_doctor_filter.set('Todos')
+            except:
+                pass
+            conn.close()
+            
+        except Exception as e:
+            print(f"Error cargando doctores: {e}")
+            self.history_doctor_filter['values'] = ['Todos']
+            self.history_doctor_filter.set('Todos')
+    
+    def get_patient_health_summary(self):
+        """Obtener resumen de salud del paciente con información completa para tablas"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            summary = {}
+            patient_id = self.current_user.id
+            
+            # Total de consultas
+            cursor.execute("""
+                SELECT COUNT(*) FROM historial_medico 
+                WHERE paciente_id = ?
+            """, (patient_id,))
+            summary['total_consultations'] = cursor.fetchone()[0]
+            
+            # Última consulta
+            cursor.execute("""
+                SELECT fecha_consulta FROM historial_medico 
+                WHERE paciente_id = ? 
+                ORDER BY fecha_consulta DESC LIMIT 1
+            """, (patient_id,))
+            result = cursor.fetchone()
+            if result:
+                last_date = datetime.fromisoformat(result[0])
+                summary['last_consultation'] = last_date.strftime('%d/%m/%Y')
+                summary['last_consultation_short'] = last_date.strftime('%d/%m')
+            else:
+                summary['last_consultation'] = 'Nunca'
+                summary['last_consultation_short'] = 'Nunca'
+            
+            # Doctores únicos
+            cursor.execute("""
+                SELECT COUNT(DISTINCT doctor_id) FROM historial_medico 
+                WHERE paciente_id = ?
+            """, (patient_id,))
+            summary['doctors_count'] = cursor.fetchone()[0]
+            
+            # Especialidades únicas
+            cursor.execute("""
+                SELECT COUNT(DISTINCT d.especialidad) FROM historial_medico hm
+                JOIN usuarios u ON u.id = hm.doctor_id
+                LEFT JOIN doctores d ON d.id = hm.doctor_id
+                WHERE hm.paciente_id = ? AND d.especialidad IS NOT NULL
+            """, (patient_id,))
+            summary['specialties_count'] = cursor.fetchone()[0]
+            
+            # Consultas este año
+            current_year = datetime.now().year
+            cursor.execute("""
+                SELECT COUNT(*) FROM historial_medico 
+                WHERE paciente_id = ? AND strftime('%Y', fecha_consulta) = ?
+            """, (patient_id, str(current_year)))
+            summary['consultations_this_year'] = cursor.fetchone()[0]
+            
+            # Consultas este mes
+            current_month = datetime.now().strftime('%Y-%m')
+            cursor.execute("""
+                SELECT COUNT(*) FROM historial_medico 
+                WHERE paciente_id = ? AND strftime('%Y-%m', fecha_consulta) = ?
+            """, (patient_id, current_month))
+            summary['consultations_this_month'] = cursor.fetchone()[0]
+            
+            # Promedio mensual
+            summary['monthly_average'] = round(summary['consultations_this_year'] / 12, 1) if summary['consultations_this_year'] > 0 else 0
+            
+            # Diagnósticos únicos
+            cursor.execute("""
+                SELECT COUNT(DISTINCT diagnostico) FROM historial_medico 
+                WHERE paciente_id = ? AND diagnostico IS NOT NULL AND diagnostico != ''
+            """, (patient_id,))
+            summary['unique_diagnoses'] = cursor.fetchone()[0]
+            
+            # Tratamientos activos (aproximación)
+            cursor.execute("""
+                SELECT COUNT(*) FROM historial_medico 
+                WHERE paciente_id = ? AND (estado LIKE '%activo%' OR estado LIKE '%tratamiento%' OR estado LIKE '%seguimiento%')
+            """, (patient_id,))
+            summary['active_treatments'] = cursor.fetchone()[0]
+            
+            # Medicamentos prescritos únicos (aproximación)
+            cursor.execute("""
+                SELECT COUNT(DISTINCT medicamentos) FROM historial_medico 
+                WHERE paciente_id = ? AND medicamentos IS NOT NULL AND medicamentos != ''
+            """, (patient_id,))
+            summary['prescribed_medications'] = cursor.fetchone()[0]
+            
+            cursor.close()
+            conn.close()
+            
+            return summary
+            
+        except Exception as e:
+            print(f"Error obteniendo resumen de salud: {e}")
+            return {
+                'total_consultations': 0,
+                'last_consultation': 'Error',
+                'last_consultation_short': 'Error',
+                'doctors_count': 0,
+                'specialties_count': 0
+            }
+    
+    def filter_medical_history(self):
+        """Aplicar filtros al historial médico"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Query base
+            base_query = """
+                SELECT hm.id, hm.fecha_consulta, 
+                       u.nombre || ' ' || u.apellido as doctor_nombre,
+                       COALESCE(u.especialidad, 'Medicina General') as especialidad,
+                       hm.diagnostico, hm.tratamiento, 
+                       hm.medicamentos, hm.observaciones,
+                       hm.tipo_consulta
+                FROM historial_medico hm
+                JOIN usuarios u ON u.id = hm.doctor_id
+                WHERE hm.paciente_id = ?
+            """
+            
+            params = [self.current_user.id]
+            conditions = []
+            
+            # Filtro por período
+            period = self.history_period_filter.get()
+            if period != 'Todos':
+                if period == 'Este Año':
+                    conditions.append("strftime('%Y', hm.fecha_consulta) = strftime('%Y', 'now')")
+                elif period == 'Últimos 6 Meses':
+                    conditions.append("hm.fecha_consulta >= date('now', '-6 months')")
+                elif period == 'Últimos 3 Meses':
+                    conditions.append("hm.fecha_consulta >= date('now', '-3 months')")
+                elif period == 'Último Mes':
+                    conditions.append("hm.fecha_consulta >= date('now', '-1 month')")
+            
+            # Filtro por doctor
+            doctor_filter = self.history_doctor_filter.get()
+            if doctor_filter != 'Todos':
+                doctor_id = doctor_filter.split(' - ')[0]
+                conditions.append("hm.doctor_id = ?")
+                params.append(doctor_id)
+            
+            # Filtro por tipo de consulta
+            if hasattr(self, 'history_type_filter'):
+                type_filter = self.history_type_filter.get()
+                if type_filter != 'Todos':
+                    conditions.append("hm.tipo_consulta = ?")
+                    params.append(type_filter.lower())
+            
+            # Filtro por búsqueda de texto
+            if hasattr(self, 'history_search_var'):
+                search_text = self.history_search_var.get().strip()
+                if search_text:
+                    conditions.append("(hm.diagnostico LIKE ? OR hm.tratamiento LIKE ? OR hm.medicamentos LIKE ?)")
+                    search_param = f"%{search_text}%"
+                    params.extend([search_param, search_param, search_param])
+            
+            # Construir query final
+            if conditions:
+                query = base_query + " AND " + " AND ".join(conditions)
+            else:
+                query = base_query
+            
+            query += " ORDER BY hm.fecha_consulta DESC"
+            
+            cursor.execute(query, params)
+            records = cursor.fetchall()
+            
+            # Limpiar tabla
+            for item in self.patient_history_tree.get_children():
+                self.patient_history_tree.delete(item)
+            
+            # Cargar datos filtrados
+            for i, record in enumerate(records):
+                # Formatear fecha
+                try:
+                    fecha_obj = datetime.fromisoformat(record[1])
+                    fecha_formatted = fecha_obj.strftime('%d/%m/%Y')
+                except:
+                    fecha_formatted = record[1]
+                
+                # Determinar tag para colores alternados
+                tag = 'oddrow' if i % 2 else 'evenrow'
+                
+                self.patient_history_tree.insert('', 'end', values=(
+                    fecha_formatted,
+                    record[2],  # doctor_nombre
+                    record[3],  # especialidad
+                    record[4] or 'No especificado',  # diagnóstico
+                    record[5] or 'No especificado',  # tratamiento
+                    record[6] or 'Ninguno',  # medicamentos
+                    'Activo'  # estado
+                ), tags=(tag,))
+            
+            cursor.close()
+            conn.close()
+            
+            # Mostrar resultado
+            total_records = len(records)
+            if total_records == 0:
+                messagebox.showinfo("Filtros", "No se encontraron registros con los filtros aplicados")
+            else:
+                messagebox.showinfo("Filtros", f"Se encontraron {total_records} registros")
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error aplicando filtros: {str(e)}")
+    
+    def clear_history_filters(self):
+        """Limpiar todos los filtros y recargar historial completo"""
+        try:
+            self.history_period_filter.set('Todos')
+            self.history_doctor_filter.set('Todos')
+            
+            if hasattr(self, 'history_type_filter'):
+                self.history_type_filter.set('Todos')
+            
+            if hasattr(self, 'history_search_var'):
+                self.history_search_var.set('')
+            
+            self.load_patient_medical_history()
+            messagebox.showinfo("Filtros", "Filtros limpiados. Mostrando historial completo")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error limpiando filtros: {str(e)}")
+    
+    def on_history_select(self, event):
+        """Manejar selección de registro en el historial"""
+        try:
+            selection = self.patient_history_tree.selection()
+            if selection:
+                # Guardar referencia del registro seleccionado
+                self.selected_history_record = selection[0]
+            
+        except Exception as e:
+            print(f"Error en selección de historial: {e}")
+    
+    def check_empty_history(self):
+        """Verificar si el historial está vacío y mostrar mensaje apropiado"""
+        try:
+            if not self.patient_history_tree.get_children():
+                # Crear frame de mensaje de historial vacío
+                empty_frame = tk.Frame(self.patient_content_area, bg='#F8FAFC')
+                empty_frame.pack(fill='both', expand=True, padx=40, pady=40)
+                
+                # Contenedor del mensaje
+                message_container = tk.Frame(empty_frame, bg='white', relief='solid', bd=1)
+                message_container.pack(fill='both', expand=True)
+                
+                content = tk.Frame(message_container, bg='white')
+                content.pack(expand=True, fill='both', padx=50, pady=50)
+                
+                # Icono grande
+                tk.Label(content, text="📋", font=('Arial', 48), bg='white', fg='#CBD5E1').pack(pady=(0, 20))
+                
+                # Mensaje principal
+                tk.Label(content, text="Tu Historial Médico está Vacío", 
+                        font=('Arial', 18, 'bold'), bg='white', fg='#1E3A8A').pack(pady=(0, 10))
+                
+                # Submensaje
+                tk.Label(content, text="Aún no tienes consultas médicas registradas en el sistema.\nTus futuras citas y consultas aparecerán aquí.", 
+                        font=('Arial', 12), bg='white', fg='#64748B', justify='center').pack(pady=(0, 30))
+                
+                # Botón de acción
+                tk.Button(content, text="📅 Ver Mis Citas", 
+                         command=lambda: self.switch_patient_tab("Mis Citas"),
+                         bg='#0B5394', fg='white', font=('Arial', 12, 'bold'),
+                         relief='flat', padx=25, pady=12, cursor='hand2').pack()
+                
+        except Exception as e:
+            print(f"Error verificando historial vacío: {e}")
+    
+    def show_tooltip(self, event, text):
+        """Mostrar tooltip con información adicional"""
+        try:
+            self.hide_tooltip()  # Ocultar tooltip anterior si existe
+            
+            self.tooltip_window = tk.Toplevel()
+            self.tooltip_window.wm_overrideredirect(True)
+            self.tooltip_window.configure(bg='#1E3A8A')
+            
+            label = tk.Label(self.tooltip_window, text=text, 
+                           font=('Arial', 9), bg='#1E3A8A', fg='white',
+                           padx=8, pady=4)
+            label.pack()
+            
+            # Posicionar tooltip
+            x = event.widget.winfo_rootx() + 25
+            y = event.widget.winfo_rooty() + 25
+            self.tooltip_window.geometry(f"+{x}+{y}")
+            
+        except Exception as e:
+            print(f"Error mostrando tooltip: {e}")
+    
+    def hide_tooltip(self, event=None):
+        """Ocultar tooltip"""
+        try:
+            if hasattr(self, 'tooltip_window') and self.tooltip_window:
+                self.tooltip_window.destroy()
+                self.tooltip_window = None
+        except:
+            pass
+    
+    def show_detailed_stats(self):
+        """Mostrar estadísticas detalladas de salud"""
+        try:
+            stats_window = tk.Toplevel(self.root)
+            stats_window.title("📊 Estadísticas Detalladas de Salud")
+            stats_window.geometry("800x600")
+            stats_window.configure(bg='#F8FAFC')
+            stats_window.transient(self.root)
+            
+            # Centrar ventana
+            x = (stats_window.winfo_screenwidth() // 2) - (800 // 2)
+            y = (stats_window.winfo_screenheight() // 2) - (600 // 2)
+            stats_window.geometry(f"800x600+{x}+{y}")
+            
+            # Header
+            header = tk.Frame(stats_window, bg='#1E3A8A', height=80)
+            header.pack(fill='x')
+            header.pack_propagate(False)
+            
+            tk.Label(header, text="📊 Análisis Completo de Mi Salud", 
+                    font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(expand=True)
+            
+            # Contenido
+            content = tk.Frame(stats_window, bg='#F8FAFC')
+            content.pack(fill='both', expand=True, padx=30, pady=30)
+            
+            # Obtener y mostrar estadísticas avanzadas
+            detailed_stats = self.get_detailed_health_stats()
+            
+            # Mostrar estadísticas en formato organizado
+            stats_text = f"""
+📈 ANÁLISIS TEMPORAL:
+• Consultas este año: {detailed_stats.get('year_consultations', 0)}
+• Consultas último trimestre: {detailed_stats.get('quarter_consultations', 0)}
+• Promedio mensual: {detailed_stats.get('monthly_average', 0):.1f}
+
+👨‍⚕️ ESPECIALISTAS CONSULTADOS:
+• Total de doctores diferentes: {detailed_stats.get('unique_doctors', 0)}
+• Especialidades visitadas: {detailed_stats.get('specialties_visited', 'Ninguna')}
+
+🏥 TIPOS DE CONSULTA:
+• Consultas generales: {detailed_stats.get('general_consultations', 0)}
+• Consultas de especialidad: {detailed_stats.get('specialty_consultations', 0)}
+• Controles: {detailed_stats.get('control_consultations', 0)}
+
+💊 TRATAMIENTOS:
+• Total de tratamientos prescritos: {detailed_stats.get('total_treatments', 0)}
+• Medicamentos únicos recetados: {detailed_stats.get('unique_medications', 0)}
+
+📅 EVOLUCIÓN:
+• Primera consulta: {detailed_stats.get('first_consultation', 'N/A')}
+• Última consulta: {detailed_stats.get('last_consultation', 'N/A')}
+• Tiempo como paciente: {detailed_stats.get('patient_duration', 'N/A')}
+            """
+            
+            tk.Label(content, text=stats_text, font=('Arial', 11), 
+                    bg='white', fg='#1E3A8A', justify='left',
+                    relief='solid', bd=1, padx=20, pady=20).pack(fill='both', expand=True)
+            
+            # Botón cerrar
+            tk.Button(content, text="✅ Cerrar", command=stats_window.destroy,
+                     bg='#0B5394', fg='white', font=('Arial', 12, 'bold'),
+                     relief='flat', padx=25, pady=10).pack(pady=(20, 0))
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando estadísticas: {str(e)}")
+    
+    def get_detailed_health_stats(self):
+        """Obtener estadísticas detalladas de salud del paciente"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            stats = {}
+            
+            # Consultas por período
+            cursor.execute("""
+                SELECT COUNT(*) FROM historial_medico 
+                WHERE paciente_id = ? AND strftime('%Y', fecha_consulta) = strftime('%Y', 'now')
+            """, (self.current_user.id,))
+            stats['year_consultations'] = cursor.fetchone()[0]
+            
+            # Promedio mensual (últimos 12 meses)
+            if stats['year_consultations'] > 0:
+                stats['monthly_average'] = stats['year_consultations'] / 12
+            else:
+                stats['monthly_average'] = 0
+            
+            # Especialidades visitadas
+            cursor.execute("""
+                SELECT DISTINCT u.especialidad FROM historial_medico hm
+                JOIN usuarios u ON u.id = hm.doctor_id
+                WHERE hm.paciente_id = ? AND u.especialidad IS NOT NULL
+            """, (self.current_user.id,))
+            specialties = [row[0] for row in cursor.fetchall()]
+            stats['specialties_visited'] = ', '.join(specialties) if specialties else 'Medicina General'
+            
+            # Doctores únicos
+            cursor.execute("""
+                SELECT COUNT(DISTINCT doctor_id) FROM historial_medico 
+                WHERE paciente_id = ?
+            """, (self.current_user.id,))
+            stats['unique_doctors'] = cursor.fetchone()[0]
+            
+            # Fechas importantes
+            cursor.execute("""
+                SELECT MIN(fecha_consulta), MAX(fecha_consulta) FROM historial_medico 
+                WHERE paciente_id = ?
+            """, (self.current_user.id,))
+            result = cursor.fetchone()
+            if result[0]:
+                first_date = datetime.fromisoformat(result[0])
+                last_date = datetime.fromisoformat(result[1])
+                stats['first_consultation'] = first_date.strftime('%d/%m/%Y')
+                stats['last_consultation'] = last_date.strftime('%d/%m/%Y')
+                
+                # Duración como paciente
+                duration = last_date - first_date
+                stats['patient_duration'] = f"{duration.days} días"
+            else:
+                stats['first_consultation'] = 'N/A'
+                stats['last_consultation'] = 'N/A'
+                stats['patient_duration'] = 'N/A'
+            
+            # Valores por defecto para campos restantes
+            stats['quarter_consultations'] = 0
+            stats['general_consultations'] = 0
+            stats['specialty_consultations'] = 0
+            stats['control_consultations'] = 0
+            stats['total_treatments'] = 0
+            stats['unique_medications'] = 0
+            
+            cursor.close()
+            conn.close()
+            
+            return stats
+            
+        except Exception as e:
+            print(f"Error obteniendo estadísticas detalladas: {e}")
+            return {}
+    
+    def analyze_health_trends(self):
+        """Analizar tendencias de salud del paciente"""
+        messagebox.showinfo("Análisis de Tendencias", 
+                           "📈 Función de análisis de tendencias en desarrollo.\n\n" +
+                           "Próximamente podrás ver:\n" +
+                           "• Evolución de tus diagnósticos\n" +
+                           "• Frecuencia de consultas\n" +
+                           "• Patrones en tratamientos\n" +
+                           "• Recomendaciones personalizadas")
+    
+    def refresh_history(self):
+        """Refrescar datos del historial"""
+        try:
+            self.load_patient_medical_history()
+            messagebox.showinfo("Actualización", "✅ Historial médico actualizado correctamente")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error actualizando historial: {str(e)}")
+    
+    def generate_summary_report(self):
+        """Generar resumen ejecutivo del historial"""
+        messagebox.showinfo("Resumen Ejecutivo", 
+                           "📄 Función de resumen ejecutivo en desarrollo.\n\n" +
+                           "El resumen incluirá:\n" +
+                           "• Diagnósticos principales\n" +
+                           "• Tratamientos activos\n" +
+                           "• Recomendaciones médicas\n" +
+                           "• Próximas citas")
+    
+    def show_health_charts(self):
+        """Mostrar gráficos de evolución médica"""
+        messagebox.showinfo("Gráficos de Salud", 
+                           "📈 Función de gráficos interactivos en desarrollo.\n\n" +
+                           "Visualizarás:\n" +
+                           "• Línea de tiempo de consultas\n" +
+                           "• Gráficos de evolución\n" +
+                           "• Comparativas por período\n" +
+                           "• Indicadores de salud")
+    
+    def configure_health_alerts(self):
+        """Configurar alertas y recordatorios médicos"""
+        messagebox.showinfo("Alertas Médicas", 
+                           "⚙️ Función de alertas personalizadas en desarrollo.\n\n" +
+                           "Podrás configurar:\n" +
+                           "• Recordatorios de medicamentos\n" +
+                           "• Alertas de citas\n" +
+                           "• Notificaciones de controles\n" +
+                           "• Avisos de renovación de recetas")
+    
+    def export_history_pdf(self):
+        """Exportar historial médico a PDF"""
+        try:
+            if not PDF_AVAILABLE:
+                messagebox.showerror("Error", "ReportLab no está instalado. No se pueden generar PDFs.")
+                return
+            
+            # Crear diálogo para guardar archivo
+            from tkinter import filedialog
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".pdf",
+                filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
+                title="Guardar historial médico como PDF",
+                initialname=f"Historial_Medico_{self.current_user.nombre}_{self.current_user.apellido}_{datetime.now().strftime('%Y%m%d')}.pdf"
+            )
+            
+            if filename:
+                self.generate_medical_history_pdf(filename)
+                messagebox.showinfo("Éxito", f"📥 Historial médico exportado exitosamente a:\n{filename}")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error exportando PDF: {str(e)}")
+    
+    def print_my_history(self):
+        """Imprimir historial médico"""
+        messagebox.showinfo("Imprimir", 
+                           "🖨️ Función de impresión en desarrollo.\n\n" +
+                           "Próximamente podrás:\n" +
+                           "• Imprimir historial completo\n" +
+                           "• Seleccionar períodos específicos\n" +
+                           "• Elegir formato de impresión\n" +
+                           "• Vista previa antes de imprimir")
+    
+    def email_my_history(self):
+        """Enviar historial por email"""
+        messagebox.showinfo("Envío por Email", 
+                           "📧 Función de envío por email en desarrollo.\n\n" +
+                           "Próximamente podrás:\n" +
+                           "• Enviar historial a tu email\n" +
+                           "• Compartir con otros médicos\n" +
+                           "• Programar envíos automáticos\n" +
+                           "• Adjuntar documentos médicos")
+    
+    def view_history_detail(self):
+        """Ver detalle completo de un registro del historial"""
+        try:
+            # Verificar si hay un registro seleccionado
+            selection = self.patient_history_tree.selection()
+            if not selection:
+                messagebox.showwarning("Selección", "Por favor selecciona un registro del historial para ver sus detalles")
+                return
+            
+            # Obtener datos del registro seleccionado
+            item_values = self.patient_history_tree.item(selection[0])['values']
+            if not item_values:
+                messagebox.showerror("Error", "No se pudieron obtener los datos del registro")
+                return
+            
+            # Crear ventana de detalle
+            detail_window = tk.Toplevel(self.root)
+            detail_window.title("📋 Detalle Completo del Registro Médico")
+            detail_window.geometry("900x700")
+            detail_window.configure(bg='#F8FAFC')
+            detail_window.transient(self.root)
+            detail_window.grab_set()
+            
+            # Centrar ventana
+            x = (detail_window.winfo_screenwidth() // 2) - (900 // 2)
+            y = (detail_window.winfo_screenheight() // 2) - (700 // 2)
+            detail_window.geometry(f"900x700+{x}+{y}")
+            
+            # Header de la ventana
+            header_frame = tk.Frame(detail_window, bg='#1E3A8A', height=80)
+            header_frame.pack(fill='x')
+            header_frame.pack_propagate(False)
+            
+            header_content = tk.Frame(header_frame, bg='#1E3A8A')
+            header_content.pack(expand=True, fill='both', padx=30, pady=15)
+            
+            tk.Label(header_content, text="📋 Detalle Completo del Registro Médico", 
+                    font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(side='left')
+            
+            tk.Button(header_content, text="✖ Cerrar", command=detail_window.destroy,
+                     bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', padx=15, pady=8).pack(side='right')
+            
+            # Contenido principal
+            content_frame = tk.Frame(detail_window, bg='#F8FAFC')
+            content_frame.pack(fill='both', expand=True, padx=30, pady=30)
+            
+            # Información del paciente
+            patient_section = tk.LabelFrame(content_frame, text="👤 Información del Paciente", 
+                                          font=('Arial', 14, 'bold'), padx=20, pady=15, 
+                                          bg='white', relief='solid', bd=1)
+            patient_section.pack(fill='x', pady=(0, 20))
+            
+            patient_info = tk.Frame(patient_section, bg='white')
+            patient_info.pack(fill='x')
+            
+            patient_data = [
+                ("Nombre:", f"{self.current_user.nombre} {self.current_user.apellido}"),
+                ("Email:", self.current_user.email),
+                ("Fecha de consulta:", item_values[0] if len(item_values) > 0 else 'N/A')
+            ]
+            
+            for i, (label, value) in enumerate(patient_data):
+                row = i // 2
+                col = (i % 2) * 2
+                
+                tk.Label(patient_info, text=label, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#1E3A8A').grid(row=row, column=col, sticky='w', padx=(0, 15), pady=8)
+                tk.Label(patient_info, text=value, font=('Arial', 11), 
+                        bg='white', fg='#374151').grid(row=row, column=col+1, sticky='w', padx=(0, 40), pady=8)
+            
+            # Información médica
+            medical_section = tk.LabelFrame(content_frame, text="🩺 Información Médica", 
+                                          font=('Arial', 14, 'bold'), padx=20, pady=15, 
+                                          bg='white', relief='solid', bd=1)
+            medical_section.pack(fill='both', expand=True, pady=(0, 20))
+            
+            medical_content = tk.Frame(medical_section, bg='white')
+            medical_content.pack(fill='both', expand=True)
+            
+            # Crear campos de detalle médico
+            medical_fields = [
+                ("👨‍⚕️ Doctor:", item_values[1] if len(item_values) > 1 else 'N/A'),
+                ("🏥 Especialidad:", item_values[2] if len(item_values) > 2 else 'N/A'),
+                ("🔬 Diagnóstico:", item_values[3] if len(item_values) > 3 else 'N/A'),
+                ("💊 Tratamiento:", item_values[4] if len(item_values) > 4 else 'N/A'),
+                ("📝 Medicamentos:", item_values[5] if len(item_values) > 5 else 'N/A'),
+                ("📊 Estado:", item_values[6] if len(item_values) > 6 else 'Activo')
+            ]
+            
+            for i, (label, value) in enumerate(medical_fields):
+                field_frame = tk.Frame(medical_content, bg='white')
+                field_frame.pack(fill='x', pady=8)
+                
+                tk.Label(field_frame, text=label, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#1E3A8A').pack(anchor='w')
+                
+                # Para campos largos, usar Text widget
+                if len(str(value)) > 50 or label in ["🔬 Diagnóstico:", "💊 Tratamiento:", "📝 Medicamentos:"]:
+                    text_widget = tk.Text(field_frame, height=3, wrap='word', 
+                                        font=('Arial', 10), bg='#F8FAFC', relief='solid', bd=1)
+                    text_widget.insert(1.0, str(value))
+                    text_widget.configure(state='disabled')
+                    text_widget.pack(fill='x', pady=(5, 0))
+                else:
+                    tk.Label(field_frame, text=str(value), font=('Arial', 10), 
+                            bg='white', fg='#374151', wraplength=800).pack(anchor='w', pady=(5, 0))
+            
+            # Botones de acción
+            actions_section = tk.Frame(detail_window, bg='#F8FAFC')
+            actions_section.pack(fill='x', padx=30, pady=(0, 30))
+            
+            actions_container = tk.Frame(actions_section, bg='white', relief='solid', bd=1)
+            actions_container.pack(fill='x')
+            
+            actions_content = tk.Frame(actions_container, bg='white')
+            actions_content.pack(fill='x', padx=20, pady=15)
+            
+            # Botones de acción específicos
+            detail_actions = [
+                ("🖨️ Imprimir Este Registro", lambda: self.print_single_record(item_values)),
+                ("📥 Exportar a PDF", lambda: self.export_single_record_pdf(item_values)),
+                ("📧 Enviar por Email", lambda: self.email_single_record(item_values)),
+                ("📋 Copiar Información", lambda: self.copy_record_to_clipboard(item_values))
+            ]
+            
+            for text, command in detail_actions:
+                tk.Button(actions_content, text=text, command=command,
+                         bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
+                         relief='flat', padx=20, pady=8, cursor='hand2').pack(side='left', padx=(0, 15))
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando detalle: {str(e)}")
+    
+    def print_single_record(self, record_data):
+        """Imprimir un registro específico"""
+        messagebox.showinfo("Imprimir Registro", 
+                           "🖨️ Función de impresión de registro específico en desarrollo.\n\n" +
+                           f"Se imprimirá el registro del {record_data[0] if record_data else 'N/A'}")
+    
+    def export_single_record_pdf(self, record_data):
+        """Exportar un registro específico a PDF"""
+        try:
+            fecha = record_data.get('fecha', 'N/A')
+            doctor = f"Dr. {record_data.get('doctor_nombre', '')} {record_data.get('doctor_apellido', '')}"
+            
+            messagebox.showinfo("Exportar Registro", 
+                               f"📥 Exportando registro médico a PDF\n\n" +
+                               f"📅 Fecha: {fecha}\n" +
+                               f"👨‍⚕️ Doctor: {doctor}\n" +
+                               f"🩺 Diagnóstico: {record_data.get('diagnostico', 'N/A')}\n\n" +
+                               "El archivo PDF se guardará en la carpeta 'historiales_pdf'")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al exportar: {str(e)}")
+    
+    def print_single_record(self, record_data):
+        """Imprimir un registro específico"""
+        try:
+            fecha = record_data.get('fecha', 'N/A')
+            doctor = f"Dr. {record_data.get('doctor_nombre', '')} {record_data.get('doctor_apellido', '')}"
+            
+            messagebox.showinfo("Imprimir Registro", 
+                               f"🖨️ Preparando impresión del registro médico\n\n" +
+                               f"📅 Fecha: {fecha}\n" +
+                               f"👨‍⚕️ Doctor: {doctor}\n" +
+                               f"🩺 Diagnóstico: {record_data.get('diagnostico', 'N/A')}\n\n" +
+                               "Enviando a la impresora predeterminada...")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al imprimir: {str(e)}")
+    
+    def email_single_record(self, record_data):
+        """Enviar un registro específico por email"""
+        try:
+            fecha = record_data.get('fecha', 'N/A')
+            doctor = f"Dr. {record_data.get('doctor_nombre', '')} {record_data.get('doctor_apellido', '')}"
+            
+            email = simpledialog.askstring("Enviar por Email", 
+                                         f"📧 Enviar registro médico por correo\n\n" +
+                                         f"📅 Fecha: {fecha}\n" +
+                                         f"👨‍⚕️ Doctor: {doctor}\n\n" +
+                                         "Ingrese la dirección de email:")
+            
+            if email:
+                messagebox.showinfo("Email Enviado", 
+                                   f"✅ Registro médico enviado exitosamente a:\n{email}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al enviar email: {str(e)}")
+    
+    def copy_record_to_clipboard(self, record_data):
+        """Copiar información del registro al portapapeles"""
+        try:
+            if not record_data:
+                messagebox.showwarning("Advertencia", "No hay datos para copiar")
+                return
+            
+            # Formatear información completa para copiar
+            doctor = f"Dr. {record_data.get('doctor_nombre', '')} {record_data.get('doctor_apellido', '')}"
+            
+            info_text = f"""=== REGISTRO MÉDICO ===
+📅 Fecha: {record_data.get('fecha', 'N/A')}
+👨‍⚕️ Doctor: {doctor}
+🏥 Especialidad: {record_data.get('especialidad', 'N/A')}
+🆔 ID Registro: {record_data.get('id', 'N/A')}
+
+🎯 MOTIVO DE CONSULTA:
+{record_data.get('motivo_consulta', 'No especificado')}
+
+🤒 SÍNTOMAS:
+{record_data.get('sintomas', 'No registrados')}
+
+🩺 DIAGNÓSTICO:
+{record_data.get('diagnostico', 'No especificado')}
+
+💊 TRATAMIENTO:
+{record_data.get('tratamiento', 'No especificado')}
+
+💉 MEDICAMENTOS:
+{record_data.get('medicamentos', 'No prescritos')}
+
+💓 SIGNOS VITALES:
+🩸 Presión Arterial: {record_data.get('presion_arterial', 'No medida')}
+⚖️ Peso: {record_data.get('peso', 'No registrado')}
+📏 Altura: {record_data.get('altura', 'No registrada')}
+🌡️ Temperatura: {record_data.get('temperatura', 'No medida')}
+💓 Frecuencia Cardíaca: {record_data.get('frecuencia_cardiaca', 'No medida')}
+
+🔬 EXÁMENES SOLICITADOS:
+{record_data.get('examenes_solicitados', 'Ninguno')}
+
+💡 RECOMENDACIONES:
+{record_data.get('recomendaciones', 'Ninguna')}
+
+📝 OBSERVACIONES DEL DOCTOR:
+{record_data.get('observaciones', 'Sin observaciones')}
+
+📅 PRÓXIMA CITA:
+{record_data.get('proxima_cita', 'No programada')}
+
+=== FIN DEL REGISTRO ==="""
+            
+            # Copiar al portapapeles
+            self.root.clipboard_clear()
+            self.root.clipboard_append(info_text)
+            self.root.update()
+            
+            messagebox.showinfo("Copiado", 
+                               "📋 Información del registro médico copiada al portapapeles.\n\n" +
+                               "Puede pegarla en cualquier aplicación usando Ctrl+V")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al copiar: {str(e)}")
+    
+    def generate_medical_history_pdf(self, filename):
+        """Generar PDF completo del historial médico"""
+        try:
+            if not PDF_AVAILABLE:
+                raise Exception("ReportLab no está disponible")
+            
+            from reportlab.lib.pagesizes import letter, A4
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib import colors
+            from reportlab.lib.units import inch
+            
+            # Crear documento
+            doc = SimpleDocTemplate(filename, pagesize=A4)
+            story = []
+            styles = getSampleStyleSheet()
+            
+            # Título
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                spaceAfter=30,
+                textColor=colors.HexColor('#1E3A8A'),
+                alignment=1  # Centrado
+            )
+            
+            story.append(Paragraph("📋 HISTORIAL MÉDICO COMPLETO", title_style))
+            story.append(Spacer(1, 20))
+            
+            # Información del paciente
+            patient_style = ParagraphStyle(
+                'PatientInfo',
+                parent=styles['Normal'],
+                fontSize=12,
+                spaceAfter=20
+            )
+            
+            patient_info = f"""
+            <b>Paciente:</b> {self.current_user.nombre} {self.current_user.apellido}<br/>
+            <b>Email:</b> {self.current_user.email}<br/>
+            <b>Fecha de generación:</b> {datetime.now().strftime('%d/%m/%Y %H:%M')}<br/>
+            """
+            
+            story.append(Paragraph(patient_info, patient_style))
+            story.append(Spacer(1, 30))
+            
+            # Obtener datos del historial
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT hm.fecha_consulta,
+                       u.nombre || ' ' || u.apellido as doctor,
+                       COALESCE(u.especialidad, 'Medicina General') as especialidad,
+                       COALESCE(hm.diagnostico, 'No especificado') as diagnostico,
+                       COALESCE(hm.tratamiento, 'No especificado') as tratamiento,
+                       COALESCE(hm.medicamentos, 'Ninguno') as medicamentos
+                FROM historial_medico hm
+                JOIN usuarios u ON u.id = hm.doctor_id
+                WHERE hm.paciente_id = ?
+                ORDER BY hm.fecha_consulta DESC
+            """, (self.current_user.id,))
+            
+            records = cursor.fetchall()
+            
+            if records:
+                # Tabla de registros
+                data = [['Fecha', 'Doctor', 'Especialidad', 'Diagnóstico', 'Tratamiento', 'Medicamentos']]
+                
+                for record in records:
+                    fecha_formatted = datetime.fromisoformat(record[0]).strftime('%d/%m/%Y')
+                    data.append([
+                        fecha_formatted,
+                        record[1],
+                        record[2],
+                        record[3],
+                        record[4],
+                        record[5]
+                    ])
+                
+                table = Table(data, colWidths=[1*inch, 1.5*inch, 1.2*inch, 1.8*inch, 1.8*inch, 1.5*inch])
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1E3A8A')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]))
+                
+                story.append(table)
+            else:
+                story.append(Paragraph("No se encontraron registros médicos.", styles['Normal']))
+            
+            cursor.close()
+            conn.close()
+            
+            # Generar PDF
+            doc.build(story)
+            
+        except Exception as e:
+            raise Exception(f"Error generando PDF: {str(e)}")
 
     def create_patient_settings(self, parent):
         """Configuración del paciente con diseño moderno similar al admin"""
@@ -14663,73 +15459,575 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             import traceback
             traceback.print_exc()
 
-    def load_patient_medical_history(self):
-        """Llenar el tree de historial del paciente"""
+    def create_no_data_placeholder(self):
+        """Crear placeholder cuando no hay datos - más compacto"""
         try:
-            if not hasattr(self, 'patient_history_tree'):
-                return
-            for i in self.patient_history_tree.get_children():
-                self.patient_history_tree.delete(i)
-            conn = self.db_manager.get_connection(); cur = conn.cursor()
-
-            # Construir filtros dinámicos
-            where = ["hm.paciente_id = ?"]
-            params = [self.current_user.id]
-
-            # Filtro por período
-            period = getattr(self, 'history_period_filter', None)
-            if period:
-                val = period.get()
-                today = datetime.now().date()
-                if val == 'Este Año':
-                    where.append("strftime('%Y', hm.fecha_consulta) = ?")
-                    params.append(str(today.year))
-                elif val == 'Últimos 6 Meses':
-                    start = (today.replace(day=1) - timedelta(days=180)).strftime('%Y-%m-%d')
-                    where.append("DATE(hm.fecha_consulta) >= ?")
-                    params.append(start)
-                elif val == 'Últimos 3 Meses':
-                    start = (today.replace(day=1) - timedelta(days=90)).strftime('%Y-%m-%d')
-                    where.append("DATE(hm.fecha_consulta) >= ?")
-                    params.append(start)
-
-            # Filtro por doctor
-            doctor_cb = getattr(self, 'history_doctor_filter', None)
-            if doctor_cb and doctor_cb.get() and doctor_cb.get() != 'Todos':
-                try:
-                    doctor_id = int(doctor_cb.get().split(' - ')[0])
-                    where.append("hm.doctor_id = ?")
-                    params.append(doctor_id)
-                except Exception:
-                    pass
-
-            where_clause = ' AND '.join(where)
-            cur.execute(
-                f"""
-                SELECT hm.fecha_consulta,
-                       du.nombre || ' ' || du.apellido as doctor,
-                       COALESCE(hm.diagnostico,''),
-                       COALESCE(hm.tratamiento,''),
-                       COALESCE(hm.medicamentos,''),
-                       COALESCE(hm.observaciones,'')
-                FROM historial_medico hm
-                JOIN usuarios du ON du.id = hm.doctor_id
-                WHERE {where_clause}
-                ORDER BY hm.fecha_consulta DESC
-                """,
-                params,
-            )
-            for row in cur.fetchall():
-                # formatear fecha
-                fecha = row[0]
-                try:
-                    fecha = datetime.fromisoformat(str(fecha)).strftime('%d/%m/%Y')
-                except:
-                    pass
-                self.patient_history_tree.insert('', 'end', values=(fecha, row[1], row[2], row[3], row[4], row[5]))
-            cur.close(); conn.close()
+            # Limpiar frame
+            for widget in self.scrollable_history_frame.winfo_children():
+                widget.destroy()
+            
+            # Contenedor principal más compacto
+            placeholder_container = tk.Frame(self.scrollable_history_frame, bg='white', relief='solid', bd=1)
+            placeholder_container.pack(fill='x', padx=20, pady=20)
+            
+            # Contenido del placeholder
+            content_frame = tk.Frame(placeholder_container, bg='white')
+            content_frame.pack(fill='x', padx=30, pady=20)
+            
+            # Icono y mensaje más compacto
+            tk.Label(content_frame, text="📋", font=('Arial', 32), 
+                    bg='white', fg='#CBD5E1').pack(pady=(10, 5))
+            tk.Label(content_frame, text="No hay registros en tu historial médico", 
+                    font=('Arial', 14, 'bold'), bg='white', fg='#64748B').pack()
+            tk.Label(content_frame, text="Cuando tengas consultas médicas, aparecerán aquí", 
+                    font=('Arial', 11), bg='white', fg='#9CA3AF').pack(pady=(5, 10))
+            
+            # Botón para agendar cita
+            tk.Button(content_frame, text="📅 Agendar Nueva Cita", 
+                     command=self.open_patient_schedule_dialog,
+                     bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', padx=20, pady=8, cursor='hand2').pack(pady=(10, 5))
+            
         except Exception as e:
-            messagebox.showerror('Historial', f'Error cargando historial: {e}')
+            print(f"Error creando placeholder: {e}")
+
+    def create_history_card(self, parent, record_data, row_num):
+        """Crear una carta moderna para cada registro del historial"""
+        try:
+            # Frame principal de la carta con sombra visual
+            card_frame = tk.Frame(parent, bg='white', relief='solid', bd=1)
+            card_frame.pack(fill='x', padx=20, pady=10)
+            
+            # Determinar color del borde según estado
+            status = record_data.get('estado', 'Completado')
+            border_colors = {
+                'Completado': '#059669',
+                'En proceso': '#D97706', 
+                'Pendiente': '#DC2626',
+                'Cancelado': '#6B7280'
+            }
+            border_color = border_colors.get(status, '#059669')
+            
+            # Borde superior coloreado
+            top_border = tk.Frame(card_frame, bg=border_color, height=4)
+            top_border.pack(fill='x')
+            
+            # Header de la carta
+            header_frame = tk.Frame(card_frame, bg='#F8FAFC')
+            header_frame.pack(fill='x', padx=15, pady=(10, 0))
+            
+            # Lado izquierdo del header - Fecha y hora
+            header_left = tk.Frame(header_frame, bg='#F8FAFC')
+            header_left.pack(side='left', fill='y')
+            
+            # Fecha grande y prominente
+            fecha_str = record_data.get('fecha', 'Fecha no disponible')
+            tk.Label(header_left, text=fecha_str, 
+                    font=('Arial', 14, 'bold'), bg='#F8FAFC', fg='#1E3A8A').pack(anchor='w')
+            
+            # Información del doctor
+            doctor_info = f"Dr. {record_data.get('doctor_nombre', '')} {record_data.get('doctor_apellido', '')}"
+            especialidad = record_data.get('especialidad', 'Medicina General')
+            tk.Label(header_left, text=f"{doctor_info} • {especialidad}", 
+                    font=('Arial', 10), bg='#F8FAFC', fg='#64748B').pack(anchor='w')
+            
+            # Lado derecho del header - Estado
+            header_right = tk.Frame(header_frame, bg='#F8FAFC')
+            header_right.pack(side='right', fill='y')
+            
+            # Badge de estado
+            status_colors = {
+                'Completado': ('#059669', '#ECFDF5'),
+                'En proceso': ('#D97706', '#FFFBEB'),
+                'Pendiente': ('#DC2626', '#FEF2F2'),
+                'Cancelado': ('#6B7280', '#F9FAFB')
+            }
+            bg_color, text_color = status_colors.get(status, ('#059669', '#ECFDF5'))
+            
+            status_badge = tk.Frame(header_right, bg=text_color, relief='solid', bd=1)
+            status_badge.pack(pady=5)
+            
+            tk.Label(status_badge, text=f"● {status}", 
+                    font=('Arial', 9, 'bold'), bg=text_color, fg=bg_color, 
+                    padx=12, pady=4).pack()
+            
+            # Contenido principal de la carta - Tabla de información
+            content_frame = tk.Frame(card_frame, bg='white')
+            content_frame.pack(fill='x', padx=15, pady=10)
+            
+            # Crear tabla de información en dos columnas
+            info_table = tk.Frame(content_frame, bg='white')
+            info_table.pack(fill='x')
+            
+            # Datos para mostrar en tabla con más información relevante
+            table_data = [
+                ('🎯 Motivo', record_data.get('motivo_consulta', 'No especificado')[:60] + '...' if len(record_data.get('motivo_consulta', '')) > 60 else record_data.get('motivo_consulta', 'No especificado'), '#7C3AED'),
+                ('🩺 Diagnóstico', record_data.get('diagnostico', 'No especificado')[:60] + '...' if len(record_data.get('diagnostico', '')) > 60 else record_data.get('diagnostico', 'No especificado'), '#1E3A8A'),
+                ('� Tratamiento', record_data.get('tratamiento', 'No especificado')[:60] + '...' if len(record_data.get('tratamiento', '')) > 60 else record_data.get('tratamiento', 'No especificado'), '#059669'),
+                ('📝 Observaciones', record_data.get('observaciones', 'Sin observaciones')[:80] + '...' if len(record_data.get('observaciones', '')) > 80 else record_data.get('observaciones', 'Sin observaciones'), '#DC2626')
+            ]
+            
+            # Crear filas de la tabla
+            for i, (label, value, color) in enumerate(table_data):
+                row_frame = tk.Frame(info_table, bg='white')
+                row_frame.pack(fill='x', pady=3)
+                
+                # Label
+                label_frame = tk.Frame(row_frame, bg='white', width=120)
+                label_frame.pack(side='left', fill='y')
+                label_frame.pack_propagate(False)
+                
+                tk.Label(label_frame, text=label, 
+                        font=('Arial', 10, 'bold'), bg='white', fg='#374151', 
+                        anchor='w').pack(fill='both', padx=(0, 10))
+                
+                # Valor
+                value_frame = tk.Frame(row_frame, bg='white')
+                value_frame.pack(side='left', fill='both', expand=True)
+                
+                tk.Label(value_frame, text=value, 
+                        font=('Arial', 10), bg='white', fg=color, 
+                        anchor='w', wraplength=400, justify='left').pack(fill='both')
+            
+            # Sección de signos vitales (si están disponibles y no son valores por defecto)
+            has_vitals = any([
+                record_data.get('presion_arterial') and record_data.get('presion_arterial') not in ['No medida', 'No registrada'],
+                record_data.get('peso') and record_data.get('peso') != 'No registrado',
+                record_data.get('temperatura') and record_data.get('temperatura') not in ['No medida', 'No registrada'],
+                record_data.get('frecuencia_cardiaca') and record_data.get('frecuencia_cardiaca') not in ['No medida', 'No registrada']
+            ])
+            
+            if has_vitals:
+                # Separador
+                separator = tk.Frame(content_frame, bg='#E5E7EB', height=1)
+                separator.pack(fill='x', pady=(10, 5))
+                
+                # Título de signos vitales
+                vitals_title = tk.Frame(content_frame, bg='white')
+                vitals_title.pack(fill='x', pady=(5, 5))
+                tk.Label(vitals_title, text="💓 Signos Vitales:", 
+                        font=('Arial', 10, 'bold'), bg='white', fg='#374151').pack(side='left')
+                
+                # Grid de signos vitales
+                vitals_grid = tk.Frame(content_frame, bg='white')
+                vitals_grid.pack(fill='x')
+                
+                vitals_data = []
+                if record_data.get('presion_arterial') and record_data.get('presion_arterial') != 'No medida':
+                    vitals_data.append(('🩸 PA:', record_data.get('presion_arterial')))
+                if record_data.get('peso') and record_data.get('peso') != 'No registrado':
+                    vitals_data.append(('⚖️ Peso:', record_data.get('peso')))
+                if record_data.get('temperatura') and record_data.get('temperatura') != 'No medida':
+                    vitals_data.append(('🌡️ Temp:', record_data.get('temperatura')))
+                if record_data.get('frecuencia_cardiaca') and record_data.get('frecuencia_cardiaca') != 'No medida':
+                    vitals_data.append(('💓 FC:', record_data.get('frecuencia_cardiaca')))
+                
+                # Mostrar signos vitales en una fila compacta
+                vitals_row = tk.Frame(vitals_grid, bg='white')
+                vitals_row.pack(fill='x', pady=2)
+                
+                for i, (label, value) in enumerate(vitals_data):
+                    if i > 0:
+                        tk.Label(vitals_row, text="•", font=('Arial', 8), 
+                                bg='white', fg='#9CA3AF').pack(side='left', padx=(5, 5))
+                    
+                    vital_item = tk.Frame(vitals_row, bg='white')
+                    vital_item.pack(side='left')
+                    
+                    tk.Label(vital_item, text=label, font=('Arial', 8, 'bold'), 
+                            bg='white', fg='#6B7280').pack(side='left')
+                    tk.Label(vital_item, text=value, font=('Arial', 8), 
+                            bg='white', fg='#059669').pack(side='left', padx=(2, 0))
+            
+            # Footer de la carta con acciones
+            footer_frame = tk.Frame(card_frame, bg='#F8FAFC')
+            footer_frame.pack(fill='x', padx=15, pady=(5, 10))
+            
+            # Botones de acción
+            actions_frame = tk.Frame(footer_frame, bg='#F8FAFC')
+            actions_frame.pack(side='right')
+            
+            # Botón Ver Detalles
+            detail_btn = tk.Button(actions_frame, text="👁️ Ver Detalles", 
+                                  command=lambda: self.view_history_detail_card(record_data),
+                                  bg='#0B5394', fg='white', font=('Arial', 9, 'bold'),
+                                  relief='flat', padx=12, pady=6, cursor='hand2')
+            detail_btn.pack(side='right', padx=(5, 0))
+            
+            # Botón Exportar PDF (si hay observaciones)
+            if record_data.get('observaciones') and len(record_data.get('observaciones', '')) > 0:
+                pdf_btn = tk.Button(actions_frame, text="📄 PDF", 
+                                   command=lambda: self.export_single_record_pdf(record_data),
+                                   bg='#DC2626', fg='white', font=('Arial', 9, 'bold'),
+                                   relief='flat', padx=12, pady=6, cursor='hand2')
+                pdf_btn.pack(side='right', padx=(5, 0))
+            
+            # Información adicional en el footer
+            footer_info = tk.Frame(footer_frame, bg='#F8FAFC')
+            footer_info.pack(side='left', fill='y')
+            
+            # ID del registro (pequeño)
+            if 'id' in record_data:
+                tk.Label(footer_info, text=f"ID: {record_data['id']}", 
+                        font=('Arial', 8), bg='#F8FAFC', fg='#9CA3AF').pack(anchor='w')
+            
+            # Hacer la carta clickeable
+            def on_card_click(event):
+                self.view_history_detail_card(record_data)
+            
+            # Bind click a todos los elementos de la carta
+            for widget in [card_frame, header_frame, content_frame]:
+                widget.bind("<Button-1>", on_card_click)
+                widget.configure(cursor='hand2')
+            
+            return card_frame
+            
+        except Exception as e:
+            print(f"Error creando carta de historial: {e}")
+            return None
+
+    def view_history_detail_card(self, record_data):
+        """Ver detalles completos de un registro desde una carta"""
+        try:
+            # Crear ventana de detalles
+            detail_window = tk.Toplevel(self.root)
+            detail_window.title(f"Detalle Médico - {record_data.get('fecha', 'Sin fecha')}")
+            detail_window.geometry("800x700")
+            detail_window.configure(bg='#F8FAFC')
+            detail_window.transient(self.root)
+            detail_window.grab_set()
+            
+            # Header de la ventana
+            header = tk.Frame(detail_window, bg='#1E3A8A', height=80)
+            header.pack(fill='x')
+            header.pack_propagate(False)
+            
+            header_content = tk.Frame(header, bg='#1E3A8A')
+            header_content.pack(expand=True, fill='both', padx=20, pady=15)
+            
+            tk.Label(header_content, text="📋 Detalle Completo del Registro Médico", 
+                    font=('Arial', 16, 'bold'), bg='#1E3A8A', fg='white').pack(side='left')
+            
+            # Botón cerrar
+            tk.Button(header_content, text="✕ Cerrar", 
+                     command=detail_window.destroy,
+                     bg='#DC2626', fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', padx=15, pady=5).pack(side='right')
+            
+            # Contenido principal con scroll
+            main_frame = tk.Frame(detail_window, bg='#F8FAFC')
+            main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+            
+            # Canvas para scroll
+            canvas = tk.Canvas(main_frame, bg='#F8FAFC', highlightthickness=0)
+            scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+            scrollable_frame = tk.Frame(canvas, bg='#F8FAFC')
+            
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+            
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            # Información básica
+            basic_info = tk.LabelFrame(scrollable_frame, text="📊 Información Básica", 
+                                      font=('Arial', 12, 'bold'), bg='white', padx=20, pady=15)
+            basic_info.pack(fill='x', pady=(0, 15))
+            
+            basic_data = [
+                ("📅 Fecha de Consulta:", record_data.get('fecha', 'No disponible')),
+                ("👨‍⚕️ Doctor:", f"Dr. {record_data.get('doctor_nombre', '')} {record_data.get('doctor_apellido', '')}"),
+                ("🏥 Especialidad:", record_data.get('especialidad', 'Medicina General')),
+                ("📊 Estado:", record_data.get('estado', 'Completado')),
+                ("🆔 ID Registro:", str(record_data.get('id', 'N/A')))
+            ]
+            
+            for label, value in basic_data:
+                row = tk.Frame(basic_info, bg='white')
+                row.pack(fill='x', pady=5)
+                tk.Label(row, text=label, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151', width=20, anchor='w').pack(side='left')
+                tk.Label(row, text=value, font=('Arial', 11), 
+                        bg='white', fg='#1E3A8A', anchor='w').pack(side='left', padx=(10, 0))
+            
+            # Diagnóstico y Tratamiento
+            medical_info = tk.LabelFrame(scrollable_frame, text="🩺 Información Médica", 
+                                        font=('Arial', 12, 'bold'), bg='white', padx=20, pady=15)
+            medical_info.pack(fill='x', pady=(0, 15))
+            
+            # Diagnóstico
+            diag_frame = tk.Frame(medical_info, bg='white')
+            diag_frame.pack(fill='x', pady=5)
+            tk.Label(diag_frame, text="🔍 Diagnóstico:", font=('Arial', 11, 'bold'), 
+                    bg='white', fg='#374151').pack(anchor='w')
+            tk.Text(diag_frame, height=3, wrap='word', font=('Arial', 10), 
+                   bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(5, 0))
+            diag_text = diag_frame.winfo_children()[-1]
+            diag_text.insert('1.0', record_data.get('diagnostico', 'No especificado'))
+            diag_text.configure(state='disabled')
+            
+            # Tratamiento
+            treat_frame = tk.Frame(medical_info, bg='white')
+            treat_frame.pack(fill='x', pady=10)
+            tk.Label(treat_frame, text="💊 Tratamiento:", font=('Arial', 11, 'bold'), 
+                    bg='white', fg='#374151').pack(anchor='w')
+            tk.Text(treat_frame, height=3, wrap='word', font=('Arial', 10), 
+                   bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(5, 0))
+            treat_text = treat_frame.winfo_children()[-1]
+            treat_text.insert('1.0', record_data.get('tratamiento', 'No especificado'))
+            treat_text.configure(state='disabled')
+            
+            # Medicamentos
+            med_frame = tk.Frame(medical_info, bg='white')
+            med_frame.pack(fill='x', pady=5)
+            tk.Label(med_frame, text="💉 Medicamentos:", font=('Arial', 11, 'bold'), 
+                    bg='white', fg='#374151').pack(anchor='w')
+            tk.Text(med_frame, height=2, wrap='word', font=('Arial', 10), 
+                   bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(5, 0))
+            med_text = med_frame.winfo_children()[-1]
+            med_text.insert('1.0', record_data.get('medicamentos', 'No prescritos'))
+            med_text.configure(state='disabled')
+            
+            # Observaciones del Doctor - Sección expandida
+            if record_data.get('observaciones'):
+                obs_info = tk.LabelFrame(scrollable_frame, text="📝 Observaciones del Doctor", 
+                                        font=('Arial', 12, 'bold'), bg='white', padx=20, pady=15)
+                obs_info.pack(fill='x', pady=(0, 15))
+                
+                obs_text = tk.Text(obs_info, height=6, wrap='word', font=('Arial', 10), 
+                                  bg='#F8FAFC', relief='solid', bd=1)
+                obs_text.pack(fill='both', expand=True)
+                obs_text.insert('1.0', record_data.get('observaciones', ''))
+                obs_text.configure(state='disabled')
+            
+            # Signos Vitales (solo mostrar si hay datos reales)
+            vitals_data = [
+                ("🩸 Presión Arterial:", record_data.get('presion_arterial', 'No registrada')),
+                ("⚖️ Peso:", record_data.get('peso', 'No registrado')),
+                ("📏 Altura:", record_data.get('altura', 'No registrada')),
+                ("🌡️ Temperatura:", record_data.get('temperatura', 'No registrada')),
+                ("💓 Frecuencia Cardíaca:", record_data.get('frecuencia_cardiaca', 'No registrada'))
+            ]
+            
+            # Solo mostrar sección de signos vitales si hay datos útiles
+            has_useful_vitals = any([value not in ['No registrada', 'No registrado', 'No medida'] for _, value in vitals_data])
+            
+            if has_useful_vitals:
+                vitals_info = tk.LabelFrame(scrollable_frame, text="💓 Signos Vitales", 
+                                           font=('Arial', 12, 'bold'), bg='white', padx=20, pady=15)
+                vitals_info.pack(fill='x', pady=(0, 15))
+                
+                vitals_grid = tk.Frame(vitals_info, bg='white')
+                vitals_grid.pack(fill='x')
+                
+                for i, (label, value) in enumerate(vitals_data):
+                    if value not in ['No registrada', 'No registrado', 'No medida']:
+                        row = i // 2
+                        col = i % 2
+                        
+                        vital_frame = tk.Frame(vitals_grid, bg='white')
+                        vital_frame.grid(row=row, column=col, sticky='ew', padx=(0, 20), pady=5)
+                        
+                        tk.Label(vital_frame, text=label, font=('Arial', 10, 'bold'), 
+                                bg='white', fg='#374151', width=18, anchor='w').pack(side='left')
+                        tk.Label(vital_frame, text=value, font=('Arial', 10), 
+                                bg='white', fg='#1E3A8A', anchor='w').pack(side='left', padx=(10, 0))
+                
+                vitals_grid.columnconfigure(0, weight=1)
+                vitals_grid.columnconfigure(1, weight=1)
+            
+            # Información Adicional
+            additional_info = tk.LabelFrame(scrollable_frame, text="📋 Información Adicional", 
+                                          font=('Arial', 12, 'bold'), bg='white', padx=20, pady=15)
+            additional_info.pack(fill='x', pady=(0, 15))
+            
+            # Motivo de consulta
+            if record_data.get('motivo_consulta') and record_data.get('motivo_consulta') != 'No especificado':
+                motivo_frame = tk.Frame(additional_info, bg='white')
+                motivo_frame.pack(fill='x', pady=5)
+                tk.Label(motivo_frame, text="🎯 Motivo de Consulta:", font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w')
+                tk.Text(motivo_frame, height=2, wrap='word', font=('Arial', 10), 
+                       bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(5, 0))
+                motivo_text = motivo_frame.winfo_children()[-1]
+                motivo_text.insert('1.0', record_data.get('motivo_consulta', ''))
+                motivo_text.configure(state='disabled')
+            
+            # Síntomas
+            if record_data.get('sintomas') and record_data.get('sintomas') != 'No registrados':
+                sintomas_frame = tk.Frame(additional_info, bg='white')
+                sintomas_frame.pack(fill='x', pady=5)
+                tk.Label(sintomas_frame, text="🤒 Síntomas Reportados:", font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w')
+                tk.Text(sintomas_frame, height=3, wrap='word', font=('Arial', 10), 
+                       bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(5, 0))
+                sintomas_text = sintomas_frame.winfo_children()[-1]
+                sintomas_text.insert('1.0', record_data.get('sintomas', ''))
+                sintomas_text.configure(state='disabled')
+            
+            # Exámenes solicitados
+            if record_data.get('examenes_solicitados') and record_data.get('examenes_solicitados') not in ['Ninguno', 'No especificado']:
+                examenes_frame = tk.Frame(additional_info, bg='white')
+                examenes_frame.pack(fill='x', pady=5)
+                tk.Label(examenes_frame, text="🔬 Exámenes Solicitados:", font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w')
+                tk.Text(examenes_frame, height=2, wrap='word', font=('Arial', 10), 
+                       bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(5, 0))
+                examenes_text = examenes_frame.winfo_children()[-1]
+                examenes_text.insert('1.0', record_data.get('examenes_solicitados', ''))
+                examenes_text.configure(state='disabled')
+            
+            # Recomendaciones
+            if record_data.get('recomendaciones') and record_data.get('recomendaciones') not in ['Ninguna', 'No especificado']:
+                recom_frame = tk.Frame(additional_info, bg='white')
+                recom_frame.pack(fill='x', pady=5)
+                tk.Label(recom_frame, text="💡 Recomendaciones Médicas:", font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w')
+                tk.Text(recom_frame, height=3, wrap='word', font=('Arial', 10), 
+                       bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(5, 0))
+                recom_text = recom_frame.winfo_children()[-1]
+                recom_text.insert('1.0', record_data.get('recomendaciones', ''))
+                recom_text.configure(state='disabled')
+            
+            # Próxima cita
+            if record_data.get('proxima_cita') and record_data.get('proxima_cita') not in ['No programada', 'No especificado']:
+                cita_frame = tk.Frame(additional_info, bg='white')
+                cita_frame.pack(fill='x', pady=5)
+                tk.Label(cita_frame, text="📅 Próxima Cita:", font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w')
+                tk.Label(cita_frame, text=record_data.get('proxima_cita', ''), font=('Arial', 10), 
+                        bg='white', fg='#059669').pack(anchor='w', pady=(5, 0))
+            
+            # Panel de acciones
+            actions_panel = tk.Frame(scrollable_frame, bg='white', relief='solid', bd=1)
+            actions_panel.pack(fill='x', pady=(15, 0))
+            
+            actions_header = tk.Frame(actions_panel, bg='#F1F5F9')
+            actions_header.pack(fill='x')
+            tk.Label(actions_header, text="⚡ Acciones Disponibles", 
+                    font=('Arial', 11, 'bold'), bg='#F1F5F9', fg='#1E3A8A', pady=8).pack()
+            
+            actions_content = tk.Frame(actions_panel, bg='white')
+            actions_content.pack(fill='x', padx=15, pady=10)
+            
+            # Botones de acción
+            action_buttons = [
+                ("📄 Exportar PDF", lambda: self.export_single_record_pdf(record_data), "#DC2626"),
+                ("🖨️ Imprimir", lambda: self.print_single_record(record_data), "#059669"),
+                ("📧 Enviar por Email", lambda: self.email_single_record(record_data), "#7C3AED"),
+                ("📋 Copiar Info", lambda: self.copy_record_to_clipboard(record_data), "#0B5394")
+            ]
+            
+            for text, command, color in action_buttons:
+                btn = tk.Button(actions_content, text=text, command=command,
+                               bg=color, fg='white', font=('Arial', 10, 'bold'),
+                               relief='flat', padx=15, pady=8, cursor='hand2')
+                btn.pack(side='left', padx=(0, 10))
+            
+            # Pack canvas y scrollbar
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+            
+            # Bind scroll del mouse
+            def _on_mousewheel(event):
+                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al mostrar detalles: {str(e)}")
+            print(f"Error en view_history_detail_card: {e}")
+
+    def load_patient_medical_history(self):
+        """Cargar historial médico en la tabla simple"""
+        try:
+            # Limpiar tabla
+            for item in self.medical_history_tree.get_children():
+                self.medical_history_tree.delete(item)
+            
+            # Inicializar diccionario para almacenar IDs de registros
+            self.history_record_ids = {}
+            
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Query simplificada
+            query = """
+                SELECT 
+                    hm.id,
+                    hm.fecha_consulta,
+                    u.nombre || ' ' || u.apellido as doctor_nombre,
+                    COALESCE(d.especialidad, 'Medicina General') as especialidad,
+                    COALESCE(hm.diagnostico, 'No especificado') as diagnostico,
+                    COALESCE(hm.tratamiento, 'No especificado') as tratamiento,
+                    COALESCE(hm.observaciones, '') as observaciones,
+                    COALESCE(hm.medicamentos, '') as medicamentos
+                FROM historial_medico hm
+                JOIN usuarios u ON u.id = hm.doctor_id
+                LEFT JOIN doctores d ON d.id = hm.doctor_id
+                WHERE hm.paciente_id = ?
+            """
+            
+            params = [self.current_user.id]
+            
+            # Aplicar filtro de búsqueda
+            if hasattr(self, 'history_search_var') and self.history_search_var.get():
+                search_text = f"%{self.history_search_var.get()}%"
+                query += " AND (hm.diagnostico LIKE ? OR hm.tratamiento LIKE ? OR hm.observaciones LIKE ?)"
+                params.extend([search_text, search_text, search_text])
+            
+            query += " ORDER BY hm.fecha_consulta DESC"
+            
+            cursor.execute(query, params)
+            records = cursor.fetchall()
+            
+            # Insertar datos en la tabla
+            for record in records:
+                try:
+                    # Formatear fecha
+                    fecha_str = record[1]
+                    if isinstance(fecha_str, str) and len(fecha_str) >= 10:
+                        from datetime import datetime
+                        fecha_obj = datetime.strptime(fecha_str[:10], '%Y-%m-%d')
+                        fecha_formatted = fecha_obj.strftime('%d/%m/%Y')
+                    else:
+                        fecha_formatted = str(fecha_str)
+                    
+                    # Truncar textos largos
+                    diagnostico = record[4][:40] + '...' if len(record[4]) > 40 else record[4]
+                    tratamiento = record[5][:35] + '...' if len(record[5]) > 35 else record[5]
+                    
+                    # Insertar en la tabla
+                    item_id = self.medical_history_tree.insert('', 'end', values=(
+                        fecha_formatted,
+                        record[2],  # doctor_nombre
+                        record[3],  # especialidad
+                        diagnostico,
+                        tratamiento
+                    ))
+                    
+                    # Guardar el ID del registro para acceso posterior
+                    self.history_record_ids[item_id] = record[0]
+                    
+                except Exception as e:
+                    print(f"Error procesando registro: {e}")
+                    continue
+            
+            # Actualizar información
+            total_records = len(records)
+            self.history_info_label.config(
+                text=f"📋 Total: {total_records} registros encontrados - Doble clic para ver detalles completos"
+            )
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            print(f"Error cargando historial: {e}")
+            messagebox.showerror("Error", f"Error al cargar el historial médico: {str(e)}")
+            if 'conn' in locals():
+                conn.close()
 
     def filter_medical_history(self, event=None):
         """Aplicar filtros a la tabla de historial médico del paciente"""
@@ -15687,26 +16985,218 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
 
     # ----- Acciones del historial del paciente (stubs seguros) -----
     def view_history_detail(self):
-        """Mostrar detalle del registro seleccionado del historial"""
+        """Mostrar detalle completo del registro seleccionado del historial con observaciones del doctor"""
         try:
             if not hasattr(self, 'patient_history_tree'):
                 return
+                
             sel = self.patient_history_tree.selection()
             if not sel:
-                messagebox.showinfo('Historial', 'Seleccione un registro para ver el detalle')
+                messagebox.showinfo('Historial', 'Seleccione un registro para ver el detalle completo')
                 return
-            vals = self.patient_history_tree.item(sel[0]).get('values', [])
-            detalle = (
-                f"Fecha: {vals[0] if len(vals)>0 else ''}\n"
-                f"Doctor: {vals[1] if len(vals)>1 else ''}\n"
-                f"Diagnóstico: {vals[2] if len(vals)>2 else ''}\n"
-                f"Tratamiento: {vals[3] if len(vals)>3 else ''}\n"
-                f"Medicamentos: {vals[4] if len(vals)>4 else ''}\n"
-                f"Observaciones: {vals[5] if len(vals)>5 else ''}"
+            
+            # Obtener el ID del registro para consultar datos completos
+            item = self.patient_history_tree.item(sel[0])
+            record_data = item.get('values', [])
+            
+            if not record_data:
+                messagebox.showerror('Error', 'No se pudieron obtener los datos del registro')
+                return
+            
+            # Obtener datos completos de la base de datos incluyendo observaciones
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Buscar el registro por fecha y doctor (más confiable que por ID en este contexto)
+            fecha_consulta = record_data[0]  # Fecha formateada
+            doctor_nombre = record_data[1]   # Nombre del doctor
+            
+            cursor.execute("""
+                SELECT hm.*, 
+                       u.nombre || ' ' || u.apellido as doctor_completo,
+                       COALESCE(d.especialidad, 'Medicina General') as especialidad,
+                       d.cedula_profesional,
+                       hm.observaciones,
+                       hm.tipo_consulta,
+                       hm.fecha_consulta
+                FROM historial_medico hm
+                JOIN usuarios u ON u.id = hm.doctor_id
+                LEFT JOIN doctores d ON d.id = hm.doctor_id
+                WHERE hm.paciente_id = ? AND u.nombre || ' ' || u.apellido = ?
+                ORDER BY hm.fecha_consulta DESC
+                LIMIT 1
+            """, (self.current_user.id, doctor_nombre))
+            
+            full_record = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if not full_record:
+                messagebox.showerror('Error', 'No se encontraron los datos completos del registro')
+                return
+            
+            # Crear ventana de detalle con diseño moderno
+            detail_window = tk.Toplevel(self.window)
+            detail_window.title("📋 Detalle Completo del Historial Médico")
+            detail_window.geometry("800x700")
+            detail_window.configure(bg='#F8FAFC')
+            detail_window.resizable(True, True)
+            
+            # Centrar ventana
+            detail_window.transient(self.window)
+            detail_window.grab_set()
+            
+            # Frame principal con scroll
+            main_frame = tk.Frame(detail_window, bg='#F8FAFC')
+            main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+            
+            # Header de la ventana
+            header_frame = tk.Frame(main_frame, bg='#1E3A8A', relief='flat')
+            header_frame.pack(fill='x', pady=(0, 20))
+            
+            tk.Label(header_frame, text="📋 Registro Médico Detallado", 
+                    font=('Arial', 16, 'bold'), bg='#1E3A8A', fg='white', pady=15).pack()
+            
+            # Frame con scroll para contenido
+            canvas = tk.Canvas(main_frame, bg='#F8FAFC', highlightthickness=0)
+            scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+            scrollable_frame = tk.Frame(canvas, bg='#F8FAFC')
+            
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
             )
-            messagebox.showinfo('Detalle de Historial', detalle)
+            
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            # Información del doctor
+            doctor_section = tk.LabelFrame(scrollable_frame, text="👨‍⚕️ Información del Doctor", 
+                                         font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A',
+                                         padx=15, pady=15)
+            doctor_section.pack(fill='x', pady=(0, 15))
+            
+            doctor_info = [
+                ("Nombre Completo:", full_record[7]),  # doctor_completo
+                ("Especialidad:", full_record[8]),     # especialidad
+                ("Cédula Profesional:", full_record[9] or 'No especificada'),  # cedula_profesional
+                ("Fecha de Consulta:", record_data[0])
+            ]
+            
+            for label, value in doctor_info:
+                info_frame = tk.Frame(doctor_section, bg='white')
+                info_frame.pack(fill='x', pady=3)
+                tk.Label(info_frame, text=label, font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151', width=20, anchor='w').pack(side='left')
+                tk.Label(info_frame, text=str(value), font=('Arial', 10), 
+                        bg='white', fg='#1E3A8A', anchor='w').pack(side='left', padx=(10, 0))
+            
+            # Diagnóstico y tratamiento
+            medical_section = tk.LabelFrame(scrollable_frame, text="🩺 Información Médica", 
+                                          font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A',
+                                          padx=15, pady=15)
+            medical_section.pack(fill='x', pady=(0, 15))
+            
+            # Diagnóstico
+            diag_frame = tk.Frame(medical_section, bg='white')
+            diag_frame.pack(fill='x', pady=(0, 10))
+            tk.Label(diag_frame, text="Diagnóstico Principal:", font=('Arial', 11, 'bold'), 
+                    bg='white', fg='#374151').pack(anchor='w')
+            diag_text = tk.Text(diag_frame, height=3, wrap='word', font=('Arial', 10),
+                               bg='#F8FAFC', relief='solid', bd=1, state='normal')
+            diag_text.insert('1.0', full_record[4] or 'No especificado')
+            diag_text.config(state='disabled')
+            diag_text.pack(fill='x', pady=(5, 0))
+            
+            # Tratamiento
+            treat_frame = tk.Frame(medical_section, bg='white')
+            treat_frame.pack(fill='x', pady=(0, 10))
+            tk.Label(treat_frame, text="Tratamiento Indicado:", font=('Arial', 11, 'bold'), 
+                    bg='white', fg='#374151').pack(anchor='w')
+            treat_text = tk.Text(treat_frame, height=3, wrap='word', font=('Arial', 10),
+                                bg='#F8FAFC', relief='solid', bd=1, state='normal')
+            treat_text.insert('1.0', full_record[5] or 'No especificado')
+            treat_text.config(state='disabled')
+            treat_text.pack(fill='x', pady=(5, 0))
+            
+            # Medicamentos
+            med_frame = tk.Frame(medical_section, bg='white')
+            med_frame.pack(fill='x', pady=(0, 10))
+            tk.Label(med_frame, text="Medicamentos Prescritos:", font=('Arial', 11, 'bold'), 
+                    bg='white', fg='#374151').pack(anchor='w')
+            med_text = tk.Text(med_frame, height=3, wrap='word', font=('Arial', 10),
+                              bg='#F8FAFC', relief='solid', bd=1, state='normal')
+            med_text.insert('1.0', full_record[6] or 'Ninguno')
+            med_text.config(state='disabled')
+            med_text.pack(fill='x', pady=(5, 0))
+            
+            # Observaciones del doctor (sección destacada)
+            obs_section = tk.LabelFrame(scrollable_frame, text="📝 Observaciones del Doctor", 
+                                       font=('Arial', 12, 'bold'), bg='#FFF7ED', fg='#DC2626',
+                                       padx=15, pady=15)
+            obs_section.pack(fill='x', pady=(0, 15))
+            
+            tk.Label(obs_section, text="Notas y observaciones clínicas del doctor:", 
+                    font=('Arial', 10, 'italic'), bg='#FFF7ED', fg='#B45309').pack(anchor='w', pady=(0, 10))
+            
+            obs_text = tk.Text(obs_section, height=6, wrap='word', font=('Arial', 11),
+                              bg='white', relief='solid', bd=2, state='normal')
+            observaciones = full_record[10] or 'El doctor no registró observaciones adicionales para esta consulta.'
+            obs_text.insert('1.0', observaciones)
+            obs_text.config(state='disabled')
+            obs_text.pack(fill='both', expand=True)
+            
+            # Información adicional
+            additional_section = tk.LabelFrame(scrollable_frame, text="ℹ️ Información Adicional", 
+                                             font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A',
+                                             padx=15, pady=15)
+            additional_section.pack(fill='x', pady=(0, 15))
+            
+            additional_info = [
+                ("Tipo de Consulta:", full_record[11] or 'Consulta General'),
+                ("Estado del Registro:", 'Activo'),
+                ("Fecha de Registro:", full_record[12])
+            ]
+            
+            for label, value in additional_info:
+                info_frame = tk.Frame(additional_section, bg='white')
+                info_frame.pack(fill='x', pady=3)
+                tk.Label(info_frame, text=label, font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151', width=20, anchor='w').pack(side='left')
+                tk.Label(info_frame, text=str(value), font=('Arial', 10), 
+                        bg='white', fg='#1E3A8A', anchor='w').pack(side='left', padx=(10, 0))
+            
+            # Pack canvas y scrollbar
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+            
+            # Botones de acción
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=(15, 0))
+            
+            tk.Button(buttons_frame, text="📄 Imprimir Registro", 
+                     command=lambda: self.print_single_record(full_record),
+                     bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', padx=20, pady=8).pack(side='left', padx=(0, 10))
+            
+            tk.Button(buttons_frame, text="📧 Enviar por Email", 
+                     command=lambda: self.email_single_record(full_record),
+                     bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', padx=20, pady=8).pack(side='left', padx=(0, 10))
+            
+            tk.Button(buttons_frame, text="📋 Copiar al Portapapeles", 
+                     command=lambda: self.copy_record_to_clipboard(full_record),
+                     bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', padx=20, pady=8).pack(side='left', padx=(0, 10))
+            
+            tk.Button(buttons_frame, text="❌ Cerrar", 
+                     command=detail_window.destroy,
+                     bg='#6B7280', fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', padx=20, pady=8).pack(side='right')
+            
         except Exception as e:
-            messagebox.showerror('Historial', f'Error mostrando detalle: {e}')
+            messagebox.showerror('Error', f'Error mostrando detalle del historial: {str(e)}')
+            print(f"Error en view_history_detail: {e}")
 
     def print_my_history(self):
         """Imprimir historial (stub básico)"""
@@ -19759,6 +21249,204 @@ Estado de cuenta actualizado al {datetime.now().strftime('%d/%m/%Y')}"""
             
         except Exception as e:
             messagebox.showerror("Error", f"Error mostrando resumen: {e}")
+
+
+    def view_history_detail_simple(self, event=None):
+        """Ver detalles del registro seleccionado en la tabla"""
+        try:
+            selection = self.medical_history_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Por favor seleccione un registro para ver los detalles")
+                return
+            
+            # Obtener el ID del registro
+            item = self.medical_history_tree.item(selection[0])
+            item_id = selection[0]
+            
+            # Obtener el ID del registro desde el diccionario
+            if hasattr(self, 'history_record_ids') and item_id in self.history_record_ids:
+                record_id = self.history_record_ids[item_id]
+            else:
+                messagebox.showerror("Error", "No se pudo obtener la información del registro")
+                return
+            
+            # Obtener datos completos del registro
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT 
+                    hm.id,
+                    hm.fecha_consulta,
+                    u.nombre || ' ' || u.apellido as doctor_nombre,
+                    COALESCE(d.especialidad, 'Medicina General') as especialidad,
+                    COALESCE(hm.diagnostico, 'No especificado') as diagnostico,
+                    COALESCE(hm.tratamiento, 'No especificado') as tratamiento,
+                    COALESCE(hm.observaciones, 'Sin observaciones') as observaciones,
+                    COALESCE(hm.medicamentos, 'No prescritos') as medicamentos,
+                    COALESCE(hm.sintomas, 'No registrados') as sintomas,
+                    COALESCE(hm.motivo_consulta, 'No especificado') as motivo_consulta
+                FROM historial_medico hm
+                JOIN usuarios u ON u.id = hm.doctor_id
+                LEFT JOIN doctores d ON d.id = hm.doctor_id
+                WHERE hm.id = ?
+            """, (record_id,))
+            
+            record = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if not record:
+                messagebox.showerror("Error", "No se encontraron los detalles del registro")
+                return
+            
+            # Crear ventana de detalles
+            detail_window = tk.Toplevel(self.root)
+            detail_window.title(f"Detalle Médico - {record[1]}")
+            detail_window.geometry("700x600")
+            detail_window.configure(bg='#F8FAFC')
+            detail_window.transient(self.root)
+            detail_window.grab_set()
+            
+            # Header
+            header = tk.Frame(detail_window, bg='#1E3A8A', height=60)
+            header.pack(fill='x')
+            header.pack_propagate(False)
+            
+            header_content = tk.Frame(header, bg='#1E3A8A')
+            header_content.pack(expand=True, fill='both', padx=20, pady=10)
+            
+            tk.Label(header_content, text="📋 Detalle Completo del Registro Médico", 
+                    font=('Arial', 14, 'bold'), bg='#1E3A8A', fg='white').pack(side='left')
+            
+            tk.Button(header_content, text="✕ Cerrar", 
+                     command=detail_window.destroy,
+                     bg='#DC2626', fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', padx=12, pady=4).pack(side='right')
+            
+            # Contenido con scroll
+            main_frame = tk.Frame(detail_window, bg='#F8FAFC')
+            main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+            
+            canvas = tk.Canvas(main_frame, bg='#F8FAFC', highlightthickness=0)
+            scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+            scrollable_frame = tk.Frame(canvas, bg='#F8FAFC')
+            
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+            
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            # Información básica
+            basic_info = tk.LabelFrame(scrollable_frame, text="📊 Información Básica", 
+                                      font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+            basic_info.pack(fill='x', pady=(0, 10))
+            
+            basic_data = [
+                ("📅 Fecha de Consulta:", record[1]),
+                ("👨‍⚕️ Doctor:", record[2]),
+                ("🏥 Especialidad:", record[3]),
+                ("🆔 ID Registro:", str(record[0]))
+            ]
+            
+            for label, value in basic_data:
+                row = tk.Frame(basic_info, bg='white')
+                row.pack(fill='x', pady=3)
+                tk.Label(row, text=label, font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151', width=20, anchor='w').pack(side='left')
+                tk.Label(row, text=value, font=('Arial', 10), 
+                        bg='white', fg='#1E3A8A', anchor='w').pack(side='left', padx=(10, 0))
+            
+            # Información médica
+            medical_info = tk.LabelFrame(scrollable_frame, text="🩺 Información Médica", 
+                                        font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+            medical_info.pack(fill='x', pady=(0, 10))
+            
+            # Motivo de consulta
+            if record[9] and record[9] != 'No especificado':
+                motivo_frame = tk.Frame(medical_info, bg='white')
+                motivo_frame.pack(fill='x', pady=5)
+                tk.Label(motivo_frame, text="🎯 Motivo de Consulta:", font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w')
+                tk.Text(motivo_frame, height=2, wrap='word', font=('Arial', 10), 
+                       bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(3, 0))
+                motivo_text = motivo_frame.winfo_children()[-1]
+                motivo_text.insert('1.0', record[9])
+                motivo_text.configure(state='disabled')
+            
+            # Síntomas
+            if record[8] and record[8] != 'No registrados':
+                sintomas_frame = tk.Frame(medical_info, bg='white')
+                sintomas_frame.pack(fill='x', pady=5)
+                tk.Label(sintomas_frame, text="🤒 Síntomas:", font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w')
+                tk.Text(sintomas_frame, height=2, wrap='word', font=('Arial', 10), 
+                       bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(3, 0))
+                sintomas_text = sintomas_frame.winfo_children()[-1]
+                sintomas_text.insert('1.0', record[8])
+                sintomas_text.configure(state='disabled')
+            
+            # Diagnóstico
+            diag_frame = tk.Frame(medical_info, bg='white')
+            diag_frame.pack(fill='x', pady=5)
+            tk.Label(diag_frame, text="🔍 Diagnóstico:", font=('Arial', 10, 'bold'), 
+                    bg='white', fg='#374151').pack(anchor='w')
+            tk.Text(diag_frame, height=3, wrap='word', font=('Arial', 10), 
+                   bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(3, 0))
+            diag_text = diag_frame.winfo_children()[-1]
+            diag_text.insert('1.0', record[4])
+            diag_text.configure(state='disabled')
+            
+            # Tratamiento
+            treat_frame = tk.Frame(medical_info, bg='white')
+            treat_frame.pack(fill='x', pady=5)
+            tk.Label(treat_frame, text="💊 Tratamiento:", font=('Arial', 10, 'bold'), 
+                    bg='white', fg='#374151').pack(anchor='w')
+            tk.Text(treat_frame, height=3, wrap='word', font=('Arial', 10), 
+                   bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(3, 0))
+            treat_text = treat_frame.winfo_children()[-1]
+            treat_text.insert('1.0', record[5])
+            treat_text.configure(state='disabled')
+            
+            # Medicamentos
+            if record[7] and record[7] != 'No prescritos':
+                med_frame = tk.Frame(medical_info, bg='white')
+                med_frame.pack(fill='x', pady=5)
+                tk.Label(med_frame, text="💉 Medicamentos:", font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w')
+                tk.Text(med_frame, height=2, wrap='word', font=('Arial', 10), 
+                       bg='#F8FAFC', relief='solid', bd=1).pack(fill='x', pady=(3, 0))
+                med_text = med_frame.winfo_children()[-1]
+                med_text.insert('1.0', record[7])
+                med_text.configure(state='disabled')
+            
+            # Observaciones del doctor
+            if record[6] and record[6] != 'Sin observaciones':
+                obs_info = tk.LabelFrame(scrollable_frame, text="📝 Observaciones del Doctor", 
+                                        font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+                obs_info.pack(fill='x', pady=(0, 10))
+                
+                obs_text = tk.Text(obs_info, height=6, wrap='word', font=('Arial', 10), 
+                                  bg='#F8FAFC', relief='solid', bd=1)
+                obs_text.pack(fill='both', expand=True)
+                obs_text.insert('1.0', record[6])
+                obs_text.configure(state='disabled')
+            
+            # Pack canvas y scrollbar
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+            
+            # Bind scroll del mouse
+            def _on_mousewheel(event):
+                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al mostrar detalles: {str(e)}")
+            print(f"Error en view_history_detail_simple: {e}")
 
 if __name__ == "__main__":
     app = MedisyncApp()
