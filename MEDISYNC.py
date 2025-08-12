@@ -10904,7 +10904,7 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             ]
             
             for i, card in enumerate(stats_cards):
-                self.create_modern_stats_card(stats_row, card, i)
+                self.create_doctor_stats_card(stats_row, card, i)
                 
         except Exception as e:
             error_label = tk.Label(stats_row, text=f"Error cargando estadísticas: {str(e)}", 
@@ -11063,7 +11063,7 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             tk.Label(summary_content, text=f"Error cargando resumen: {str(e)}", 
                     fg='#EF4444', bg='white', font=('Arial', 9)).pack(pady=10)
     
-    def create_modern_stats_card(self, parent, card_data, index):
+    def create_doctor_stats_card(self, parent, card_data, index):
         """Crear tarjeta de estadística moderna"""
         card_frame = tk.Frame(parent, bg=card_data['bg_color'], relief='solid', bd=1)
         card_frame.pack(side='left', fill='both', expand=True, padx=5 if index > 0 else (0, 5))
@@ -19093,7 +19093,7 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
             cursor = conn.cursor()
             
             cursor.execute("""
-                SELECT DISTINCT u.nombre, u.apellido, u.email, u.telefono,
+                SELECT DISTINCT u.id, u.nombre, u.apellido, u.email, u.telefono,
                        MAX(c.fecha_hora) as ultima_consulta,
                        CASE WHEN u.activo THEN 'Activo' ELSE 'Inactivo' END as estado
                 FROM usuarios u
@@ -19105,7 +19105,7 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
             
             for row in cursor.fetchall():
                 # Formatear última consulta
-                ultima_consulta = row[4]
+                ultima_consulta = row[5]  # Ahora es índice 5 porque agregamos u.id
                 if ultima_consulta:
                     try:
                         dt = datetime.fromisoformat(ultima_consulta)
@@ -19116,7 +19116,7 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                     ultima_consulta_formatted = 'Nunca'
                 
                 self.doctor_patients_tree.insert('', 'end', values=(
-                    row[0], row[1], row[2], row[3], ultima_consulta_formatted, row[5]
+                    row[0], row[1], row[2], row[3], row[4], ultima_consulta_formatted, row[6]
                 ))
             
             cursor.close()
@@ -19482,22 +19482,23 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
             
             # Obtener información del paciente
             item = self.doctor_patients_tree.item(selection[0])
-            nombre = item['values'][0]
-            apellido = item['values'][1]
-            email = item['values'][2]
+            patient_id = item['values'][0]  # ID está en índice 0
+            nombre = item['values'][1]      # Nombre está en índice 1
+            apellido = item['values'][2]    # Apellido está en índice 2
+            email = item['values'][3]       # Email está en índice 3
             
-            # Buscar ID del paciente
+            # Buscar información completa del paciente por ID (más confiable)
             conn = self.db_manager.get_connection()
             cursor = conn.cursor()
             
             cursor.execute("""
                 SELECT u.*, p.numero_expediente, p.contacto_emergencia, p.telefono_emergencia,
-                       p.fecha_nacimiento, p.direccion, s.nombre as seguro_nombre
+                       s.nombre as seguro_nombre
                 FROM usuarios u
                 LEFT JOIN pacientes p ON u.id = p.id
                 LEFT JOIN seguros_medicos s ON p.seguro_medico_id = s.id
-                WHERE u.nombre = ? AND u.apellido = ? AND u.email = ?
-            """, (nombre, apellido, email))
+                WHERE u.id = ?
+            """, (patient_id,))
             
             patient_data = cursor.fetchone()
             
@@ -19623,27 +19624,27 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
             
             # Obtener información del paciente
             item = self.doctor_patients_tree.item(selection[0])
-            nombre = item['values'][0]
-            apellido = item['values'][1]
-            email = item['values'][2]
+            patient_id = item['values'][0]  # ID está en índice 0
+            nombre = item['values'][1]      # Nombre está en índice 1
+            apellido = item['values'][2]    # Apellido está en índice 2
             
-            # Buscar ID del paciente
+            # Buscar directamente por ID (más confiable)
             conn = self.db_manager.get_connection()
             cursor = conn.cursor()
             
-            cursor.execute("SELECT id FROM usuarios WHERE nombre = ? AND apellido = ? AND email = ?", 
-                         (nombre, apellido, email))
+            # Verificar que el paciente existe
+            cursor.execute("SELECT id, nombre, apellido FROM usuarios WHERE id = ?", (patient_id,))
             patient_result = cursor.fetchone()
             
             if not patient_result:
                 messagebox.showerror("Error", "No se encontró el paciente")
                 return
             
-            patient_id = patient_result[0]
+            # El patient_id ya está disponible desde la selección
             
             # Obtener historial médico
             cursor.execute("""
-                SELECT fecha_consulta, diagnostico, tratamiento, notas, medicamentos
+                SELECT fecha_consulta, diagnostico, tratamiento, observaciones, medicamentos
                 FROM historiales_medicos 
                 WHERE paciente_id = ? 
                 ORDER BY fecha_consulta DESC
@@ -19667,9 +19668,13 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                                  font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
             title_label.pack(pady=(0, 20))
             
+            # Frame para la tabla con scrollbars
+            table_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            table_frame.pack(fill='both', expand=True)
+            
             # Tabla de historial
             columns = ('Fecha', 'Diagnóstico', 'Tratamiento', 'Notas')
-            history_tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=15)
+            history_tree = ttk.Treeview(table_frame, columns=columns, show='headings', height=15)
             
             for col in columns:
                 history_tree.heading(col, text=col)
@@ -19681,18 +19686,18 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                     history_tree.column(col, width=250)
             
             # Scrollbars
-            v_scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=history_tree.yview)
-            h_scrollbar = ttk.Scrollbar(main_frame, orient="horizontal", command=history_tree.xview)
+            v_scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=history_tree.yview)
+            h_scrollbar = ttk.Scrollbar(table_frame, orient="horizontal", command=history_tree.xview)
             history_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
             
-            # Grid layout
+            # Grid layout dentro del table_frame
             history_tree.grid(row=0, column=0, sticky='nsew')
             v_scrollbar.grid(row=0, column=1, sticky='ns')
             h_scrollbar.grid(row=1, column=0, sticky='ew')
             
-            # Configurar expansión
-            main_frame.grid_rowconfigure(0, weight=1)
-            main_frame.grid_columnconfigure(0, weight=1)
+            # Configurar expansión del table_frame
+            table_frame.grid_rowconfigure(0, weight=1)
+            table_frame.grid_columnconfigure(0, weight=1)
             
             # Cargar datos
             for record in medical_records:
@@ -19708,12 +19713,13 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                 ))
             
             if not medical_records:
-                tk.Label(main_frame, text="No hay registros médicos para este paciente", 
-                        font=('Arial', 12), fg='#6B7280', bg='#F8FAFC').grid(row=2, column=0, pady=20)
+                no_records_label = tk.Label(main_frame, text="No hay registros médicos para este paciente", 
+                        font=('Arial', 12), fg='#6B7280', bg='#F8FAFC')
+                no_records_label.pack(pady=20)
             
             # Botones
             buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
-            buttons_frame.grid(row=3, column=0, columnspan=2, sticky='ew', pady=15)
+            buttons_frame.pack(fill='x', pady=15)
             
             tk.Button(buttons_frame, text="➕ Nuevo Registro", bg='#059669', fg='white',
                      font=('Arial', 10, 'bold'), 
@@ -19738,23 +19744,22 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
             
             # Obtener información del paciente
             item = self.doctor_patients_tree.item(selection[0])
-            nombre = item['values'][0]
-            apellido = item['values'][1]
-            email = item['values'][2]
+            patient_id = item['values'][0]  # ID está en índice 0
+            nombre = item['values'][1]      # Nombre está en índice 1
+            apellido = item['values'][2]    # Apellido está en índice 2
             
-            # Buscar ID del paciente
+            # Verificar que el paciente existe
             conn = self.db_manager.get_connection()
             cursor = conn.cursor()
             
-            cursor.execute("SELECT id FROM usuarios WHERE nombre = ? AND apellido = ? AND email = ?", 
-                         (nombre, apellido, email))
+            cursor.execute("SELECT id, nombre, apellido FROM usuarios WHERE id = ?", (patient_id,))
             patient_result = cursor.fetchone()
             
             if not patient_result:
                 messagebox.showerror("Error", "No se encontró el paciente")
                 return
             
-            patient_id = patient_result[0]
+            # El patient_id ya está disponible desde la selección
             cursor.close()
             conn.close()
             
@@ -19790,7 +19795,7 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
             cursor = conn.cursor()
             
             cursor.execute("""
-                SELECT fecha_consulta, diagnostico, tratamiento, notas
+                SELECT fecha_consulta, diagnostico, tratamiento, observaciones
                 FROM historiales_medicos 
                 WHERE paciente_id = ? 
                 ORDER BY fecha_consulta DESC
@@ -20618,9 +20623,13 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
             tk.Label(main_frame, text=f"Paciente: {patient_name}", 
                     font=('Arial', 12), bg='#F8FAFC', fg='#6B7280').pack(pady=(0, 20))
             
+            # Frame para la tabla con scrollbars
+            table_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            table_frame.pack(fill='both', expand=True)
+            
             # Tabla de historial
             columns = ('Fecha', 'Diagnóstico', 'Tratamiento', 'Medicamentos', 'Notas')
-            history_tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=15)
+            history_tree = ttk.Treeview(table_frame, columns=columns, show='headings', height=15)
             
             for col in columns:
                 history_tree.heading(col, text=col)
@@ -20632,18 +20641,18 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                     history_tree.column(col, width=150)
             
             # Scrollbars
-            v_scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=history_tree.yview)
-            h_scrollbar = ttk.Scrollbar(main_frame, orient="horizontal", command=history_tree.xview)
+            v_scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=history_tree.yview)
+            h_scrollbar = ttk.Scrollbar(table_frame, orient="horizontal", command=history_tree.xview)
             history_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
             
-            # Grid layout
+            # Grid layout dentro del table_frame
             history_tree.grid(row=0, column=0, sticky='nsew')
             v_scrollbar.grid(row=0, column=1, sticky='ns')
             h_scrollbar.grid(row=1, column=0, sticky='ew')
             
-            # Configurar expansión
-            main_frame.grid_rowconfigure(0, weight=1)
-            main_frame.grid_columnconfigure(0, weight=1)
+            # Configurar expansión del table_frame
+            table_frame.grid_rowconfigure(0, weight=1)
+            table_frame.grid_columnconfigure(0, weight=1)
             
             # Cargar datos del historial
             try:
@@ -20651,7 +20660,7 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                 cursor = conn.cursor()
                 
                 cursor.execute("""
-                    SELECT fecha_consulta, diagnostico, tratamiento, medicamentos, notas
+                    SELECT fecha_consulta, diagnostico, tratamiento, medicamentos, observaciones
                     FROM historiales_medicos 
                     WHERE paciente_id = ? 
                     ORDER BY fecha_consulta DESC
@@ -20670,16 +20679,18 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                 conn.close()
                 
                 if not medical_records:
-                    tk.Label(main_frame, text="No hay registros médicos para este paciente", 
-                            font=('Arial', 12), fg='#6B7280', bg='#F8FAFC').grid(row=2, column=0, pady=20)
+                    no_records_label = tk.Label(main_frame, text="No hay registros médicos para este paciente", 
+                            font=('Arial', 12), fg='#6B7280', bg='#F8FAFC')
+                    no_records_label.pack(pady=20)
                 
             except Exception as e:
-                tk.Label(main_frame, text=f"Error cargando historial: {str(e)}", 
-                        font=('Arial', 12), fg='#EF4444', bg='#F8FAFC').grid(row=2, column=0, pady=20)
+                error_label = tk.Label(main_frame, text=f"Error cargando historial: {str(e)}", 
+                        font=('Arial', 12), fg='#EF4444', bg='#F8FAFC')
+                error_label.pack(pady=20)
             
             # Botones
             buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
-            buttons_frame.grid(row=3, column=0, columnspan=2, sticky='ew', pady=15)
+            buttons_frame.pack(fill='x', pady=15)
             
             tk.Button(buttons_frame, text="➕ Nuevo Registro", bg='#059669', fg='white',
                      font=('Arial', 10, 'bold'), 
@@ -21727,12 +21738,12 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
                  command=window.destroy, padx=15, pady=8).pack(fill='x', pady=2)
         
         # Cargar registros médicos del paciente
-        self.load_patient_medical_records(patient_info['id'])
+        self.load_patient_records_for_print(patient_info['id'])
         
         # Actualizar vista previa inicial
         self.update_medical_history_preview(patient_info)
     
-    def load_patient_medical_records(self, patient_id):
+    def load_patient_records_for_print(self, patient_id):
         """Cargar registros médicos del paciente con checkboxes"""
         # Limpiar registros anteriores
         for widget in self.records_scrollable_frame.winfo_children():
@@ -25194,7 +25205,7 @@ Estado de cuenta actualizado al {datetime.now().strftime('%d/%m/%Y')}"""
             
             cursor.execute("""
                 SELECT u.*, p.numero_expediente, p.contacto_emergencia, p.telefono_emergencia,
-                       p.fecha_nacimiento, p.direccion, s.nombre as seguro_nombre,
+                       s.nombre as seguro_nombre,
                        CASE 
                            WHEN u.fecha_nacimiento IS NOT NULL 
                            THEN CAST((julianday('now') - julianday(u.fecha_nacimiento)) / 365.25 AS INTEGER)
