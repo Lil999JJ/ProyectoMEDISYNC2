@@ -3785,10 +3785,10 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
             stats = self.get_billing_statistics_integrated()
             
             stats_items = [
-                ("💰", "Ingresos Hoy", f"₡{stats.get('ingresos_hoy', 0):,.2f}", "#4caf50"),
+                ("💰", "Ingresos Hoy", f"RD$ {stats.get('ingresos_hoy', 0):,.2f}", "#4caf50"),
                 ("📋", "Facturas Hoy", str(stats.get('facturas_hoy', 0)), "#2196f3"),
                 ("⏳", "Pendientes", str(stats.get('pendientes', 0)), "#ff9800"),
-                ("📅", "Este Mes", f"₡{stats.get('ingresos_mes', 0):,.2f}", "#9c27b0")
+                ("📅", "Este Mes", f"RD$ {stats.get('ingresos_mes', 0):,.2f}", "#9c27b0")
             ]
             
             for i, (icon, title, value, color) in enumerate(stats_items):
@@ -4113,7 +4113,7 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
                         service['codigo'],
                         service['nombre'],
                         service['categoria'],
-                        f"₡{service['precio']:,.2f}"
+                        f"RD$ {service['precio']:,.2f}"
                     ))
                 
                 current_col += 1
@@ -4174,7 +4174,7 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
         price_frame.pack(fill='x', pady=(0, 8))
         
         tk.Label(price_frame, text="💰", font=('Arial', 12), bg='white').pack(side='left')
-        tk.Label(price_frame, text=f"₡{service['precio']:,.2f}", 
+        tk.Label(price_frame, text=f"RD$ {service['precio']:,.2f}", 
                 font=('Arial', 11, 'bold'), bg='white', fg='#059669').pack(side='left', padx=(5, 0))
         
         # Botón agregar
@@ -4248,8 +4248,8 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
                 self.invoice_services_tree.insert('', 'end', values=(
                     service['nombre'],
                     service['cantidad'],
-                    f"₡{service['precio_unitario']:,.2f}",
-                    f"₡{service['total']:,.2f}"
+                    f"RD$ {service['precio_unitario']:,.2f}",
+                    f"RD$ {service['total']:,.2f}"
                 ))
         
         # Si no hay servicios, mostrar mensaje
@@ -4301,13 +4301,13 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
         # Precio unitario
         unit_frame = tk.Frame(bottom_row, bg='white')
         unit_frame.pack(side='left', padx=(20, 0))
-        tk.Label(unit_frame, text=f"Unit: ₡{service['precio_unitario']:,.2f}", 
+        tk.Label(unit_frame, text=f"Unit: RD$ {service['precio_unitario']:,.2f}", 
                 font=('Arial', 9), bg='white', fg='#64748B').pack()
         
         # Total
         total_frame = tk.Frame(bottom_row, bg='white')
         total_frame.pack(side='right')
-        tk.Label(total_frame, text=f"Total: ₡{service['total']:,.2f}", 
+        tk.Label(total_frame, text=f"Total: RD$ {service['total']:,.2f}", 
                 font=('Arial', 9, 'bold'), bg='white', fg='#059669').pack()
     
     def remove_service_by_index(self, index):
@@ -4354,7 +4354,7 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
                         service['codigo'],
                         service['nombre'],
                         service['categoria'],
-                        f"₡{service['precio']:,.2f}"
+                        f"RD$ {service['precio']:,.2f}"
                     ))
                 
                 current_col += 1
@@ -4494,8 +4494,8 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
         if total < 0:
             total = 0
         
-        self.subtotal_var.set(f"₡{subtotal:,.2f}")
-        self.total_var.set(f"₡{total:,.2f}")
+        self.subtotal_var.set(f"RD$ {subtotal:,.2f}")
+        self.total_var.set(f"RD$ {total:,.2f}")
         
         # Recalcular cambio si hay pago ingresado
         self.calculate_change()
@@ -4507,7 +4507,7 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
     def calculate_change(self, event=None):
         """Calcular cambio o faltante"""
         try:
-            total_str = self.total_var.get().replace('₡', '').replace(',', '')
+            total_str = self.total_var.get().replace('RD$', '').replace(',', '')
             total = float(total_str)
             
             payment = float(self.payment_var.get() or 0)
@@ -4516,19 +4516,19 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
             
             if difference > 0:
                 self.change_label.config(text="Cambio:")
-                self.change_var.set(f"₡{difference:,.2f}")
+                self.change_var.set(f"RD$ {difference:,.2f}")
                 self.change_value_label.config(fg='#4caf50')
             elif difference < 0:
                 self.change_label.config(text="Faltante:")
-                self.change_var.set(f"₡{abs(difference):,.2f}")
+                self.change_var.set(f"RD$ {abs(difference):,.2f}")
                 self.change_value_label.config(fg='#f44336')
             else:
                 self.change_label.config(text="Exacto:")
-                self.change_var.set("₡0.00")
+                self.change_var.set("RD$ 0.00")
                 self.change_value_label.config(fg='#4caf50')
                 
         except ValueError:
-            self.change_var.set("₡0.00")
+            self.change_var.set("RD$ 0.00")
             self.change_value_label.config(fg='#4caf50')
     
     def generate_invoice_pdf_integrated(self):
@@ -4566,7 +4566,7 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
     def generate_simple_pdf(self, filepath, invoice_number):
         """Generar PDF simple de texto"""
         try:
-            total_str = self.total_var.get().replace('₡', '').replace(',', '')
+            total_str = self.total_var.get().replace('RD$', '').replace(',', '')
             total = float(total_str)
             
             payment = float(self.payment_var.get() or 0)
@@ -4594,23 +4594,23 @@ SERVICIOS PRESTADOS
 """
             
             for service in self.selected_services:
-                content += f"{service['nombre']:<30} x{service['cantidad']:>3} = ₡{service['total']:>10,.2f}\n"
+                content += f"{service['nombre']:<30} x{service['cantidad']:>3} = RD$ {service['total']:>10,.2f}\n"
             
             content += f"""
 -------------------------------------
 RESUMEN FINANCIERO
 -------------------------------------
-Subtotal:           ₡{sum(s['total'] for s in self.selected_services):>10,.2f}
-Descuento:          ₡{float(self.discount_var.get() or 0):>10,.2f}
-TOTAL A PAGAR:      ₡{total:>10,.2f}
+Subtotal:           RD$ {sum(s['total'] for s in self.selected_services):>10,.2f}
+Descuento:          RD$ {float(self.discount_var.get() or 0):>10,.2f}
+TOTAL A PAGAR:      RD$ {total:>10,.2f}
 
-Monto Recibido:     ₡{payment:>10,.2f}
+Monto Recibido:     RD$ {payment:>10,.2f}
 """
             
             if payment >= total:
-                content += f"Cambio:             ₡{payment - total:>10,.2f}\n"
+                content += f"Cambio:             RD$ {payment - total:>10,.2f}\n"
             else:
-                content += f"Faltante:           ₡{total - payment:>10,.2f}\n"
+                content += f"Faltante:           RD$ {total - payment:>10,.2f}\n"
             
             content += f"""
 =====================================
@@ -4722,7 +4722,7 @@ Generado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
                 service['codigo'],
                 service['nombre'],
                 service['categoria'],
-                f"₡{service['precio']:,.2f}"
+                f"RD$ {service['precio']:,.2f}"
             ))
     
     def add_new_service(self):
@@ -4760,7 +4760,7 @@ Generado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
         categoria_combo.grid(row=2, column=1, pady=5, padx=(10, 0))
         
         # Precio
-        tk.Label(fields_frame, text="Precio (₡):", bg='#F8FAFC', font=('Arial', 10, 'bold')).grid(row=3, column=0, sticky='w', pady=5)
+        tk.Label(fields_frame, text="Precio (RD$):", bg='#F8FAFC', font=('Arial', 10, 'bold')).grid(row=3, column=0, sticky='w', pady=5)
         precio_var = tk.StringVar()
         tk.Entry(fields_frame, textvariable=precio_var, width=30).grid(row=3, column=1, pady=5, padx=(10, 0))
         
@@ -4871,7 +4871,7 @@ Generado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
         categoria_combo.grid(row=2, column=1, pady=5, padx=(10, 0))
         
         # Precio
-        tk.Label(fields_frame, text="Precio (₡):", bg='#F8FAFC', font=('Arial', 10, 'bold')).grid(row=3, column=0, sticky='w', pady=5)
+        tk.Label(fields_frame, text="Precio (RD$):", bg='#F8FAFC', font=('Arial', 10, 'bold')).grid(row=3, column=0, sticky='w', pady=5)
         precio_var = tk.StringVar(value=str(service_to_edit['precio']))
         tk.Entry(fields_frame, textvariable=precio_var, width=30).grid(row=3, column=1, pady=5, padx=(10, 0))
         
@@ -5016,7 +5016,7 @@ Fecha: {datetime.now().strftime('%d/%m/%Y')}
 
 RESUMEN:
 - Total de facturas: {len(facturas)}
-- Ingresos del día: ₡{sum(f[4] for f in facturas):,.2f}
+- Ingresos del día: RD$ {sum(f[4] for f in facturas):,.2f}
 
 DETALLE DE FACTURAS:
 """
@@ -5027,7 +5027,7 @@ Factura: {factura[0]}
 Fecha: {factura[1]}
 Paciente: {factura[2]}
 Doctor: {factura[3]}
-Monto: ₡{factura[4]:,.2f}
+Monto: RD$ {factura[4]:,.2f}
 Estado: {factura[5]}
 -----------------------------------
 """
@@ -5088,7 +5088,7 @@ Estado: {factura[5]}
         # Variables de estadísticas
         self.stats_vars = {
             'facturas_hoy': tk.StringVar(value="0"),
-            'ingresos_hoy': tk.StringVar(value="₡0.00"),
+            'ingresos_hoy': tk.StringVar(value="RD$ 0.00"),
             'pendientes': tk.StringVar(value="0"),
             'citas_sin_facturar': tk.StringVar(value="0")
         }
@@ -8569,7 +8569,7 @@ Notas: {factura_info[7] or 'Sin notas'}
                     invoice[0] or 'N/A',  # Número
                     fecha,               # Fecha
                     invoice[2] or 'N/A', # Paciente
-                    f"₡{float(invoice[3] or 0):,.2f}",  # Monto
+                    f"RD$ {float(invoice[3] or 0):,.2f}",  # Monto
                     estado               # Estado
                 ))
             
@@ -8600,7 +8600,7 @@ Notas: {factura_info[7] or 'Sin notas'}
             # Ingresos de hoy
             cursor.execute('SELECT COALESCE(SUM(monto), 0) FROM facturas WHERE DATE(fecha_creacion) = ? AND estado IN ("pagada", "pago_parcial")', (today,))
             ingresos_hoy = cursor.fetchone()[0]
-            self.stats_vars['ingresos_hoy'].set(f"₡{float(ingresos_hoy):,.2f}")
+            self.stats_vars['ingresos_hoy'].set(f"RD$ {float(ingresos_hoy):,.2f}")
             
             # Facturas pendientes
             cursor.execute('SELECT COUNT(*) FROM facturas WHERE estado = "pendiente"')
@@ -8723,7 +8723,7 @@ Notas: {factura_info[7] or 'Sin notas'}
             summary_text = f"""📊 RESUMEN DE FACTURACIÓN - {datetime.now().strftime('%B %Y').upper()}
 
 💰 FACTURAS GENERADAS: {stats[0]}
-💵 INGRESOS TOTALES: ₡{float(stats[1]):,.2f}
+💵 INGRESOS TOTALES: RD${float(stats[1]):,.2f}
 ✅ FACTURAS PAGADAS: {stats[2]}
 ⏳ FACTURAS PENDIENTES: {stats[3]}
 
@@ -8760,7 +8760,7 @@ Notas: {factura_info[7] or 'Sin notas'}
                     invoice['id'], invoice.get('numero_factura', 'N/A'),
                     fecha, invoice.get('paciente_nombre', 'N/A'),
                     invoice.get('concepto', 'N/A'),
-                    f"₡{invoice.get('monto', 0):,.2f}",
+                    f"RD${invoice.get('monto', 0):,.2f}",
                     invoice.get('estado', 'N/A').title()
                 ))
                 
@@ -8953,7 +8953,7 @@ Notas: {factura_info[7] or 'Sin notas'}
                 ("👥 Total Usuarios", stats.get('total_users', 0), "#0B5394"),
                 ("🤒 Total Pacientes", stats.get('total_patients', 0), "#16A085"),
                 ("📅 Citas Hoy", stats.get('appointments_today', 0), "#E67E22"),
-                ("💰 Ingresos Mes", f"₡{stats.get('monthly_income', 0):,.2f}", "#059669"),
+                ("💰 Ingresos Mes", f"RD${stats.get('monthly_income', 0):,.2f}", "#059669"),
                 ("📋 Fact. Pendientes", stats.get('pending_invoices', 0), "#C0392B"),
                 ("👨‍⚕️ Doctores Activos", stats.get('active_doctors', 0), "#8e44ad")
             ]
@@ -9523,9 +9523,9 @@ Notas: {factura_info[7] or 'Sin notas'}
                     
                     values = [
                         datetime.fromisoformat(fecha).strftime('%d/%m/%Y'),
-                        f"₡{total_dia:,.2f}",
+                        f"RD${total_dia:,.2f}",
                         str(num_facturas),
-                        f"₡{promedio:,.2f}"
+                        f"RD${promedio:,.2f}"
                     ]
                     
                     for value in values:
@@ -9539,9 +9539,9 @@ Notas: {factura_info[7] or 'Sin notas'}
                 total_avg = total_income / total_invoices if total_invoices > 0 else 0
                 total_values = [
                     'TOTAL',
-                    f"₡{total_income:,.2f}",
+                    f"RD${total_income:,.2f}",
                     str(total_invoices),
-                    f"₡{total_avg:,.2f}"
+                    f"RD${total_avg:,.2f}"
                 ]
                 
                 for value in total_values:
@@ -9730,7 +9730,7 @@ Notas: {factura_info[7] or 'Sin notas'}
                         numero,
                         fecha_creacion.strftime('%d/%m/%Y'),
                         paciente[:20] + '...' if len(paciente) > 20 else paciente,
-                        f"₡{monto:,.2f}",
+                        f"RD${monto:,.2f}",
                         f"{dias_pendiente} días"
                     ]
                     
@@ -9742,7 +9742,7 @@ Notas: {factura_info[7] or 'Sin notas'}
                 total_frame = tk.Frame(table_frame, bg='#0B5394')
                 total_frame.pack(fill='x')
                 
-                tk.Label(total_frame, text=f"TOTAL PENDIENTE: ₡{total_pending:,.2f}", 
+                tk.Label(total_frame, text=f"TOTAL PENDIENTE: RD${total_pending:,.2f}", 
                         font=('Arial', 12, 'bold'), fg='white', bg='#0B5394').pack(pady=8)
             else:
                 tk.Label(content_frame, text="¡Excelente! No hay facturas pendientes en este período", 
@@ -9810,7 +9810,7 @@ Notas: {factura_info[7] or 'Sin notas'}
             income_card.pack(side='left', fill='both', expand=True, padx=(0, 10))
             tk.Label(income_card, text="💰 INGRESOS TOTALES", font=('Arial', 10, 'bold'), 
                     fg='white', bg='#0B5394').pack(pady=(10, 5))
-            tk.Label(income_card, text=f"₡{total_ingresos:,.2f}", font=('Arial', 14, 'bold'), 
+            tk.Label(income_card, text=f"RD${total_ingresos:,.2f}", font=('Arial', 14, 'bold'), 
                     fg='white', bg='#0B5394').pack(pady=(0, 5))
             tk.Label(income_card, text=f"{num_pagadas} facturas pagadas", font=('Arial', 9), 
                     fg='white', bg='#0B5394').pack(pady=(0, 10))
@@ -9820,7 +9820,7 @@ Notas: {factura_info[7] or 'Sin notas'}
             pending_card.pack(side='left', fill='both', expand=True, padx=(5, 5))
             tk.Label(pending_card, text="⏳ CUENTAS POR COBRAR", font=('Arial', 10, 'bold'), 
                     fg='white', bg='#0B5394').pack(pady=(10, 5))
-            tk.Label(pending_card, text=f"₡{total_pendiente:,.2f}", font=('Arial', 14, 'bold'), 
+            tk.Label(pending_card, text=f"RD${total_pendiente:,.2f}", font=('Arial', 14, 'bold'), 
                     fg='white', bg='#0B5394').pack(pady=(0, 5))
             tk.Label(pending_card, text=f"{num_pendientes} facturas pendientes", font=('Arial', 9), 
                     fg='white', bg='#0B5394').pack(pady=(0, 10))
@@ -9831,7 +9831,7 @@ Notas: {factura_info[7] or 'Sin notas'}
             total_card.pack(side='left', fill='both', expand=True, padx=(10, 0))
             tk.Label(total_card, text="📊 FACTURACIÓN TOTAL", font=('Arial', 10, 'bold'), 
                     fg='white', bg='#0B5394').pack(pady=(10, 5))
-            tk.Label(total_card, text=f"₡{total_neto:,.2f}", font=('Arial', 14, 'bold'), 
+            tk.Label(total_card, text=f"RD${total_neto:,.2f}", font=('Arial', 14, 'bold'), 
                     fg='white', bg='#0B5394').pack(pady=(0, 5))
             tk.Label(total_card, text=f"{num_pagadas + num_pendientes} facturas totales", font=('Arial', 9), 
                     fg='white', bg='#0B5394').pack(pady=(0, 10))
@@ -10022,7 +10022,7 @@ Notas: {factura_info[7] or 'Sin notas'}
                     row_frame = tk.Frame(doctor_frame, bg='#F8F9FA')
                     row_frame.pack(fill='x')
                     
-                    promedio_display = f"₡{promedio:,.2f}" if promedio else "N/A"
+                    promedio_display = f"RD${promedio:,.2f}" if promedio else "N/A"
                     
                     values = [
                         doctor[:28] + '...' if len(doctor) > 28 else doctor,
@@ -10107,9 +10107,9 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                 avg_invoice = total_income / total_invoices if total_invoices > 0 else 0
                 
                 summary_data = [
-                    ("Total de Ingresos", f"₡{total_income:,.2f}", "#059669"),
+                    ("Total de Ingresos", f"RD${total_income:,.2f}", "#059669"),
                     ("Facturas Pagadas", total_invoices, "#0B5394"),
-                    ("Promedio por Factura", f"₡{avg_invoice:,.2f}", "#E67E22")
+                    ("Promedio por Factura", f"RD${avg_invoice:,.2f}", "#E67E22")
                 ]
                 
             elif config['report_type'] == 'appointments':
@@ -10326,9 +10326,9 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                     promedio = total / count if count > 0 else 0
                     formatted_data.append([
                         datetime.fromisoformat(fecha).strftime('%d/%m/%Y'),
-                        f"₡{total:,.2f}",
+                        f"RD${total:,.2f}",
                         str(count),
-                        f"₡{promedio:,.2f}"
+                        f"RD${promedio:,.2f}"
                     ])
                 return formatted_data
                 
@@ -10373,7 +10373,7 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                     formatted_data.append([
                         numero,
                         paciente,
-                        f"₡{monto:,.2f}",
+                        f"RD${monto:,.2f}",
                         f"{dias_pendiente} días"
                     ])
                 return formatted_data
@@ -11507,10 +11507,10 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             
             # Indicadores financieros
             indicators = [
-                ("💰 Ingresos Hoy", f"₡{billing_summary.get('today_income', 0):,.2f}", "#16A085"),
+                ("💰 Ingresos Hoy", f"RD${billing_summary.get('today_income', 0):,.2f}", "#16A085"),
                 ("📋 Pendientes", str(billing_summary.get('pending_count', 0)), "#C0392B"),
                 ("✅ Pagadas Hoy", str(billing_summary.get('paid_today', 0)), "#0B5394"),
-                ("📊 Meta Mensual", f"₡{billing_summary.get('month_income', 0):,.2f}", "#16A085")
+                ("📊 Meta Mensual", f"RD${billing_summary.get('month_income', 0):,.2f}", "#16A085")
             ]
             
             for title, value, color in indicators:
@@ -11771,7 +11771,7 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                     invoice[0] or 'N/A',
                     fecha,
                     invoice[2] or 'N/A',
-                    f"₡{float(invoice[3] or 0):,.2f}",
+                    f"RD${float(invoice[3] or 0):,.2f}",
                     estado,
                     "Ver"
                 ))
@@ -16034,13 +16034,13 @@ Para consultas sobre este reporte, contacte al departamento de administración.
         self.load_patient_medical_history()
     
     def create_patient_billing(self, parent):
-        """Mis facturas y pagos con diseño moderno similar al admin"""
+        """Mis facturas y pagos - Vista simplificada con tabla y tarjetas laterales"""
         # Frame principal
         main_frame = tk.Frame(parent, bg='#F8FAFC')
         main_frame.pack(fill='both', expand=True)
         
-        # Header principal con gradiente visual
-        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=80)
+        # Header simple
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=70)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
         
@@ -16048,190 +16048,247 @@ Para consultas sobre este reporte, contacte al departamento de administración.
         header_content = tk.Frame(header_frame, bg='#1E3A8A')
         header_content.pack(expand=True, fill='both', padx=30, pady=15)
         
-        # Título principal
-        title_frame = tk.Frame(header_content, bg='#1E3A8A')
-        title_frame.pack(side='left', fill='y')
+        tk.Label(header_content, text="💰 Mis Facturas", 
+                font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(side='left')
         
-        tk.Label(title_frame, text="💰 Mis Facturas y Pagos", 
-                font=('Arial', 20, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
-        tk.Label(title_frame, text="Administra y consulta tu estado financiero", 
-                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
+        user_info = f"Paciente: {self.current_user.nombre} {self.current_user.apellido}"
+        tk.Label(header_content, text=user_info, 
+                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(side='right')
         
-        # Botones de acción en el header
-        actions_frame = tk.Frame(header_content, bg='#1E3A8A')
-        actions_frame.pack(side='right', fill='y')
-        
-        tk.Button(actions_frame, text="🔄 Actualizar", bg='#0B5394', fg='white',
-                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
-                 command=self.refresh_patient_billing).pack(side='right', padx=(10, 0))
-        tk.Button(actions_frame, text="📊 Resumen", bg='#0B5394', fg='white',
-                 font=('Arial', 10, 'bold'), relief='flat', padx=15, pady=8,
-                 command=self.show_billing_summary).pack(side='right', padx=(10, 0))
-
         # Contenido principal
         content_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        content_frame.pack(fill='both', expand=True, padx=30, pady=30)
+        content_frame.pack(fill='both', expand=True, padx=30, pady=20)
         
-        # Panel de resumen financiero mejorado
-        financial_panel = tk.LabelFrame(content_frame, text="💰 Mi Estado Financiero", 
-                                      font=('Arial', 14, 'bold'), padx=25, pady=20, 
-                                      bg='white', relief='solid', bd=1)
-        financial_panel.pack(fill='x', pady=(0, 30))
+        # Contenedor principal horizontal (tarjetas laterales + tabla)
+        main_container = tk.Frame(content_frame, bg='#F8FAFC')
+        main_container.pack(fill='both', expand=True)
         
-        try:
-            billing_summary = self.get_patient_billing_summary()
-            
-            # Grid de indicadores financieros
-            financial_grid = tk.Frame(financial_panel, bg='white')
-            financial_grid.pack(fill='x')
-            
-            # Tarjetas de estado financiero
-            financial_cards = [
-                ("💳", "Total Pagado", f"₡{billing_summary.get('total_paid', 0):,.2f}", "#16A085"),
-                ("⏳", "Pendiente", f"₡{billing_summary.get('total_pending', 0):,.2f}", "#C0392B"),
-                ("📋", "Mis Facturas", str(billing_summary.get('total_invoices', 0)), "#0B5394"),
-                ("📅", "Este Mes", f"₡{billing_summary.get('month_total', 0):,.2f}", "#8B5CF6")
-            ]
-            
-            for i, (icon, title, value, color) in enumerate(financial_cards):
-                col = i % 2
-                row = i // 2
-                
-                # Frame de la tarjeta
-                card_frame = tk.Frame(financial_grid, bg=color, relief='flat', bd=2)
-                card_frame.grid(row=row, column=col, padx=15, pady=10, sticky='ew')
-                
-                # Contenido de la tarjeta
-                card_content = tk.Frame(card_frame, bg=color)
-                card_content.pack(fill='both', expand=True, padx=20, pady=15)
-                
-                # Icono y valor
-                tk.Label(card_content, text=icon, font=('Arial', 18), 
-                        bg=color, fg='white').pack(side='left')
-                
-                text_frame = tk.Frame(card_content, bg=color)
-                text_frame.pack(side='right', fill='x', expand=True)
-                
-                tk.Label(text_frame, text=value, font=('Arial', 16, 'bold'), 
-                        bg=color, fg='white').pack(anchor='e')
-                tk.Label(text_frame, text=title, font=('Arial', 10), 
-                        bg=color, fg='white').pack(anchor='e')
-            
-            # Configurar expansión del grid
-            financial_grid.columnconfigure(0, weight=1)
-            financial_grid.columnconfigure(1, weight=1)
-            
-        except Exception as e:
-            error_frame = tk.Frame(financial_panel, bg='white')
-            error_frame.pack(fill='x', pady=10)
-            tk.Label(error_frame, text=f"Error cargando resumen: {str(e)}", 
-                    font=('Arial', 10), fg='red', bg='white').pack()
+        # Panel lateral con tarjetas de estado
+        sidebar_frame = tk.Frame(main_container, bg='#F8FAFC', width=250)
+        sidebar_frame.pack(side='left', fill='y', padx=(0, 20))
+        sidebar_frame.pack_propagate(False)
         
-        # Panel de filtros para facturas
-        filters_panel = tk.LabelFrame(content_frame, text="🔍 Filtros de Facturas", 
-                                    font=('Arial', 12, 'bold'), padx=20, pady=15, 
-                                    bg='white', relief='solid', bd=1)
-        filters_panel.pack(fill='x', pady=(0, 30))
+        # Título del sidebar
+        tk.Label(sidebar_frame, text="📊 Estado de Facturas", 
+                font=('Arial', 14, 'bold'), bg='#F8FAFC', fg='#1E3A8A').pack(pady=(0, 15))
         
-        filters_content = tk.Frame(filters_panel, bg='white')
-        filters_content.pack(fill='x')
+        # Crear las tarjetas de estado
+        self.create_billing_status_cards(sidebar_frame)
         
-        # Filtros en una sola fila
-        filters_row = tk.Frame(filters_content, bg='white')
-        filters_row.pack(fill='x')
+        # Panel principal con tabla
+        table_frame = tk.Frame(main_container, bg='white', relief='solid', bd=1)
+        table_frame.pack(side='right', fill='both', expand=True)
         
-        tk.Label(filters_row, text="📅 Período:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=0, padx=5, sticky='w')
-        self.billing_period_filter = ttk.Combobox(filters_row, 
-                                                values=['Todos', 'Este Año', 'Últimos 6 Meses', 'Últimos 3 Meses'], 
-                                                state='readonly', width=18, font=('Arial', 9))
-        self.billing_period_filter.set('Todos')
-        self.billing_period_filter.grid(row=0, column=1, padx=10, sticky='ew')
+        # Header de la tabla
+        table_header = tk.Frame(table_frame, bg='#1E3A8A', height=40)
+        table_header.pack(fill='x')
+        table_header.pack_propagate(False)
         
-        tk.Label(filters_row, text="💰 Estado:", font=('Arial', 10, 'bold'), bg='white').grid(row=0, column=2, padx=5, sticky='w')
-        self.billing_status_filter = ttk.Combobox(filters_row, 
-                                                values=['Todos', 'Pagado', 'Pendiente', 'Vencido'], 
-                                                state='readonly', width=18, font=('Arial', 9))
+        tk.Label(table_header, text="💰 Mis Facturas - Doble clic para ver detalles", 
+                font=('Arial', 12, 'bold'), bg='#1E3A8A', fg='white').pack(expand=True)
+        
+        # Panel de filtros simple
+        filters_frame = tk.Frame(table_frame, bg='white')
+        filters_frame.pack(fill='x', padx=15, pady=10)
+        
+        # Búsqueda simple
+        search_row = tk.Frame(filters_frame, bg='white')
+        search_row.pack(fill='x')
+        
+        tk.Label(search_row, text="� Buscar:", font=('Arial', 10, 'bold'), 
+                bg='white', fg='#374151').grid(row=0, column=0, sticky='w', padx=(0, 10))
+        
+        self.billing_search_var = tk.StringVar()
+        search_entry = tk.Entry(search_row, textvariable=self.billing_search_var, 
+                               font=('Arial', 10), width=25)
+        search_entry.grid(row=0, column=1, sticky='w', padx=(0, 20))
+        search_entry.bind('<KeyRelease>', lambda e: self.load_patient_billing_data())
+        
+        # Filtro por estado
+        tk.Label(search_row, text="Estado:", font=('Arial', 10, 'bold'), 
+                bg='white', fg='#374151').grid(row=0, column=2, sticky='w', padx=(0, 10))
+        
+        self.billing_status_filter = ttk.Combobox(search_row, 
+                                                values=['Todos', 'pendiente', 'pagado', 'vencido'], 
+                                                state='readonly', width=15, font=('Arial', 9))
         self.billing_status_filter.set('Todos')
-        self.billing_status_filter.grid(row=0, column=3, padx=10, sticky='ew')
+        self.billing_status_filter.grid(row=0, column=3, sticky='w', padx=(0, 20))
+        self.billing_status_filter.bind('<<ComboboxSelected>>', lambda e: self.load_patient_billing_data())
         
-        # Botones de filtro
-        tk.Button(filters_row, text="🔍 Filtrar", 
-                 command=self.filter_patient_billing,
+        # Botón actualizar
+        tk.Button(search_row, text="� Actualizar", 
+                 command=self.load_patient_billing_data,
                  bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
-                 relief='flat', padx=15, pady=6).grid(row=0, column=4, padx=10)
-        tk.Button(filters_row, text="🗑️ Limpiar", 
-                 command=self.clear_billing_filters,
-                 bg='#6B7280', fg='white', font=('Arial', 10, 'bold'),
-                 relief='flat', padx=15, pady=6).grid(row=0, column=5, padx=5)
+                 relief='flat', padx=15, pady=5).grid(row=0, column=4, sticky='w')
         
-        # Configurar expansión
-        filters_row.columnconfigure(1, weight=1)
-        filters_row.columnconfigure(3, weight=1)
+        # Contenedor de la tabla con scrollbars
+        table_container = tk.Frame(table_frame, bg='white')
+        table_container.pack(fill='both', expand=True, padx=15, pady=10)
         
-        # Panel de tabla de facturas
-        table_panel = tk.LabelFrame(content_frame, text="📋 Mis Facturas", 
-                                  font=('Arial', 14, 'bold'), padx=25, pady=20, 
-                                  bg='white', relief='solid', bd=1)
-        table_panel.pack(fill='both', expand=True)
+        # Crear Treeview para facturas
+        columns = ('Número', 'Fecha', 'Servicio', 'Monto', 'Estado')
+        self.patient_billing_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=12)
         
-        # Frame contenedor para tabla con scrollbars
-        table_container = tk.Frame(table_panel, bg='white')
-        table_container.pack(fill='both', expand=True, padx=10, pady=10)
-        
-        # Tabla de facturas con diseño mejorado
-        columns = ('Número', 'Fecha', 'Doctor/Servicio', 'Monto', 'Estado', 'Vencimiento')
-        self.patient_billing_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=10)
-        
-        # Configurar headers con mejores anchos
-        column_widths = {'Número': 120, 'Fecha': 100, 'Doctor/Servicio': 200, 
-                        'Monto': 120, 'Estado': 100, 'Vencimiento': 100}
+        # Configurar columnas
+        column_widths = {
+            'Número': 120,
+            'Fecha': 100,
+            'Servicio': 200,
+            'Monto': 120,
+            'Estado': 100
+        }
         
         for col in columns:
-            self.patient_billing_tree.heading(col, text=col, anchor='center')
-            self.patient_billing_tree.column(col, width=column_widths.get(col, 100), anchor='center')
+            self.patient_billing_tree.heading(col, text=col)
+            self.patient_billing_tree.column(col, width=column_widths[col], anchor='center')
         
         # Scrollbars
-        scrollbar_y = ttk.Scrollbar(table_container, orient="vertical", command=self.patient_billing_tree.yview)
-        scrollbar_x = ttk.Scrollbar(table_container, orient="horizontal", command=self.patient_billing_tree.xview)
-        self.patient_billing_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+        v_scrollbar = ttk.Scrollbar(table_container, orient='vertical', command=self.patient_billing_tree.yview)
+        h_scrollbar = ttk.Scrollbar(table_container, orient='horizontal', command=self.patient_billing_tree.xview)
+        self.patient_billing_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
         
-        # Layout con grid
+        # Layout
         self.patient_billing_tree.grid(row=0, column=0, sticky='nsew')
-        scrollbar_y.grid(row=0, column=1, sticky='ns')
-        scrollbar_x.grid(row=1, column=0, sticky='ew')
+        v_scrollbar.grid(row=0, column=1, sticky='ns')
+        h_scrollbar.grid(row=1, column=0, sticky='ew')
         
-        # Configurar expansión
         table_container.grid_rowconfigure(0, weight=1)
         table_container.grid_columnconfigure(0, weight=1)
         
-        # Panel de acciones
-        actions_panel = tk.Frame(main_frame, bg='#F8FAFC')
-        actions_panel.pack(fill='x', padx=30, pady=(0, 30))
+        # Eventos de la tabla
+        self.patient_billing_tree.bind('<Double-1>', self.view_billing_detail_simple)
         
-        actions_inner = tk.Frame(actions_panel, bg='white', relief='solid', bd=1)
-        actions_inner.pack(fill='x', pady=10)
+        # Panel de información
+        info_frame = tk.Frame(table_frame, bg='white', height=50)
+        info_frame.pack(fill='x', padx=15, pady=(0, 15))
+        info_frame.pack_propagate(False)
         
-        actions_content = tk.Frame(actions_inner, bg='white')
-        actions_content.pack(fill='x', padx=20, pady=15)
+        self.billing_info_label = tk.Label(info_frame, 
+                                         text="� Consejo: Haga doble clic en una factura para ver los detalles completos", 
+                                         font=('Arial', 10, 'italic'), bg='white', fg='#64748B')
+        self.billing_info_label.pack(expand=True)
         
-        tk.Label(actions_content, text="⚡ Acciones Disponibles", 
-                font=('Arial', 12, 'bold'), bg='white', fg='#1E3A8A').pack(side='left')
+        # Diccionario para almacenar IDs de facturas
+        self.billing_record_ids = {}
         
-        # Botones de acción
-        billing_actions = [
-            ("👁️ Ver Detalle", self.view_billing_detail, "#0B5394"),
-            ("📥 Descargar PDF", self.download_billing_pdf, "#16A085"),
-            ("💳 Pagar En Línea", lambda: messagebox.showinfo("Pago", "Función en desarrollo"), "#8B5CF6"),
-            ("📧 Enviar por Email", self.email_my_billing, "#E67E22")
-        ]
-
-        for text, command, color in billing_actions:
-            tk.Button(actions_content, text=text, command=command,
-                     bg=color, fg='white', font=('Arial', 10, 'bold'),
-                     relief='flat', bd=0, padx=15, pady=8, cursor='hand2').pack(side='right', padx=5)
-        
-        # Cargar datos iniciales
+        # Cargar datos
         self.load_patient_billing_data()
+
+    def create_billing_status_cards(self, parent):
+        """Crear tarjetas de estado en el panel lateral"""
+        try:
+            # Obtener estadísticas de facturas
+            billing_stats = self.get_billing_statistics()
+            
+            # Configuración de las tarjetas
+            cards_config = [
+                {
+                    'title': 'Pendientes',
+                    'value': str(billing_stats.get('pendientes', 0)),
+                    'icon': '⏳',
+                    'color': '#E74C3C',
+                    'bg_color': '#FADBD8'
+                },
+                {
+                    'title': 'Pagadas',
+                    'value': str(billing_stats.get('pagadas', 0)),
+                    'icon': '✅',
+                    'color': '#27AE60',
+                    'bg_color': '#D5F5E3'
+                },
+                {
+                    'title': 'Vencidas',
+                    'value': str(billing_stats.get('vencidas', 0)),
+                    'icon': '🚨',
+                    'color': '#8E44AD',
+                    'bg_color': '#E8DAEF'
+                },
+                {
+                    'title': 'Total',
+                    'value': f"RD${billing_stats.get('total_monto', 0):,.0f}",
+                    'icon': '💰',
+                    'color': '#3498DB',
+                    'bg_color': '#D6EAF8'
+                }
+            ]
+            
+            # Crear cada tarjeta
+            for card in cards_config:
+                self.create_status_card(parent, card)
+                
+        except Exception as e:
+            # Tarjeta de error
+            error_card = tk.Frame(parent, bg='#FADBD8', relief='solid', bd=1, height=80)
+            error_card.pack(fill='x', pady=5)
+            error_card.pack_propagate(False)
+            
+            tk.Label(error_card, text="❌ Error cargando estadísticas", 
+                    font=('Arial', 10), bg='#FADBD8', fg='#E74C3C').pack(expand=True)
+
+    def create_status_card(self, parent, config):
+        """Crear una tarjeta individual de estado"""
+        # Frame de la tarjeta
+        card_frame = tk.Frame(parent, bg=config['bg_color'], relief='solid', bd=1, height=80)
+        card_frame.pack(fill='x', pady=5)
+        card_frame.pack_propagate(False)
+        
+        # Contenido de la tarjeta
+        content_frame = tk.Frame(card_frame, bg=config['bg_color'])
+        content_frame.pack(expand=True, fill='both', padx=15, pady=10)
+        
+        # Fila superior con ícono y valor
+        top_row = tk.Frame(content_frame, bg=config['bg_color'])
+        top_row.pack(fill='x')
+        
+        # Ícono
+        tk.Label(top_row, text=config['icon'], font=('Arial', 18), 
+                bg=config['bg_color'], fg=config['color']).pack(side='left')
+        
+        # Valor
+        tk.Label(top_row, text=config['value'], font=('Arial', 16, 'bold'), 
+                bg=config['bg_color'], fg=config['color']).pack(side='right')
+        
+        # Título
+        tk.Label(content_frame, text=config['title'], font=('Arial', 11), 
+                bg=config['bg_color'], fg='#2C3E50').pack(anchor='w', pady=(5, 0))
+
+    def get_billing_statistics(self):
+        """Obtener estadísticas de facturación del paciente actual"""
+        try:
+            if not self.current_user:
+                return {'pendientes': 0, 'pagadas': 0, 'vencidas': 0, 'total_monto': 0}
+            
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Obtener estadísticas
+            cursor.execute("""
+                SELECT 
+                    COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pendientes,
+                    COUNT(CASE WHEN estado = 'pagado' THEN 1 END) as pagadas,
+                    COUNT(CASE WHEN estado = 'vencido' THEN 1 END) as vencidas,
+                    COALESCE(SUM(monto), 0) as total_monto
+                FROM facturas 
+                WHERE paciente_id = ?
+            """, (self.current_user.id,))
+            
+            result = cursor.fetchone()
+            
+            stats = {
+                'pendientes': result[0] if result[0] else 0,
+                'pagadas': result[1] if result[1] else 0,
+                'vencidas': result[2] if result[2] else 0,
+                'total_monto': result[3] if result[3] else 0
+            }
+            
+            cursor.close()
+            conn.close()
+            
+            return stats
+            
+        except Exception as e:
+            print(f"Error obteniendo estadísticas de facturación: {e}")
+            return {'pendientes': 0, 'pagadas': 0, 'vencidas': 0, 'total_monto': 0}
 
     def get_patient_billing_summary(self):
         """Obtener resumen de facturación del paciente actual"""
@@ -16287,56 +16344,110 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             return {'total_paid': 0, 'total_pending': 0, 'total_invoices': 0, 'month_total': 0}
     
     def load_patient_billing_data(self, period_filter='Todos', status_filter='Todos'):
-        """Cargar facturas del paciente actual con filtros"""
+        """Cargar facturas del paciente actual en la tabla simplificada"""
         try:
-            if not self.current_user:
+            if not self.current_user or not hasattr(self, 'patient_billing_tree'):
                 return
             
-            # Verificar qué tabla existe
-            tree_widget = None
-            if hasattr(self, 'patient_billing_tree'):
-                tree_widget = self.patient_billing_tree
-            elif hasattr(self, 'patient_invoices_tree'):
-                tree_widget = self.patient_invoices_tree
-            else:
-                return  # No hay tabla de facturas
-            
             # Limpiar tabla
-            for item in tree_widget.get_children():
-                tree_widget.delete(item)
+            for item in self.patient_billing_tree.get_children():
+                self.patient_billing_tree.delete(item)
+            
+            # Limpiar diccionario de IDs
+            self.billing_record_ids = {}
             
             conn = self.db_manager.get_connection()
             cursor = conn.cursor()
             
-            # Construir query con filtros
-            base_query = '''
-                SELECT f.numero_factura, f.fecha_creacion, 
-                       (SELECT nombre || ' ' || apellido FROM usuarios WHERE id = f.doctor_id) as doctor_nombre,
-                       f.concepto, f.monto, f.estado
+            # Query simplificada
+            query = """
+                SELECT 
+                    f.id,
+                    f.numero_factura,
+                    f.fecha_creacion,
+                    COALESCE(f.concepto, 'Consulta médica') as concepto,
+                    f.monto,
+                    f.estado,
+                    f.fecha_vencimiento
                 FROM facturas f
                 WHERE f.paciente_id = ?
-            '''
+            """
             
             params = [self.current_user.id]
             
-            # Aplicar filtro de período
-            if period_filter != 'Todos':
-                if period_filter == 'Este Año':
-                    base_query += " AND strftime('%Y', f.fecha_creacion) = strftime('%Y', 'now')"
-                elif period_filter == 'Últimos 6 Meses':
-                    base_query += " AND f.fecha_creacion >= date('now', '-6 months')"
-                elif period_filter == 'Últimos 3 Meses':
-                    base_query += " AND f.fecha_creacion >= date('now', '-3 months')"
+            # Aplicar filtro de búsqueda
+            if hasattr(self, 'billing_search_var') and self.billing_search_var.get():
+                search_text = f"%{self.billing_search_var.get()}%"
+                query += " AND (f.numero_factura LIKE ? OR f.concepto LIKE ?)"
+                params.extend([search_text, search_text])
             
             # Aplicar filtro de estado
-            if status_filter != 'Todos':
-                base_query += " AND f.estado = ?"
-                params.append(status_filter)
+            if hasattr(self, 'billing_status_filter') and self.billing_status_filter.get() != 'Todos':
+                query += " AND f.estado = ?"
+                params.append(self.billing_status_filter.get())
             
-            base_query += " ORDER BY f.fecha_creacion DESC"
+            query += " ORDER BY f.fecha_creacion DESC"
             
-            cursor.execute(base_query, params)
-            invoices = cursor.fetchall()
+            cursor.execute(query, params)
+            records = cursor.fetchall()
+            
+            # Insertar datos en la tabla
+            for record in records:
+                try:
+                    # Formatear fecha
+                    fecha_str = record[2]
+                    if isinstance(fecha_str, str) and len(fecha_str) >= 10:
+                        from datetime import datetime
+                        fecha_obj = datetime.strptime(fecha_str[:10], '%Y-%m-%d')
+                        fecha_formatted = fecha_obj.strftime('%d/%m/%Y')
+                    else:
+                        fecha_formatted = str(fecha_str)
+                    
+                    # Formatear monto
+                    monto = f"RD${record[4]:,.0f}" if record[4] else "RD$0"
+                    
+                    # Truncar concepto si es muy largo
+                    concepto = record[3][:30] + '...' if len(record[3]) > 30 else record[3]
+                    
+                    # Insertar en la tabla
+                    item_id = self.patient_billing_tree.insert('', 'end', values=(
+                        record[1],  # numero_factura
+                        fecha_formatted,
+                        concepto,
+                        monto,
+                        record[5]  # estado
+                    ))
+                    
+                    # Guardar el ID completo del registro
+                    self.billing_record_ids[item_id] = record[0]
+                    
+                    # Colorear filas según estado
+                    if record[5] == 'vencido':
+                        self.patient_billing_tree.set(item_id, 'Estado', '🚨 Vencido')
+                    elif record[5] == 'pagado':
+                        self.patient_billing_tree.set(item_id, 'Estado', '✅ Pagado')
+                    elif record[5] == 'pendiente':
+                        self.patient_billing_tree.set(item_id, 'Estado', '⏳ Pendiente')
+                    
+                except Exception as e:
+                    print(f"Error procesando factura: {e}")
+                    continue
+            
+            # Actualizar información
+            total_records = len(records)
+            if hasattr(self, 'billing_info_label'):
+                self.billing_info_label.config(
+                    text=f"💰 Total: {total_records} facturas encontradas - Doble clic para ver detalles"
+                )
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            print(f"Error cargando facturas: {e}")
+            messagebox.showerror("Error", f"Error al cargar las facturas: {str(e)}")
+            if 'conn' in locals():
+                conn.close()
 
             for invoice in invoices:
                 fecha = invoice[1]
@@ -16361,7 +16472,7 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                     fecha,
                     invoice[2] or 'N/A',
                     invoice[3] or 'Consulta médica',
-                    f"₡{float(invoice[4] or 0):,.2f}",
+                    f"RD${float(invoice[4] or 0):,.2f}",
                     estado
                 ))
             
@@ -16495,6 +16606,76 @@ contacte a secretaría."""
         except Exception as e:
             messagebox.showerror("Error", f"Error enviando email: {e}")
     
+
+    def view_billing_detail_simple(self, event=None):
+        """Ver detalles de la factura seleccionada con doble clic"""
+        try:
+            selection = self.patient_billing_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Por favor seleccione una factura")
+                return
+            
+            # Obtener datos de la fila seleccionada
+            item = self.patient_billing_tree.item(selection[0])
+            values = item['values']
+            
+            # Crear ventana de detalles simple
+            detail_window = tk.Toplevel(self.root)
+            detail_window.title(f"Detalle de Factura - {values[0]}")
+            detail_window.geometry("500x400")
+            detail_window.configure(bg='#F8FAFC')
+            detail_window.transient(self.root)
+            detail_window.grab_set()
+            
+            # Header
+            header = tk.Frame(detail_window, bg='#1E3A8A', height=60)
+            header.pack(fill='x')
+            header.pack_propagate(False)
+            
+            tk.Label(header, text="💰 Detalle de Factura", 
+                    font=('Arial', 14, 'bold'), bg='#1E3A8A', fg='white').pack(expand=True)
+            
+            # Contenido
+            content = tk.Frame(detail_window, bg='#F8FAFC')
+            content.pack(fill='both', expand=True, padx=20, pady=20)
+            
+            # Info frame
+            info_frame = tk.LabelFrame(content, text="📄 Información", 
+                                     font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+            info_frame.pack(fill='x', pady=(0, 10))
+            
+            # Mostrar datos
+            datos = [
+                ("Número:", values[0]),
+                ("Fecha:", values[1]),
+                ("Servicio:", values[2]),
+                ("Monto:", values[3]),
+                ("Estado:", values[4])
+            ]
+            
+            for label, value in datos:
+                row = tk.Frame(info_frame, bg='white')
+                row.pack(fill='x', pady=3)
+                tk.Label(row, text=label, font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151', width=12, anchor='w').pack(side='left')
+                tk.Label(row, text=value, font=('Arial', 10), 
+                        bg='white', fg='#1E3A8A', anchor='w').pack(side='left', padx=(10, 0))
+            
+            # Botones
+            buttons_frame = tk.Frame(content, bg='white', relief='solid', bd=1)
+            buttons_frame.pack(fill='x', pady=10)
+            
+            button_content = tk.Frame(buttons_frame, bg='white')
+            button_content.pack(fill='x', padx=15, pady=10)
+            
+            tk.Button(button_content, text="✕ Cerrar", 
+                     command=detail_window.destroy,
+                     bg='#DC2626', fg='white', font=('Arial', 10, 'bold'),
+                     relief='flat', padx=15, pady=6).pack(side='right')
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error: {str(e)}")
+
     def show_billing_summary(self):
         """Mostrar resumen de facturación"""
         try:
@@ -16502,10 +16683,10 @@ contacte a secretaría."""
             
             summary_text = f"""💰 RESUMEN DE FACTURACIÓN
             
-💳 Total Pagado: ₡{summary.get('total_paid', 0):,.2f}
-⏳ Total Pendiente: ₡{summary.get('total_pending', 0):,.2f}
+💳 Total Pagado: RD${summary.get('total_paid', 0):,.2f}
+⏳ Total Pendiente: RD${summary.get('total_pending', 0):,.2f}
 📋 Total de Facturas: {summary.get('total_invoices', 0)}
-📅 Total Este Mes: ₡{summary.get('month_total', 0):,.2f}
+📅 Total Este Mes: RD${summary.get('month_total', 0):,.2f}
 
 Estado de cuenta actualizado al {datetime.now().strftime('%d/%m/%Y')}"""
             
@@ -21238,10 +21419,10 @@ contacte a secretaría."""
             
             summary_text = f"""💰 RESUMEN DE FACTURACIÓN
             
-💳 Total Pagado: ₡{summary.get('total_paid', 0):,.2f}
-⏳ Total Pendiente: ₡{summary.get('total_pending', 0):,.2f}
+💳 Total Pagado: RD${summary.get('total_paid', 0):,.2f}
+⏳ Total Pendiente: RD${summary.get('total_pending', 0):,.2f}
 📋 Total de Facturas: {summary.get('total_invoices', 0)}
-📅 Total Este Mes: ₡{summary.get('month_total', 0):,.2f}
+📅 Total Este Mes: RD${summary.get('month_total', 0):,.2f}
 
 Estado de cuenta actualizado al {datetime.now().strftime('%d/%m/%Y')}"""
             
