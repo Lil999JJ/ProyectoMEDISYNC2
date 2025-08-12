@@ -2805,12 +2805,22 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
     def confirm_appointment(self):
         """Confirmar cita seleccionada - método de acceso rápido"""
         try:
-            selection = self.appointments_tree.selection()
+            # Verificar si estamos en la vista de doctor
+            if hasattr(self, 'doctor_appointments_tree'):
+                selection = self.doctor_appointments_tree.selection()
+                tree = self.doctor_appointments_tree
+            elif hasattr(self, 'appointments_tree'):
+                selection = self.appointments_tree.selection()
+                tree = self.appointments_tree
+            else:
+                messagebox.showwarning("Advertencia", "No se encontró la tabla de citas")
+                return
+                
             if not selection:
-                messagebox.showwarning("Advertencia", "Por favor seleccione una cita para confirmar")
+                messagebox.showwarning("Advertencia", "Seleccione una cita para confirmar")
                 return
             
-            item = self.appointments_tree.item(selection[0])
+            item = tree.item(selection[0])
             appointment_id = item['values'][0]
             
             self.change_appointment_status(appointment_id, 'confirmada')
@@ -2821,12 +2831,22 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
     def cancel_appointment(self):
         """Cancelar cita seleccionada - método de acceso rápido"""
         try:
-            selection = self.appointments_tree.selection()
+            # Verificar si estamos en la vista de doctor
+            if hasattr(self, 'doctor_appointments_tree'):
+                selection = self.doctor_appointments_tree.selection()
+                tree = self.doctor_appointments_tree
+            elif hasattr(self, 'appointments_tree'):
+                selection = self.appointments_tree.selection()
+                tree = self.appointments_tree
+            else:
+                messagebox.showwarning("Advertencia", "No se encontró la tabla de citas")
+                return
+                
             if not selection:
-                messagebox.showwarning("Advertencia", "Por favor seleccione una cita para cancelar")
+                messagebox.showwarning("Advertencia", "Seleccione una cita para cancelar")
                 return
             
-            item = self.appointments_tree.item(selection[0])
+            item = tree.item(selection[0])
             appointment_id = item['values'][0]
             
             self.cancel_appointment_with_reason(appointment_id)
@@ -2837,12 +2857,22 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
     def complete_appointment(self):
         """Completar cita seleccionada - método de acceso rápido"""
         try:
-            selection = self.appointments_tree.selection()
+            # Verificar si estamos en la vista de doctor
+            if hasattr(self, 'doctor_appointments_tree'):
+                selection = self.doctor_appointments_tree.selection()
+                tree = self.doctor_appointments_tree
+            elif hasattr(self, 'appointments_tree'):
+                selection = self.appointments_tree.selection()
+                tree = self.appointments_tree
+            else:
+                messagebox.showwarning("Advertencia", "No se encontró la tabla de citas")
+                return
+                
             if not selection:
-                messagebox.showwarning("Advertencia", "Por favor seleccione una cita para completar")
+                messagebox.showwarning("Advertencia", "Seleccione una cita para completar")
                 return
             
-            item = self.appointments_tree.item(selection[0])
+            item = tree.item(selection[0])
             appointment_id = item['values'][0]
             
             # Completar la cita
@@ -2857,12 +2887,22 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
     def start_appointment(self):
         """Iniciar cita seleccionada - método de acceso rápido"""
         try:
-            selection = self.appointments_tree.selection()
+            # Verificar si estamos en la vista de doctor
+            if hasattr(self, 'doctor_appointments_tree'):
+                selection = self.doctor_appointments_tree.selection()
+                tree = self.doctor_appointments_tree
+            elif hasattr(self, 'appointments_tree'):
+                selection = self.appointments_tree.selection()
+                tree = self.appointments_tree
+            else:
+                messagebox.showwarning("Advertencia", "No se encontró la tabla de citas")
+                return
+                
             if not selection:
                 messagebox.showwarning("Advertencia", "Por favor seleccione una cita para iniciar")
                 return
             
-            item = self.appointments_tree.item(selection[0])
+            item = tree.item(selection[0])
             appointment_id = item['values'][0]
             
             self.change_appointment_status(appointment_id, 'en_curso')
@@ -10449,35 +10489,107 @@ Para consultas sobre este reporte, contacte al departamento de administración.
         messagebox.showinfo("Plantillas", "Gestión de plantillas en desarrollo")
         
     def create_doctor_menu(self, parent):
-        """Crear menú para doctores"""
-        # Crear notebook con pestañas específicas para doctores
-        self.notebook = ttk.Notebook(parent)
-        self.notebook.pack(fill='both', expand=True)
+        """Crear menú moderno para doctores con diseño similar al admin"""
+        # Frame principal para el menú
+        menu_container = tk.Frame(parent, bg='#F8FAFC')
+        menu_container.pack(fill='both', expand=True)
         
-        # Pestaña 1: Dashboard Doctor
-        dashboard_frame = ttk.Frame(self.notebook)
-        self.notebook.add(dashboard_frame, text="📊 Mi Dashboard")
-        self.create_doctor_dashboard(dashboard_frame)
+        # Header del menú con estilo moderno
+        header_frame = tk.Frame(menu_container, bg='#1E3A8A', height=70)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
         
-        # Pestaña 2: Mis Citas
-        appointments_frame = ttk.Frame(self.notebook)
-        self.notebook.add(appointments_frame, text="📅 Mis Citas")
-        self.create_doctor_appointments(appointments_frame)
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=30, pady=10)
         
-        # Pestaña 3: Mis Pacientes
-        patients_frame = ttk.Frame(self.notebook)
-        self.notebook.add(patients_frame, text="🤒 Mis Pacientes")
-        self.create_doctor_patients(patients_frame)
+        # Logo y título
+        title_frame = tk.Frame(header_content, bg='#1E3A8A')
+        title_frame.pack(side='left', expand=True, fill='both')
         
-        # Pestaña 4: Historiales Médicos
-        medical_frame = ttk.Frame(self.notebook)
-        self.notebook.add(medical_frame, text="📋 Historiales")
-        self.create_medical_records(medical_frame)
+        tk.Label(title_frame, text="👨‍⚕️", font=('Arial', 20), bg='#1E3A8A', fg='white').pack(side='left', pady=5)
+        tk.Label(title_frame, text="MEDISYNC", font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(side='left', padx=(10, 0), pady=5)
+        tk.Label(title_frame, text="Panel Médico", font=('Arial', 12), bg='#1E3A8A', fg='#CBD5E1').pack(side='left', padx=(15, 0), pady=5)
         
-        # Pestaña 5: Mi Perfil
-        profile_frame = ttk.Frame(self.notebook)
-        self.notebook.add(profile_frame, text="👨‍⚕️ Mi Perfil")
-        self.create_doctor_profile(profile_frame)
+        # Info del usuario
+        user_frame = tk.Frame(header_content, bg='#1E3A8A')
+        user_frame.pack(side='right')
+        
+        user_name = f"Dr. {self.current_user.nombre} {self.current_user.apellido}"
+        tk.Label(user_frame, text=f"👨‍⚕️ {user_name}", font=('Arial', 11, 'bold'), bg='#1E3A8A', fg='#FFFFFF').pack(anchor='e')
+        tk.Label(user_frame, text="Médico del Sistema", font=('Arial', 9), bg='#1E3A8A', fg='#64748B').pack(anchor='e')
+        
+        # Barra de navegación moderna
+        nav_frame = tk.Frame(menu_container, bg='#0B5394', height=60)
+        nav_frame.pack(fill='x')
+        nav_frame.pack_propagate(False)
+        
+        # Contenedor de botones de navegación
+        nav_content = tk.Frame(nav_frame, bg='#0B5394')
+        nav_content.pack(expand=True, fill='both', padx=20, pady=5)
+        
+        # Definir pestañas de doctor con iconos y colores
+        tabs_config = [
+            ("📊", "Dashboard", "#0B5394", "Vista general de mi práctica"),
+            ("📅", "Mis Citas", "#16A085", "Gestión de mis citas médicas"),
+            ("🤒", "Mis Pacientes", "#059669", "Pacientes bajo mi cuidado"),
+            ("📋", "Historiales", "#E67E22", "Gestión de historiales médicos"),
+            ("👤", "Mi Perfil", "#8E44AD", "Configuración de mi perfil")
+        ]
+        
+        # Variable para controlar la pestaña activa
+        self.active_doctor_tab = tk.StringVar(value="Dashboard")
+        
+        # Crear botones de navegación
+        self.doctor_nav_buttons = {}
+        for icon, name, color, description in tabs_config:
+            btn_frame = tk.Frame(nav_content, bg='#0B5394')
+            btn_frame.pack(side='left', fill='both', expand=True, padx=2)
+            
+            btn = tk.Button(btn_frame, text=f"{icon} {name}", 
+                           font=('Arial', 11, 'bold'), 
+                           bg=color if name == "Dashboard" else '#0B5394', 
+                           fg='white', relief='flat', bd=0,
+                           padx=15, pady=12, cursor='hand2',
+                           command=lambda n=name: self.switch_doctor_tab(n))
+            btn.pack(fill='both', expand=True)
+            
+            self.doctor_nav_buttons[name] = (btn, color)
+        
+        # Área de contenido principal
+        self.doctor_content_area = tk.Frame(menu_container, bg='#FFFFFF')
+        self.doctor_content_area.pack(fill='both', expand=True)
+        
+        # Cargar contenido inicial (Dashboard)
+        self.switch_doctor_tab("Dashboard")
+    
+    def switch_doctor_tab(self, tab_name):
+        """Cambiar entre pestañas de doctor con animación visual"""
+        # Actualizar variable de pestaña activa
+        self.active_doctor_tab.set(tab_name)
+        
+        # Actualizar colores de botones
+        for name, (btn, color) in self.doctor_nav_buttons.items():
+            if name == tab_name:
+                btn.configure(bg=color, relief='solid', bd=2)
+            else:
+                btn.configure(bg='#0B5394', relief='flat', bd=0)
+        
+        # Limpiar área de contenido
+        for widget in self.doctor_content_area.winfo_children():
+            widget.destroy()
+        
+        # Cargar contenido de la pestaña seleccionada
+        if tab_name == "Dashboard":
+            self.create_doctor_dashboard(self.doctor_content_area)
+        elif tab_name == "Mis Citas":
+            self.create_doctor_appointments(self.doctor_content_area)
+        elif tab_name == "Mis Pacientes":
+            self.create_doctor_patients(self.doctor_content_area)
+        elif tab_name == "Historiales":
+            self.create_medical_records(self.doctor_content_area)
+        elif tab_name == "Mi Perfil":
+            self.create_doctor_profile(self.doctor_content_area)
     
     def create_secretaria_menu(self, parent):
         """Crear menú moderno para secretarias con diseño similar al admin"""
@@ -10692,292 +10804,1333 @@ Para consultas sobre este reporte, contacte al departamento de administración.
         self.__init__()
     
     # ==================== FUNCIONES PARA DOCTORES ====================
+
     
-    def create_doctor_menu(self, parent):
-        """Crear menú moderno para doctores con diseño similar al admin"""
-        # Frame principal para el menú
-        menu_container = tk.Frame(parent, bg='#F8FAFC')
-        menu_container.pack(fill='both', expand=True)
+    def create_doctor_dashboard(self, parent):
+        """Dashboard específico para doctores con diseño mejorado"""
+        main_frame = tk.Frame(parent, bg='#F8FAFC')
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
         
-        # Header del menú con estilo moderno
-        header_frame = tk.Frame(menu_container, bg='#1E3A8A', height=70)
-        header_frame.pack(fill='x')
+        # Header personalizado con gradiente visual
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=80, relief='solid', bd=1)
+        header_frame.pack(fill='x', pady=(0, 25))
         header_frame.pack_propagate(False)
         
         # Contenido del header
         header_content = tk.Frame(header_frame, bg='#1E3A8A')
-        header_content.pack(expand=True, fill='both', padx=30, pady=10)
+        header_content.pack(expand=True, fill='both', padx=25, pady=15)
         
-        # Logo y título
-        title_frame = tk.Frame(header_content, bg='#1E3A8A')
-        title_frame.pack(side='left', expand=True, fill='both')
+        # Lado izquierdo - Saludo y avatar
+        left_header = tk.Frame(header_content, bg='#1E3A8A')
+        left_header.pack(side='left', fill='both', expand=True)
         
-        tk.Label(title_frame, text="👨‍⚕️", font=('Arial', 20), bg='#1E3A8A', fg='white').pack(side='left', pady=5)
-        tk.Label(title_frame, text="MEDISYNC", font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(side='left', padx=(10, 0), pady=5)
-        tk.Label(title_frame, text="Panel Médico", font=('Arial', 12), bg='#1E3A8A', fg='#CBD5E1').pack(side='left', padx=(15, 0), pady=5)
+        # Avatar del doctor
+        avatar_frame = tk.Frame(left_header, bg='#0B5394', width=50, height=50)
+        avatar_frame.pack(side='left', padx=(0, 15))
+        avatar_frame.pack_propagate(False)
+        tk.Label(avatar_frame, text="👨‍⚕️", font=('Arial', 24), bg='#0B5394', fg='white').pack(expand=True)
         
-        # Info del usuario
-        user_frame = tk.Frame(header_content, bg='#1E3A8A')
-        user_frame.pack(side='right')
+        # Saludo y información
+        greeting_frame = tk.Frame(left_header, bg='#1E3A8A')
+        greeting_frame.pack(side='left', fill='both', expand=True)
         
-        user_name = f"Dr. {self.current_user.nombre} {self.current_user.apellido}"
-        tk.Label(user_frame, text=f"👨‍⚕️ {user_name}", font=('Arial', 11, 'bold'), bg='#1E3A8A', fg='#FFFFFF').pack(anchor='e')
-        tk.Label(user_frame, text="Médico del Sistema", font=('Arial', 9), bg='#1E3A8A', fg='#64748B').pack(anchor='e')
+        # Saludo dinámico según hora
+        current_hour = datetime.now().hour
+        if current_hour < 12:
+            greeting = "Buenos días"
+        elif current_hour < 18:
+            greeting = "Buenas tardes"
+        else:
+            greeting = "Buenas noches"
         
-        # Barra de navegación moderna
-        nav_frame = tk.Frame(menu_container, bg='#0B5394', height=60)
-        nav_frame.pack(fill='x')
-        nav_frame.pack_propagate(False)
+        tk.Label(greeting_frame, text=f"{greeting}, Dr. {self.current_user.nombre}", 
+                font=('Arial', 18, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
+        tk.Label(greeting_frame, text="Bienvenido a tu panel médico", 
+                font=('Arial', 11), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
         
-        # Contenedor de botones de navegación
-        nav_content = tk.Frame(nav_frame, bg='#0B5394')
-        nav_content.pack(expand=True, fill='both', padx=20, pady=5)
+        # Lado derecho - Fecha y hora
+        right_header = tk.Frame(header_content, bg='#1E3A8A')
+        right_header.pack(side='right')
         
-        # Definir pestañas de doctor con iconos y colores
-        tabs_config = [
-            ("📊", "Dashboard", "#0B5394", "Vista general de mi práctica"),
-            ("📅", "Mis Citas", "#16A085", "Gestión de mis citas médicas"),
-            ("🤒", "Mis Pacientes", "#059669", "Pacientes bajo mi cuidado"),
-            ("📋", "Historiales", "#E67E22", "Gestión de historiales médicos"),
-            ("👤", "Mi Perfil", "#8E44AD", "Configuración de mi perfil")
-        ]
+        current_date = datetime.now().strftime('%d de %B, %Y')
+        current_time = datetime.now().strftime('%H:%M')
         
-        # Variable para controlar la pestaña activa
-        self.active_doctor_tab = tk.StringVar(value="Dashboard")
+        tk.Label(right_header, text=current_date, 
+                font=('Arial', 12, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='e')
+        tk.Label(right_header, text=current_time, 
+                font=('Arial', 10), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='e')
         
-        # Crear botones de navegación
-        self.doctor_nav_buttons = {}
-        for icon, name, color, description in tabs_config:
-            btn_frame = tk.Frame(nav_content, bg='#0B5394')
-            btn_frame.pack(side='left', fill='both', expand=True, padx=2)
-            
-            btn = tk.Button(btn_frame, text=f"{icon} {name}", 
-                           font=('Arial', 11, 'bold'), 
-                           bg=color if name == "Dashboard" else '#0B5394', 
-                           fg='white', relief='flat', bd=0,
-                           padx=15, pady=12, cursor='hand2',
-                           command=lambda n=name: self.switch_doctor_tab(n))
-            btn.pack(fill='both', expand=True)
-            
-            self.doctor_nav_buttons[name] = (btn, color)
+        # Contenedor principal para las tarjetas
+        cards_container = tk.Frame(main_frame, bg='#F8FAFC')
+        cards_container.pack(fill='both', expand=True)
         
-        # Área de contenido principal
-        self.doctor_content_area = tk.Frame(menu_container, bg='#FFFFFF')
-        self.doctor_content_area.pack(fill='both', expand=True)
-        
-        # Cargar contenido inicial (Dashboard)
-        self.switch_doctor_tab("Dashboard")
-    
-    def switch_doctor_tab(self, tab_name):
-        """Cambiar entre pestañas de doctor con animación visual"""
-        # Actualizar variable de pestaña activa
-        self.active_doctor_tab.set(tab_name)
-        
-        # Actualizar colores de botones
-        for name, (btn, color) in self.doctor_nav_buttons.items():
-            if name == tab_name:
-                btn.configure(bg=color, relief='solid', bd=2)
-            else:
-                btn.configure(bg='#0B5394', relief='flat', bd=0)
-        
-        # Limpiar área de contenido
-        for widget in self.doctor_content_area.winfo_children():
-            widget.destroy()
-        
-        # Cargar contenido de la pestaña seleccionada
-        if tab_name == "Dashboard":
-            self.create_doctor_dashboard(self.doctor_content_area)
-        elif tab_name == "Mis Citas":
-            self.create_doctor_appointments(self.doctor_content_area)
-        elif tab_name == "Mis Pacientes":
-            self.create_doctor_patients(self.doctor_content_area)
-        elif tab_name == "Historiales":
-            self.create_medical_records(self.doctor_content_area)
-        elif tab_name == "Mi Perfil":
-            self.create_doctor_profile(self.doctor_content_area)
-    
-    def create_doctor_dashboard(self, parent):
-        """Dashboard específico para doctores"""
-        main_frame = tk.Frame(parent, bg='#F8FAFC')
-        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
-        
-        # Título personalizado
-        title_label = tk.Label(main_frame, text=f"Bienvenido Dr. {self.current_user.nombre}", 
-                              font=('Arial', 18, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
-        title_label.pack(pady=(0, 20))
-        
-        # Estadísticas del doctor
-        stats_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        stats_frame.pack(fill='x', pady=20)
+        # Fila superior - Estadísticas principales
+        stats_row = tk.Frame(cards_container, bg='#F8FAFC')
+        stats_row.pack(fill='x', pady=(0, 20))
         
         try:
             doctor_stats = self.get_doctor_stats()
             
-            self.create_stats_card(stats_frame, "📅 Citas Hoy", 
-                                 str(doctor_stats.get('appointments_today', 0)), "#0B5394", 0, 0)
+            # Tarjetas de estadísticas con diseño moderno
+            stats_cards = [
+                {
+                    'title': 'Citas Hoy',
+                    'value': str(doctor_stats.get('appointments_today', 0)),
+                    'icon': '📅',
+                    'color': '#3B82F6',
+                    'bg_color': '#EFF6FF'
+                },
+                {
+                    'title': 'Total Pacientes',
+                    'value': str(doctor_stats.get('total_patients', 0)),
+                    'icon': '🤒',
+                    'color': '#10B981',
+                    'bg_color': '#ECFDF5'
+                },
+                {
+                    'title': 'Ingresos del Mes',
+                    'value': f"RD$ {doctor_stats.get('monthly_income', 0):,.2f}",
+                    'icon': '💰',
+                    'color': '#F59E0B',
+                    'bg_color': '#FFFBEB'
+                },
+                {
+                    'title': 'Consultas del Mes',
+                    'value': str(doctor_stats.get('consultations_month', 0)),
+                    'icon': '⭐',
+                    'color': '#8B5CF6',
+                    'bg_color': '#F3E8FF'
+                }
+            ]
             
-            self.create_stats_card(stats_frame, "🤒 Total Pacientes", 
-                                 str(doctor_stats.get('total_patients', 0)), "#059669", 0, 1)
-            
-            self.create_stats_card(stats_frame, "💰 Ingresos del Mes", 
-                                 f"RD$ {doctor_stats.get('monthly_income', 0):,.2f}", "#E67E22", 0, 2)
-            
-            self.create_stats_card(stats_frame, "⭐ Consultas Este Mes", 
-                                 str(doctor_stats.get('consultations_month', 0)), "#16A085", 0, 3)
-                                 
+            for i, card in enumerate(stats_cards):
+                self.create_modern_stats_card(stats_row, card, i)
+                
         except Exception as e:
-            tk.Label(stats_frame, text=f"Error cargando estadísticas: {str(e)}", 
-                    fg='red', bg='#F8FAFC').pack()
+            error_label = tk.Label(stats_row, text=f"Error cargando estadísticas: {str(e)}", 
+                                 fg='#EF4444', bg='#F8FAFC', font=('Arial', 10))
+            error_label.pack(pady=10)
         
-        # Próximas citas
-        appointments_frame = tk.LabelFrame(main_frame, text="🕐 Próximas Citas", 
-                                         font=('Arial', 14, 'bold'), padx=20, pady=15)
-        appointments_frame.pack(fill='both', expand=True, pady=20)
+        # Fila inferior - Contenido dinámico
+        content_row = tk.Frame(cards_container, bg='#F8FAFC')
+        content_row.pack(fill='both', expand=True)
         
-        # Lista de próximas citas
-        appointments_list = tk.Frame(appointments_frame, bg='white')
-        appointments_list.pack(fill='both', expand=True)
+        # Panel izquierdo - Próximas citas
+        left_panel = tk.Frame(content_row, bg='#F8FAFC')
+        left_panel.pack(side='left', fill='both', expand=True, padx=(0, 10))
+        
+        appointments_card = tk.Frame(left_panel, bg='white', relief='solid', bd=1)
+        appointments_card.pack(fill='both', expand=True)
+        
+        # Header de la tarjeta de citas
+        appointments_header = tk.Frame(appointments_card, bg='#F8FAFC', height=50)
+        appointments_header.pack(fill='x')
+        appointments_header.pack_propagate(False)
+        
+        tk.Label(appointments_header, text="🕐 Próximas Citas", 
+                font=('Arial', 14, 'bold'), bg='#F8FAFC', fg='#1F2937').pack(side='left', padx=20, pady=15)
+        
+        # Botón de ver todas
+        tk.Button(appointments_header, text="Ver todas →", bg='#3B82F6', fg='white',
+                 font=('Arial', 9, 'bold'), relief='flat', padx=15, pady=5,
+                 command=lambda: self.switch_doctor_tab("Mis Citas")).pack(side='right', padx=20, pady=15)
+        
+        # Lista de citas
+        appointments_content = tk.Frame(appointments_card, bg='white')
+        appointments_content.pack(fill='both', expand=True, padx=20, pady=(0, 20))
         
         try:
             upcoming_appointments = self.get_doctor_upcoming_appointments()
             
             if upcoming_appointments:
-                for i, apt in enumerate(upcoming_appointments[:5]):  # Mostrar solo 5
-                    apt_frame = tk.Frame(appointments_list, bg='#FFFFFF', relief='solid', bd=1)
-                    apt_frame.pack(fill='x', pady=5, padx=10)
-                    
-                    # Información de la cita
-                    info_text = f"🕒 {apt.get('fecha_hora_formatted', 'N/A')} - {apt.get('paciente_nombre', 'N/A')}"
-                    tk.Label(apt_frame, text=info_text, font=('Arial', 11, 'bold'), 
-                            bg='#FFFFFF', fg='#1E3A8A').pack(side='left', padx=10, pady=8)
-                    
-                    # Motivo
-                    motivo_text = f"Motivo: {apt.get('motivo', 'Consulta general')}"
-                    tk.Label(apt_frame, text=motivo_text, font=('Arial', 10), 
-                            bg='#FFFFFF', fg='#64748B').pack(side='left', padx=(20, 10))
+                for i, apt in enumerate(upcoming_appointments[:4]):  # Mostrar solo 4
+                    self.create_appointment_card(appointments_content, apt, i)
             else:
-                tk.Label(appointments_list, text="No hay citas programadas", 
-                        font=('Arial', 12), fg='#64748B').pack(pady=20)
+                no_appointments_frame = tk.Frame(appointments_content, bg='white', height=100)
+                no_appointments_frame.pack(fill='x', pady=20)
+                no_appointments_frame.pack_propagate(False)
+                
+                tk.Label(no_appointments_frame, text="📅", font=('Arial', 30), 
+                        bg='white', fg='#9CA3AF').pack()
+                tk.Label(no_appointments_frame, text="No hay citas programadas", 
+                        font=('Arial', 12), bg='white', fg='#6B7280').pack()
                 
         except Exception as e:
-            tk.Label(appointments_list, text=f"Error cargando citas: {str(e)}", 
-                    fg='red').pack(pady=20)
+            error_frame = tk.Frame(appointments_content, bg='white')
+            error_frame.pack(fill='x', pady=20)
+            tk.Label(error_frame, text=f"Error cargando citas: {str(e)}", 
+                    fg='#EF4444', bg='white', font=('Arial', 10)).pack()
+        
+        # Panel derecho - Acciones rápidas y resumen
+        right_panel = tk.Frame(content_row, bg='#F8FAFC')
+        right_panel.pack(side='right', fill='both', expand=True, padx=(10, 0))
+        
+        # Tarjeta de acciones rápidas
+        quick_actions_card = tk.Frame(right_panel, bg='white', relief='solid', bd=1, height=250)
+        quick_actions_card.pack(fill='x', pady=(0, 15))
+        quick_actions_card.pack_propagate(False)
+        
+        # Header de acciones rápidas
+        actions_header = tk.Frame(quick_actions_card, bg='#F8FAFC', height=50)
+        actions_header.pack(fill='x')
+        actions_header.pack_propagate(False)
+        
+        tk.Label(actions_header, text="🚀 Acciones Rápidas", 
+                font=('Arial', 14, 'bold'), bg='#F8FAFC', fg='#1F2937').pack(padx=20, pady=15)
+        
+        # Botones de acciones rápidas
+        actions_content = tk.Frame(quick_actions_card, bg='white')
+        actions_content.pack(fill='both', expand=True, padx=20, pady=(0, 20))
+        
+        quick_actions = [
+            ("📋 Nuevo Historial", self.create_medical_record, '#10B981'),
+            ("👁️ Ver Pacientes", lambda: self.switch_doctor_tab("Mis Pacientes"), '#3B82F6'),
+            ("📅 Gestionar Citas", lambda: self.switch_doctor_tab("Mis Citas"), '#8B5CF6'),
+            ("⚙️ Configurar Perfil", lambda: self.switch_doctor_tab("Mi Perfil"), '#6B7280')
+        ]
+        
+        for i, (text, command, color) in enumerate(quick_actions):
+            btn = tk.Button(actions_content, text=text, bg=color, fg='white',
+                           font=('Arial', 10, 'bold'), relief='flat', 
+                           padx=15, pady=8, cursor='hand2', command=command)
+            btn.pack(fill='x', pady=3)
+            
+            # Efecto hover
+            def on_enter(e, btn=btn, original_color=color):
+                btn.configure(bg=self.darken_color(original_color))
+            def on_leave(e, btn=btn, original_color=color):
+                btn.configure(bg=original_color)
+            
+            btn.bind("<Enter>", on_enter)
+            btn.bind("<Leave>", on_leave)
+        
+        # Tarjeta de resumen del día
+        summary_card = tk.Frame(right_panel, bg='white', relief='solid', bd=1)
+        summary_card.pack(fill='both', expand=True)
+        
+        # Header del resumen
+        summary_header = tk.Frame(summary_card, bg='#F8FAFC', height=50)
+        summary_header.pack(fill='x')
+        summary_header.pack_propagate(False)
+        
+        tk.Label(summary_header, text="📊 Resumen del Día", 
+                font=('Arial', 14, 'bold'), bg='#F8FAFC', fg='#1F2937').pack(padx=20, pady=15)
+        
+        # Contenido del resumen
+        summary_content = tk.Frame(summary_card, bg='white')
+        summary_content.pack(fill='both', expand=True, padx=20, pady=(0, 20))
+        
+        try:
+            # Información del resumen
+            today = datetime.now().strftime('%Y-%m-%d')
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Citas completadas hoy
+            cursor.execute("""
+                SELECT COUNT(*) FROM citas 
+                WHERE doctor_id = ? AND DATE(fecha_hora) = ? AND estado = 'completada'
+            """, (self.current_user.id, today))
+            completed_today = cursor.fetchone()[0]
+            
+            # Próxima cita
+            cursor.execute("""
+                SELECT MIN(fecha_hora) FROM citas 
+                WHERE doctor_id = ? AND fecha_hora > datetime('now') AND estado = 'programada'
+            """, (self.current_user.id,))
+            next_appointment = cursor.fetchone()[0]
+            
+            cursor.close()
+            conn.close()
+            
+            # Mostrar resumen
+            summary_items = [
+                ("Citas completadas hoy:", str(completed_today)),
+                ("Estado:", "Activo"),
+                ("Próxima cita:", "Hoy" if next_appointment and next_appointment.startswith(today) else "Mañana" if next_appointment else "Sin citas")
+            ]
+            
+            for label, value in summary_items:
+                item_frame = tk.Frame(summary_content, bg='white')
+                item_frame.pack(fill='x', pady=5)
+                
+                tk.Label(item_frame, text=label, font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151').pack(side='left')
+                tk.Label(item_frame, text=value, font=('Arial', 10), 
+                        bg='white', fg='#6B7280').pack(side='right')
+        
+        except Exception as e:
+            tk.Label(summary_content, text=f"Error cargando resumen: {str(e)}", 
+                    fg='#EF4444', bg='white', font=('Arial', 9)).pack(pady=10)
+    
+    def create_modern_stats_card(self, parent, card_data, index):
+        """Crear tarjeta de estadística moderna"""
+        card_frame = tk.Frame(parent, bg=card_data['bg_color'], relief='solid', bd=1)
+        card_frame.pack(side='left', fill='both', expand=True, padx=5 if index > 0 else (0, 5))
+        
+        # Contenido de la tarjeta
+        content_frame = tk.Frame(card_frame, bg=card_data['bg_color'])
+        content_frame.pack(fill='both', expand=True, padx=20, pady=15)
+        
+        # Fila superior - Ícono y valor
+        top_row = tk.Frame(content_frame, bg=card_data['bg_color'])
+        top_row.pack(fill='x')
+        
+        # Ícono
+        icon_frame = tk.Frame(top_row, bg=card_data['color'], width=40, height=40)
+        icon_frame.pack(side='left')
+        icon_frame.pack_propagate(False)
+        
+        tk.Label(icon_frame, text=card_data['icon'], font=('Arial', 20), 
+                bg=card_data['color'], fg='white').pack(expand=True)
+        
+        # Valor
+        value_frame = tk.Frame(top_row, bg=card_data['bg_color'])
+        value_frame.pack(side='right', fill='both', expand=True)
+        
+        tk.Label(value_frame, text=card_data['value'], 
+                font=('Arial', 18, 'bold'), bg=card_data['bg_color'], 
+                fg=card_data['color']).pack(anchor='e')
+        
+        # Título
+        tk.Label(content_frame, text=card_data['title'], 
+                font=('Arial', 11, 'bold'), bg=card_data['bg_color'], 
+                fg='#374151').pack(anchor='w', pady=(10, 0))
+    
+    def create_appointment_card(self, parent, appointment, index):
+        """Crear tarjeta de cita individual"""
+        card_frame = tk.Frame(parent, bg='#F9FAFB', relief='solid', bd=1)
+        card_frame.pack(fill='x', pady=3)
+        
+        content_frame = tk.Frame(card_frame, bg='#F9FAFB')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        # Fila superior - Hora y paciente
+        top_row = tk.Frame(content_frame, bg='#F9FAFB')
+        top_row.pack(fill='x')
+        
+        # Hora
+        try:
+            dt = datetime.fromisoformat(appointment['fecha_hora'])
+            hora = dt.strftime('%H:%M')
+        except:
+            hora = appointment.get('fecha_hora_formatted', 'N/A')
+        
+        hora_label = tk.Label(top_row, text=hora, font=('Arial', 12, 'bold'), 
+                             bg='#3B82F6', fg='white', padx=8, pady=2)
+        hora_label.pack(side='left')
+        
+        # Paciente
+        paciente_label = tk.Label(top_row, text=appointment.get('paciente_nombre', 'N/A'), 
+                                 font=('Arial', 11, 'bold'), bg='#F9FAFB', fg='#1F2937')
+        paciente_label.pack(side='left', padx=(10, 0))
+        
+        # Estado
+        estado_color = '#10B981' if appointment.get('estado') == 'programada' else '#6B7280'
+        estado_label = tk.Label(top_row, text="●", font=('Arial', 12), 
+                               bg='#F9FAFB', fg=estado_color)
+        estado_label.pack(side='right')
+        
+        # Motivo
+        motivo_text = appointment.get('motivo', 'Consulta general')
+        if len(motivo_text) > 40:
+            motivo_text = motivo_text[:40] + "..."
+        
+        motivo_label = tk.Label(content_frame, text=motivo_text, 
+                               font=('Arial', 10), bg='#F9FAFB', fg='#6B7280')
+        motivo_label.pack(anchor='w', pady=(5, 0))
+    
+    def darken_color(self, color):
+        """Oscurecer un color para efectos hover"""
+        # Mapeo simple de colores para efectos hover
+        color_map = {
+            '#10B981': '#059669',
+            '#3B82F6': '#2563EB',
+            '#8B5CF6': '#7C3AED',
+            '#6B7280': '#4B5563',
+            '#F59E0B': '#D97706'
+        }
+        return color_map.get(color, color)
     
     def create_doctor_appointments(self, parent):
-        """Gestión de citas para doctores"""
+        """Gestión moderna de citas para doctores con diseño mejorado"""
         main_frame = tk.Frame(parent, bg='#F8FAFC')
         main_frame.pack(fill='both', expand=True, padx=20, pady=20)
         
-        # Header con filtros
-        header_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        header_frame.pack(fill='x', pady=(0, 20))
+        # Header principal con diseño moderno
+        header_frame = tk.Frame(main_frame, bg='#1E3A8A', height=100, relief='solid', bd=1)
+        header_frame.pack(fill='x', pady=(0, 25))
+        header_frame.pack_propagate(False)
         
-        tk.Label(header_frame, text="Mis Citas Médicas", 
-                font=('Arial', 16, 'bold'), bg='#F8FAFC').pack(side='left')
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#1E3A8A')
+        header_content.pack(expand=True, fill='both', padx=25, pady=15)
         
-        # Filtros
-        filter_frame = tk.Frame(header_frame, bg='#F8FAFC')
-        filter_frame.pack(side='right')
+        # Lado izquierdo - Título e icono
+        left_header = tk.Frame(header_content, bg='#1E3A8A')
+        left_header.pack(side='left', fill='both', expand=True)
         
-        tk.Label(filter_frame, text="Filtrar por:", font=('Arial', 10), bg='#F8FAFC').pack(side='left')
+        # Icono de citas
+        icon_frame = tk.Frame(left_header, bg='#16A085', width=60, height=60)
+        icon_frame.pack(side='left', padx=(0, 15))
+        icon_frame.pack_propagate(False)
+        tk.Label(icon_frame, text="📅", font=('Arial', 30), bg='#16A085', fg='white').pack(expand=True)
         
-        self.appointment_filter = ttk.Combobox(filter_frame, values=['Todas', 'Hoy', 'Esta Semana', 'Este Mes'], 
-                                             state='readonly', width=12)
+        # Título y descripción
+        title_frame = tk.Frame(left_header, bg='#1E3A8A')
+        title_frame.pack(side='left', fill='both', expand=True)
+        
+        tk.Label(title_frame, text="Gestión de Mis Citas", 
+                font=('Arial', 20, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
+        tk.Label(title_frame, text="Administra y controla todas tus citas médicas", 
+                font=('Arial', 12), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
+        
+        # Lado derecho - Estadísticas rápidas
+        right_header = tk.Frame(header_content, bg='#1E3A8A')
+        right_header.pack(side='right')
+        
+        try:
+            # Obtener estadísticas de citas
+            today = datetime.now().strftime('%Y-%m-%d')
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Citas de hoy
+            cursor.execute("""
+                SELECT COUNT(*) FROM citas 
+                WHERE doctor_id = ? AND DATE(fecha_hora) = ? AND estado = 'programada'
+            """, (self.current_user.id, today))
+            citas_hoy = cursor.fetchone()[0]
+            
+            # Citas pendientes
+            cursor.execute("""
+                SELECT COUNT(*) FROM citas 
+                WHERE doctor_id = ? AND fecha_hora > datetime('now') AND estado = 'programada'
+            """, (self.current_user.id,))
+            citas_pendientes = cursor.fetchone()[0]
+            
+            cursor.close()
+            conn.close()
+            
+            # Mostrar estadísticas
+            stats_frame = tk.Frame(right_header, bg='#0B5394', padx=20, pady=10)
+            stats_frame.pack()
+            
+            tk.Label(stats_frame, text=f"Hoy: {citas_hoy}", 
+                    font=('Arial', 14, 'bold'), bg='#0B5394', fg='white').pack()
+            tk.Label(stats_frame, text=f"Pendientes: {citas_pendientes}", 
+                    font=('Arial', 12), bg='#0B5394', fg='#CBD5E1').pack()
+            
+        except Exception as e:
+            tk.Label(right_header, text="Error estadísticas", 
+                    font=('Arial', 10), bg='#1E3A8A', fg='#EF4444').pack()
+        
+        # Panel de filtros y acciones
+        controls_panel = tk.Frame(main_frame, bg='white', relief='solid', bd=1, height=80)
+        controls_panel.pack(fill='x', pady=(0, 15))
+        controls_panel.pack_propagate(False)
+        
+        controls_content = tk.Frame(controls_panel, bg='white')
+        controls_content.pack(expand=True, fill='both', padx=20, pady=15)
+        
+        # Filtros avanzados
+        filters_frame = tk.Frame(controls_content, bg='white')
+        filters_frame.pack(side='left', fill='both', expand=True)
+        
+        tk.Label(filters_frame, text="🔍 Filtrar citas:", font=('Arial', 12, 'bold'), 
+                bg='white', fg='#1F2937').pack(side='left', padx=(0, 10))
+        
+        # Filtro por período
+        self.appointment_filter = ttk.Combobox(filters_frame, 
+                                             values=['Todas', 'Hoy', 'Mañana', 'Esta Semana', 'Este Mes'], 
+                                             state='readonly', width=12, font=('Arial', 10))
         self.appointment_filter.set('Hoy')
         self.appointment_filter.pack(side='left', padx=5)
         self.appointment_filter.bind('<<ComboboxSelected>>', self.filter_doctor_appointments)
         
-        # Tabla de citas
-        columns = ('Fecha/Hora', 'Paciente', 'Motivo', 'Estado', 'Duración', 'Acciones')
-        self.doctor_appointments_tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=15)
+        # Filtro por estado
+        tk.Label(filters_frame, text="Estado:", font=('Arial', 10), 
+                bg='white', fg='#6B7280').pack(side='left', padx=(15, 5))
         
-        # Configurar headers
+        self.status_filter = ttk.Combobox(filters_frame, 
+                                        values=['Todos', 'Programada', 'Completada', 'Cancelada'], 
+                                        state='readonly', width=10, font=('Arial', 10))
+        self.status_filter.set('Todos')
+        self.status_filter.pack(side='left', padx=5)
+        self.status_filter.bind('<<ComboboxSelected>>', self.filter_doctor_appointments)
+        
+        # Búsqueda por paciente
+        tk.Label(filters_frame, text="Paciente:", font=('Arial', 10), 
+                bg='white', fg='#6B7280').pack(side='left', padx=(15, 5))
+        
+        self.patient_search = tk.Entry(filters_frame, font=('Arial', 10), width=15,
+                                     relief='solid', bd=1)
+        self.patient_search.pack(side='left', padx=5)
+        self.patient_search.bind('<KeyRelease>', self.search_appointments_by_patient)
+        
+        # Botones de acción rápida
+        actions_frame = tk.Frame(controls_content, bg='white')
+        actions_frame.pack(side='right')
+        
+        quick_actions = [
+            ("🔄 Actualizar", self.refresh_appointments, '#3B82F6'),
+            ("📅 Nueva Cita", self.schedule_new_appointment, '#10B981'),
+            ("📊 Estadísticas", self.show_appointment_stats, '#8B5CF6')
+        ]
+        
+        for text, command, color in quick_actions:
+            btn = tk.Button(actions_frame, text=text, bg=color, fg='white',
+                           font=('Arial', 9, 'bold'), relief='flat', 
+                           padx=12, pady=6, cursor='hand2', command=command)
+            btn.pack(side='left', padx=3)
+        
+        # Contenedor principal para las citas
+        content_container = tk.Frame(main_frame, bg='#F8FAFC')
+        content_container.pack(fill='both', expand=True)
+        
+        # Panel principal - Lista de citas a pantalla completa
+        main_panel = tk.Frame(content_container, bg='#F8FAFC')
+        main_panel.pack(fill='both', expand=True)
+        
+        # Título del panel
+        list_title_frame = tk.Frame(main_panel, bg='white', height=40, relief='solid', bd=1)
+        list_title_frame.pack(fill='x', pady=(0, 5))
+        list_title_frame.pack_propagate(False)
+        
+        tk.Label(list_title_frame, text="📋 Lista de Citas - Clic derecho para acciones | Doble clic para detalles", 
+                font=('Arial', 14, 'bold'), bg='white', fg='#1F2937').pack(side='left', padx=15, pady=12)
+        
+        # Contenedor de la tabla con diseño moderno
+        table_container = tk.Frame(main_panel, bg='white', relief='solid', bd=1)
+        table_container.pack(fill='both', expand=True)
+        
+        # Tabla de citas con columnas mejoradas
+        columns = ('ID', 'Fecha/Hora', 'Paciente', 'Motivo', 'Estado', 'Duración', 'Tipo')
+        self.doctor_appointments_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=15)
+        
+        # Configurar headers con mejor diseño
+        column_configs = {
+            'ID': 60,
+            'Fecha/Hora': 140,
+            'Paciente': 200,
+            'Motivo': 250,
+            'Estado': 120,
+            'Duración': 100,
+            'Tipo': 130
+        }
+        
         for col in columns:
-            self.doctor_appointments_tree.heading(col, text=col)
-            if col == 'Fecha/Hora':
-                self.doctor_appointments_tree.column(col, width=150)
-            elif col == 'Paciente':
-                self.doctor_appointments_tree.column(col, width=200)
-            elif col == 'Acciones':
-                self.doctor_appointments_tree.column(col, width=120)
-            else:
-                self.doctor_appointments_tree.column(col, width=100)
+            self.doctor_appointments_tree.heading(col, text=col, anchor='center')
+            self.doctor_appointments_tree.column(col, width=column_configs.get(col, 100), anchor='center')
         
-        # Scrollbar
-        scrollbar_y = ttk.Scrollbar(main_frame, orient="vertical", command=self.doctor_appointments_tree.yview)
-        self.doctor_appointments_tree.configure(yscrollcommand=scrollbar_y.set)
+        # Scrollbars con mejor diseño
+        scrollbar_y = ttk.Scrollbar(table_container, orient="vertical", command=self.doctor_appointments_tree.yview)
+        scrollbar_x = ttk.Scrollbar(table_container, orient="horizontal", command=self.doctor_appointments_tree.xview)
+        self.doctor_appointments_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
         
-        # Pack
-        self.doctor_appointments_tree.pack(side='left', fill='both', expand=True)
-        scrollbar_y.pack(side='right', fill='y')
+        # Layout con grid
+        self.doctor_appointments_tree.grid(row=0, column=0, sticky='nsew')
+        scrollbar_y.grid(row=0, column=1, sticky='ns')
+        scrollbar_x.grid(row=1, column=0, sticky='ew')
         
-        # Botones de acción
-        actions_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        actions_frame.pack(fill='x', pady=(10, 0))
+        table_container.grid_rowconfigure(0, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
         
-        tk.Button(actions_frame, text="📋 Ver Detalles", bg='#0B5394', fg='white',
-                 command=self.view_appointment_details).pack(side='left', padx=5)
-        tk.Button(actions_frame, text="✅ Marcar Completada", bg='#0B5394', fg='white',
-                 command=self.complete_appointment).pack(side='left', padx=5)
-        tk.Button(actions_frame, text="❌ Cancelar Cita", bg='#0B5394', fg='white',
-                 command=self.cancel_appointment).pack(side='left', padx=5)
-        tk.Button(actions_frame, text="📝 Agregar Notas", bg='#0B5394', fg='white',
-                 command=self.add_appointment_notes).pack(side='left', padx=5)
+
         
-        # Cargar datos
+
+        
+
+        
+        # Crear menú contextual para clic derecho
+        self.create_appointment_context_menu()
+        
+        # Bind para selección, doble clic y clic derecho
+        self.doctor_appointments_tree.bind('<<TreeviewSelect>>', self.on_appointment_select)
+        self.doctor_appointments_tree.bind('<Double-1>', self.on_appointment_double_click)
+        self.doctor_appointments_tree.bind('<Button-3>', self.show_context_menu)  # Clic derecho
+        
+        # Cargar datos iniciales
         self.load_doctor_appointments()
     
+    def on_appointment_select(self, event):
+        """Manejar selección de cita para habilitar botones"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if selection:
+                # Solo mostrar que hay una cita seleccionada
+                print("Cita seleccionada - Botones habilitados")
+            
+        except Exception as e:
+            print(f"Error en selección: {e}")
+    
+    def on_appointment_double_click(self, event):
+        """Manejar doble clic para mostrar detalles completos"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if not selection:
+                return
+            
+            item = selection[0]
+            values = self.doctor_appointments_tree.item(item, 'values')
+            
+            if not values:
+                return
+            
+            # Obtener ID de la cita
+            cita_id = values[0]
+            self.show_appointment_details_window(cita_id)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando detalles: {str(e)}")
+    
+    def create_appointment_context_menu(self):
+        """Crear menú contextual para las citas"""
+        self.appointment_context_menu = tk.Menu(self.root, tearoff=0)
+        
+        # Agregar opciones al menú con iconos y colores
+        self.appointment_context_menu.add_command(
+            label="👁️ Ver Detalles", 
+            command=self.context_view_details,
+            font=('Arial', 10)
+        )
+        self.appointment_context_menu.add_separator()
+        
+        self.appointment_context_menu.add_command(
+            label="🟡 Iniciar Cita", 
+            command=self.context_start_appointment,
+            font=('Arial', 10)
+        )
+        self.appointment_context_menu.add_command(
+            label="🔵 Confirmar Cita", 
+            command=self.context_confirm_appointment,
+            font=('Arial', 10)
+        )
+        self.appointment_context_menu.add_command(
+            label="✅ Completar Cita", 
+            command=self.context_complete_appointment,
+            font=('Arial', 10)
+        )
+        self.appointment_context_menu.add_separator()
+        
+        self.appointment_context_menu.add_command(
+            label="❌ Cancelar Cita", 
+            command=self.context_cancel_appointment,
+            font=('Arial', 10)
+        )
+    
+    def show_context_menu(self, event):
+        """Mostrar menú contextual en la posición del clic derecho"""
+        try:
+            # Identificar la fila donde se hizo clic derecho
+            item = self.doctor_appointments_tree.identify_row(event.y)
+            if not item:
+                return
+            
+            # Forzar la selección de la fila
+            self.doctor_appointments_tree.selection_set(item)
+            self.doctor_appointments_tree.focus(item)
+            
+            # Mostrar el menú en la posición del cursor
+            self.appointment_context_menu.post(event.x_root, event.y_root)
+                    
+        except Exception as e:
+            print(f"Error mostrando menú contextual: {e}")
+            messagebox.showerror("Error", f"Error mostrando menú: {str(e)}")
+    
+    def update_context_menu_state(self, estado):
+        """Actualizar el estado de las opciones del menú según el estado de la cita"""
+        try:
+            # Índices de las opciones en el menú
+            # 0: Ver Detalles, 1: Separador, 2: Iniciar, 3: Confirmar, 4: Completar, 5: Separador, 6: Cancelar
+            
+            # Siempre habilitar "Ver Detalles"
+            self.appointment_context_menu.entryconfig(0, state='normal')
+            
+            if estado == 'programada':
+                # Cita programada: se puede iniciar, confirmar o cancelar
+                self.appointment_context_menu.entryconfig(2, state='normal')   # Iniciar
+                self.appointment_context_menu.entryconfig(3, state='normal')   # Confirmar
+                self.appointment_context_menu.entryconfig(4, state='disabled') # Completar
+                self.appointment_context_menu.entryconfig(6, state='normal')   # Cancelar
+                
+            elif estado == 'confirmada':
+                # Cita confirmada: se puede iniciar, completar o cancelar
+                self.appointment_context_menu.entryconfig(2, state='normal')   # Iniciar
+                self.appointment_context_menu.entryconfig(3, state='disabled') # Confirmar
+                self.appointment_context_menu.entryconfig(4, state='normal')   # Completar
+                self.appointment_context_menu.entryconfig(6, state='normal')   # Cancelar
+                
+            elif estado == 'en_curso':
+                # Cita en curso: solo se puede completar
+                self.appointment_context_menu.entryconfig(2, state='disabled') # Iniciar
+                self.appointment_context_menu.entryconfig(3, state='disabled') # Confirmar
+                self.appointment_context_menu.entryconfig(4, state='normal')   # Completar
+                self.appointment_context_menu.entryconfig(6, state='disabled') # Cancelar
+                
+            else:  # completada, cancelada
+                # Cita terminada: solo ver detalles
+                self.appointment_context_menu.entryconfig(2, state='disabled') # Iniciar
+                self.appointment_context_menu.entryconfig(3, state='disabled') # Confirmar
+                self.appointment_context_menu.entryconfig(4, state='disabled') # Completar
+                self.appointment_context_menu.entryconfig(6, state='disabled') # Cancelar
+                
+        except Exception as e:
+            print(f"Error actualizando menú contextual: {e}")
+    
+    # Métodos para manejar las acciones del menú contextual
+    def context_view_details(self):
+        """Ver detalles desde menú contextual"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if selection:
+                item = selection[0]
+                values = self.doctor_appointments_tree.item(item, 'values')
+                if values:
+                    cita_id = values[0]
+                    self.show_appointment_details_window(cita_id)
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando detalles: {str(e)}")
+    
+    def context_start_appointment(self):
+        """Iniciar cita desde menú contextual"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if selection:
+                self.start_appointment()
+        except Exception as e:
+            messagebox.showerror("Error", f"Error iniciando cita: {str(e)}")
+    
+    def context_confirm_appointment(self):
+        """Confirmar cita desde menú contextual"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if selection:
+                self.confirm_appointment()
+        except Exception as e:
+            messagebox.showerror("Error", f"Error confirmando cita: {str(e)}")
+    
+    def context_complete_appointment(self):
+        """Completar cita desde menú contextual"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "No hay cita seleccionada")
+                return
+                
+            item = selection[0]
+            values = self.doctor_appointments_tree.item(item, 'values')
+            if not values:
+                messagebox.showwarning("Advertencia", "Error obteniendo datos de la cita")
+                return
+                
+            appointment_id = values[0]
+            
+            # Confirmar acción
+            result = messagebox.askyesno("Confirmar", 
+                                       f"¿Completar la cita con {values[2]}?")
+            if result:
+                # Completar la cita
+                self.change_appointment_status(appointment_id, 'completada')
+                messagebox.showinfo("Éxito", "Cita completada exitosamente")
+                # Recargar la lista
+                self.load_filtered_appointments()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error completando cita: {str(e)}")
+    
+    def context_cancel_appointment(self):
+        """Cancelar cita desde menú contextual"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "No hay cita seleccionada")
+                return
+                
+            item = selection[0]
+            values = self.doctor_appointments_tree.item(item, 'values')
+            if not values:
+                messagebox.showwarning("Advertencia", "Error obteniendo datos de la cita")
+                return
+                
+            appointment_id = values[0]
+            
+            # Confirmar acción
+            result = messagebox.askyesno("Confirmar", 
+                                       f"¿Cancelar la cita con {values[2]}?")
+            if result:
+                # Cancelar la cita
+                self.change_appointment_status(appointment_id, 'cancelada')
+                messagebox.showinfo("Éxito", "Cita cancelada exitosamente")
+                # Recargar la lista
+                self.load_filtered_appointments()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error cancelando cita: {str(e)}")
+            
+    def context_confirm_appointment(self):
+        """Confirmar cita desde menú contextual"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "No hay cita seleccionada")
+                return
+                
+            item = selection[0]
+            values = self.doctor_appointments_tree.item(item, 'values')
+            if not values:
+                messagebox.showwarning("Advertencia", "Error obteniendo datos de la cita")
+                return
+                
+            appointment_id = values[0]
+            
+            # Confirmar acción
+            result = messagebox.askyesno("Confirmar", 
+                                       f"¿Confirmar la cita con {values[2]}?")
+            if result:
+                # Confirmar la cita
+                self.change_appointment_status(appointment_id, 'confirmada')
+                messagebox.showinfo("Éxito", "Cita confirmada exitosamente")
+                # Recargar la lista
+                self.load_filtered_appointments()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error confirmando cita: {str(e)}")
+            
+    def context_start_appointment(self):
+        """Iniciar cita desde menú contextual"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "No hay cita seleccionada")
+                return
+                
+            item = selection[0]
+            values = self.doctor_appointments_tree.item(item, 'values')
+            if not values:
+                messagebox.showwarning("Advertencia", "Error obteniendo datos de la cita")
+                return
+                
+            appointment_id = values[0]
+            
+            # Confirmar acción
+            result = messagebox.askyesno("Confirmar", 
+                                       f"¿Iniciar la cita con {values[2]}?")
+            if result:
+                # Iniciar la cita
+                self.change_appointment_status(appointment_id, 'en_curso')
+                messagebox.showinfo("Éxito", "Cita iniciada exitosamente")
+                # Recargar la lista
+                self.load_filtered_appointments()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error iniciando cita: {str(e)}")
+    
+    def show_appointment_details_window(self, cita_id):
+        """Mostrar ventana emergente con detalles completos de la cita"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Obtener datos completos de la cita
+            query = """
+                SELECT 
+                    c.id, c.fecha_hora, c.motivo, c.estado, c.duracion_minutos,
+                    c.notas, c.tarifa_consulta, c.seguro_aplicable,
+                    u.nombre, u.apellido, u.email, u.telefono,
+                    u.fecha_nacimiento, u.direccion
+                FROM citas c
+                JOIN usuarios u ON c.paciente_id = u.id
+                WHERE c.id = ? AND c.doctor_id = ?
+            """
+            
+            cursor.execute(query, (cita_id, self.current_user.id))
+            cita_data = cursor.fetchone()
+            
+            if not cita_data:
+                messagebox.showerror("Error", "Cita no encontrada")
+                return
+            
+            # Crear ventana de detalles
+            details_window = tk.Toplevel(self.root)
+            details_window.title("Detalles de la Cita Médica")
+            details_window.geometry("600x500")
+            details_window.configure(bg='white')
+            details_window.transient(self.root)
+            details_window.grab_set()
+            
+            # Header de la ventana
+            header_frame = tk.Frame(details_window, bg='#1E3A8A', height=80)
+            header_frame.pack(fill='x')
+            header_frame.pack_propagate(False)
+            
+            header_content = tk.Frame(header_frame, bg='#1E3A8A')
+            header_content.pack(expand=True, fill='both', padx=20, pady=15)
+            
+            tk.Label(header_content, text="📋 DETALLES DE LA CITA MÉDICA", 
+                    font=('Arial', 16, 'bold'), bg='#1E3A8A', fg='white').pack()
+            
+            # Contenido principal
+            main_content = tk.Frame(details_window, bg='white')
+            main_content.pack(fill='both', expand=True, padx=20, pady=20)
+            
+            # Crear notebook para organizar la información
+            notebook = ttk.Notebook(main_content)
+            notebook.pack(fill='both', expand=True)
+            
+            # Pestaña 1: Información del Paciente
+            patient_frame = ttk.Frame(notebook)
+            notebook.add(patient_frame, text="👤 Paciente")
+            
+            # Información del paciente
+            patient_info_frame = tk.Frame(patient_frame, bg='white', padx=20, pady=15)
+            patient_info_frame.pack(fill='both', expand=True)
+            
+            paciente_nombre = f"{cita_data[8]} {cita_data[9]}"
+            
+            # Header del paciente
+            patient_header = tk.Frame(patient_info_frame, bg='#F3F4F6', padx=15, pady=10)
+            patient_header.pack(fill='x', pady=(0, 15))
+            
+            tk.Label(patient_header, text=paciente_nombre, 
+                    font=('Arial', 18, 'bold'), bg='#F3F4F6', fg='#059669').pack()
+            
+            # Datos del paciente
+            patient_data = [
+                ("📧 Email:", cita_data[10] or "No especificado"),
+                ("📞 Teléfono:", cita_data[11] or "No especificado"),
+                ("🎂 Fecha de Nacimiento:", cita_data[12] or "No especificada"),
+                ("🏠 Dirección:", cita_data[13] or "No especificada")
+            ]
+            
+            for label, value in patient_data:
+                info_frame = tk.Frame(patient_info_frame, bg='white')
+                info_frame.pack(fill='x', pady=5)
+                
+                tk.Label(info_frame, text=label, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(side='left')
+                tk.Label(info_frame, text=value, font=('Arial', 11), 
+                        bg='white', fg='#6B7280').pack(side='left', padx=(10, 0))
+            
+            # Pestaña 2: Detalles de la Cita
+            appointment_frame = ttk.Frame(notebook)
+            notebook.add(appointment_frame, text="📅 Cita")
+            
+            # Información de la cita
+            cita_info_frame = tk.Frame(appointment_frame, bg='white', padx=20, pady=15)
+            cita_info_frame.pack(fill='both', expand=True)
+            
+            # Formatear fecha
+            try:
+                dt = datetime.fromisoformat(cita_data[1])
+                fecha_formateada = dt.strftime('%d de %B de %Y a las %H:%M')
+            except:
+                fecha_formateada = cita_data[1]
+            
+            # Determinar tipo de cita
+            motivo = cita_data[2] or "Sin especificar"
+            tipo_cita = "Urgencia" if any(palabra in motivo.lower() for palabra in ['urgencia', 'emergencia']) else \
+                       "Control" if any(palabra in motivo.lower() for palabra in ['control', 'seguimiento']) else \
+                       "Consulta Regular"
+            
+            # Datos de la cita
+            cita_info = [
+                ("🕐 Fecha y Hora:", fecha_formateada),
+                ("🏥 Motivo:", motivo),
+                ("⏱️ Duración:", f"{cita_data[4] or 30} minutos"),
+                ("🔄 Estado:", cita_data[3].capitalize()),
+                ("🚨 Tipo:", tipo_cita),
+                ("💰 Tarifa:", f"RD$ {cita_data[6]:,.2f}" if cita_data[6] else "No definida"),
+                ("🏥 Seguro:", "Sí" if cita_data[7] else "No")
+            ]
+            
+            for label, value in cita_info:
+                info_frame = tk.Frame(cita_info_frame, bg='white')
+                info_frame.pack(fill='x', pady=5)
+                
+                tk.Label(info_frame, text=label, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(side='left')
+                tk.Label(info_frame, text=value, font=('Arial', 11), 
+                        bg='white', fg='#6B7280').pack(side='left', padx=(10, 0))
+            
+            # Pestaña 3: Notas
+            notes_frame = ttk.Frame(notebook)
+            notebook.add(notes_frame, text="📝 Notas")
+            
+            notes_content = tk.Frame(notes_frame, bg='white', padx=20, pady=15)
+            notes_content.pack(fill='both', expand=True)
+            
+            tk.Label(notes_content, text="📝 Notas Médicas:", 
+                    font=('Arial', 12, 'bold'), bg='white', fg='#374151').pack(anchor='w', pady=(0, 10))
+            
+            # Área de texto para notas
+            notes_text = tk.Text(notes_content, height=10, font=('Arial', 10), 
+                               bg='#F9FAFB', wrap='word', relief='solid', bd=1)
+            notes_text.pack(fill='both', expand=True)
+            
+            if cita_data[5]:
+                notes_text.insert('1.0', cita_data[5])
+            else:
+                notes_text.insert('1.0', "No hay notas médicas registradas para esta cita.")
+            
+            notes_text.config(state='disabled')
+            
+            # Botones de acción en la ventana
+            buttons_frame = tk.Frame(details_window, bg='white')
+            buttons_frame.pack(fill='x', padx=20, pady=(0, 20))
+            
+            tk.Button(buttons_frame, text="🖨️ Imprimir", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), padx=20, pady=8,
+                     command=lambda: self.print_appointment_details(cita_data)).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="❌ Cerrar", bg='#EF4444', fg='white',
+                     font=('Arial', 10, 'bold'), padx=20, pady=8,
+                     command=details_window.destroy).pack(side='right', padx=5)
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando detalles: {str(e)}")
+    
+    def print_appointment_details(self, cita_data):
+        """Función placeholder para imprimir detalles"""
+        messagebox.showinfo("Imprimir", "Función de impresión en desarrollo")
+    
     def create_doctor_patients(self, parent):
-        """Lista de pacientes del doctor"""
+        """Gestión moderna de pacientes para doctores con diseño mejorado"""
         main_frame = tk.Frame(parent, bg='#F8FAFC')
         main_frame.pack(fill='both', expand=True, padx=20, pady=20)
         
-        # Header
-        header_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        header_frame.pack(fill='x', pady=(0, 20))
+        # Header principal con diseño moderno
+        header_frame = tk.Frame(main_frame, bg='#059669', height=100, relief='solid', bd=1)
+        header_frame.pack(fill='x', pady=(0, 25))
+        header_frame.pack_propagate(False)
         
-        tk.Label(header_frame, text="Mis Pacientes", 
-                font=('Arial', 16, 'bold'), bg='#F8FAFC').pack(side='left')
+        # Contenido del header
+        header_content = tk.Frame(header_frame, bg='#059669')
+        header_content.pack(expand=True, fill='both', padx=25, pady=15)
         
-        # Búsqueda
-        search_frame = tk.Frame(header_frame, bg='#F8FAFC')
-        search_frame.pack(side='right')
+        # Lado izquierdo - Título e icono
+        left_header = tk.Frame(header_content, bg='#059669')
+        left_header.pack(side='left', fill='both', expand=True)
         
-        tk.Label(search_frame, text="Buscar:", font=('Arial', 10), bg='#F8FAFC').pack(side='left')
-        self.patient_search_entry = tk.Entry(search_frame, font=('Arial', 10), width=20)
+        # Icono de pacientes
+        icon_frame = tk.Frame(left_header, bg='#047857', width=60, height=60)
+        icon_frame.pack(side='left', padx=(0, 15))
+        icon_frame.pack_propagate(False)
+        tk.Label(icon_frame, text="🤒", font=('Arial', 30), bg='#047857', fg='white').pack(expand=True)
+        
+        # Título y descripción
+        title_frame = tk.Frame(left_header, bg='#059669')
+        title_frame.pack(side='left', fill='both', expand=True)
+        
+        tk.Label(title_frame, text="Mis Pacientes", 
+                font=('Arial', 20, 'bold'), bg='#059669', fg='white').pack(anchor='w')
+        tk.Label(title_frame, text="Gestiona la información de tus pacientes", 
+                font=('Arial', 12), bg='#059669', fg='#D1FAE5').pack(anchor='w')
+        
+        # Lado derecho - Estadísticas rápidas
+        right_header = tk.Frame(header_content, bg='#059669')
+        right_header.pack(side='right')
+        
+        try:
+            # Obtener estadísticas de pacientes
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Total de pacientes del doctor
+            cursor.execute("""
+                SELECT COUNT(DISTINCT c.paciente_id) 
+                FROM citas c 
+                WHERE c.doctor_id = ?
+            """, (self.current_user.id,))
+            total_pacientes = cursor.fetchone()[0]
+            
+            # Pacientes atendidos este mes
+            cursor.execute("""
+                SELECT COUNT(DISTINCT c.paciente_id) 
+                FROM citas c 
+                WHERE c.doctor_id = ? AND strftime('%Y-%m', c.fecha_hora) = strftime('%Y-%m', 'now')
+            """, (self.current_user.id,))
+            pacientes_mes = cursor.fetchone()[0]
+            
+            cursor.close()
+            conn.close()
+            
+            # Mostrar estadísticas
+            stats_frame = tk.Frame(right_header, bg='#047857', padx=20, pady=10)
+            stats_frame.pack()
+            
+            tk.Label(stats_frame, text=f"Total: {total_pacientes}", 
+                    font=('Arial', 14, 'bold'), bg='#047857', fg='white').pack()
+            tk.Label(stats_frame, text=f"Este mes: {pacientes_mes}", 
+                    font=('Arial', 12), bg='#047857', fg='#D1FAE5').pack()
+            
+        except Exception as e:
+            tk.Label(right_header, text="Error estadísticas", 
+                    font=('Arial', 10), bg='#059669', fg='#EF4444').pack()
+        
+        # Panel de filtros y búsqueda
+        controls_panel = tk.Frame(main_frame, bg='white', relief='solid', bd=1, height=80)
+        controls_panel.pack(fill='x', pady=(0, 15))
+        controls_panel.pack_propagate(False)
+        
+        controls_content = tk.Frame(controls_panel, bg='white')
+        controls_content.pack(expand=True, fill='both', padx=20, pady=15)
+        
+        # Filtros y búsqueda
+        filters_frame = tk.Frame(controls_content, bg='white')
+        filters_frame.pack(side='left', fill='both', expand=True)
+        
+        tk.Label(filters_frame, text="🔍 Buscar paciente:", font=('Arial', 12, 'bold'), 
+                bg='white', fg='#1F2937').pack(side='left', padx=(0, 10))
+        
+        # Campo de búsqueda
+        self.patient_search_entry = tk.Entry(filters_frame, font=('Arial', 11), width=25,
+                                           relief='solid', bd=1)
         self.patient_search_entry.pack(side='left', padx=5)
         self.patient_search_entry.bind('<KeyRelease>', self.search_patients)
         
-        # Tabla de pacientes
-        columns = ('Nombre', 'Apellido', 'Email', 'Teléfono', 'Última Consulta', 'Estado')
-        self.doctor_patients_tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=15)
+        # Filtro por estado
+        tk.Label(filters_frame, text="Estado:", font=('Arial', 10), 
+                bg='white', fg='#6B7280').pack(side='left', padx=(15, 5))
         
-        # Configurar headers
+        self.patient_status_filter = ttk.Combobox(filters_frame, 
+                                                values=['Todos', 'Activo', 'Inactivo'], 
+                                                state='readonly', width=10, font=('Arial', 10))
+        self.patient_status_filter.set('Todos')
+        self.patient_status_filter.pack(side='left', padx=5)
+        self.patient_status_filter.bind('<<ComboboxSelected>>', self.filter_patients)
+        
+        # Botones de acción rápida
+        actions_frame = tk.Frame(controls_content, bg='white')
+        actions_frame.pack(side='right')
+        
+        quick_actions = [
+            ("🔄 Actualizar", self.refresh_patients, '#3B82F6'),
+            ("📊 Estadísticas", self.show_patient_stats, '#8B5CF6')
+        ]
+        
+        for text, command, color in quick_actions:
+            btn = tk.Button(actions_frame, text=text, bg=color, fg='white',
+                           font=('Arial', 9, 'bold'), relief='flat', 
+                           padx=12, pady=6, cursor='hand2', command=command)
+            btn.pack(side='left', padx=3)
+        
+        # Contenedor principal para la tabla
+        content_container = tk.Frame(main_frame, bg='#F8FAFC')
+        content_container.pack(fill='both', expand=True)
+        
+        # Título del panel
+        list_title_frame = tk.Frame(content_container, bg='white', height=40, relief='solid', bd=1)
+        list_title_frame.pack(fill='x', pady=(0, 5))
+        list_title_frame.pack_propagate(False)
+        
+        tk.Label(list_title_frame, text="📋 Lista de Pacientes - Clic derecho para acciones", 
+                font=('Arial', 14, 'bold'), bg='white', fg='#1F2937').pack(side='left', padx=15, pady=12)
+        
+        # Contenedor de la tabla con diseño moderno
+        table_container = tk.Frame(content_container, bg='white', relief='solid', bd=1)
+        table_container.pack(fill='both', expand=True)
+        
+        # Tabla de pacientes con columnas mejoradas
+        columns = ('ID', 'Nombre', 'Apellido', 'Email', 'Teléfono', 'Última Consulta', 'Estado')
+        self.doctor_patients_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=15)
+        
+        # Configurar headers con mejor diseño
+        column_configs = {
+            'ID': 50,
+            'Nombre': 150,
+            'Apellido': 150,
+            'Email': 200,
+            'Teléfono': 120,
+            'Última Consulta': 150,
+            'Estado': 100
+        }
+        
         for col in columns:
-            self.doctor_patients_tree.heading(col, text=col)
-            self.doctor_patients_tree.column(col, width=120)
+            self.doctor_patients_tree.heading(col, text=col, anchor='center')
+            self.doctor_patients_tree.column(col, width=column_configs.get(col, 100), anchor='center')
         
-        # Scrollbar
-        scrollbar_y = ttk.Scrollbar(main_frame, orient="vertical", command=self.doctor_patients_tree.yview)
-        self.doctor_patients_tree.configure(yscrollcommand=scrollbar_y.set)
+        # Scrollbars con mejor diseño
+        scrollbar_y = ttk.Scrollbar(table_container, orient="vertical", command=self.doctor_patients_tree.yview)
+        scrollbar_x = ttk.Scrollbar(table_container, orient="horizontal", command=self.doctor_patients_tree.xview)
+        self.doctor_patients_tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
         
-        # Pack
-        self.doctor_patients_tree.pack(side='left', fill='both', expand=True)
-        scrollbar_y.pack(side='right', fill='y')
+        # Layout con grid
+        self.doctor_patients_tree.grid(row=0, column=0, sticky='nsew')
+        scrollbar_y.grid(row=0, column=1, sticky='ns')
+        scrollbar_x.grid(row=1, column=0, sticky='ew')
         
-        # Botones de acción
-        actions_frame = tk.Frame(main_frame, bg='#F8FAFC')
-        actions_frame.pack(fill='x', pady=(10, 0))
+        table_container.grid_rowconfigure(0, weight=1)
+        table_container.grid_columnconfigure(0, weight=1)
         
-        tk.Button(actions_frame, text="👤 Ver Perfil", bg='#0B5394', fg='white',
-                 command=self.view_patient_profile).pack(side='left', padx=5)
-        tk.Button(actions_frame, text="📋 Ver Historial", bg='#0B5394', fg='white',
-                 command=self.view_medical_history).pack(side='left', padx=5)
-        tk.Button(actions_frame, text="📅 Nueva Cita", bg='#0B5394', fg='white',
-                 command=self.schedule_appointment).pack(side='left', padx=5)
+        # Panel de acciones para el paciente seleccionado
+        actions_panel = tk.Frame(main_frame, bg='white', relief='solid', bd=1, height=60)
+        actions_panel.pack(fill='x', pady=(15, 0))
+        actions_panel.pack_propagate(False)
         
-        # Cargar datos
+        actions_content = tk.Frame(actions_panel, bg='white')
+        actions_content.pack(expand=True, fill='both', padx=20, pady=10)
+        
+        tk.Label(actions_content, text="⚡ Acciones:", font=('Arial', 12, 'bold'), 
+                bg='white', fg='#1F2937').pack(side='left', padx=(0, 15))
+        
+        # Botones de acción principales
+        action_buttons = [
+            ("👤 Ver Perfil", self.view_patient_profile, '#3B82F6'),
+            ("📋 Ver Historial", self.view_medical_history, '#10B981'),
+            ("📅 Nueva Cita", self.schedule_appointment, '#8B5CF6')
+        ]
+        
+        for text, command, color in action_buttons:
+            btn = tk.Button(actions_content, text=text, bg=color, fg='white',
+                           font=('Arial', 10, 'bold'), relief='flat', 
+                           padx=15, pady=8, cursor='hand2', command=command)
+            btn.pack(side='left', padx=5)
+            
+            # Efecto hover
+            def on_enter(e, btn=btn, original_color=color):
+                btn.configure(bg=self.darken_color(original_color))
+            def on_leave(e, btn=btn, original_color=color):
+                btn.configure(bg=original_color)
+            
+            btn.bind("<Enter>", on_enter)
+            btn.bind("<Leave>", on_leave)
+        
+        # Crear menú contextual para pacientes
+        self.create_patient_context_menu()
+        
+        # Bind para menú contextual
+        self.doctor_patients_tree.bind('<Button-3>', self.show_patient_context_menu)
+        
+        # Cargar datos iniciales
         self.load_doctor_patients()
+    
+    def create_patient_context_menu(self):
+        """Crear menú contextual para pacientes"""
+        self.patient_context_menu = tk.Menu(self.root, tearoff=0)
+        
+        # Opciones del menú
+        self.patient_context_menu.add_command(
+            label="👤 Ver Perfil Completo", 
+            command=self.context_view_patient_profile,
+            font=('Arial', 10)
+        )
+        self.patient_context_menu.add_separator()
+        
+        self.patient_context_menu.add_command(
+            label="📋 Ver Historial Médico", 
+            command=self.context_view_medical_history,
+            font=('Arial', 10)
+        )
+        self.patient_context_menu.add_command(
+            label="📅 Programar Nueva Cita", 
+            command=self.context_schedule_appointment,
+            font=('Arial', 10)
+        )
+    
+    def show_patient_context_menu(self, event):
+        """Mostrar menú contextual en la posición del clic derecho"""
+        try:
+            # Identificar la fila donde se hizo clic derecho
+            item = self.doctor_patients_tree.identify_row(event.y)
+            if not item:
+                return
+            
+            # Forzar la selección de la fila
+            self.doctor_patients_tree.selection_set(item)
+            self.doctor_patients_tree.focus(item)
+            
+            # Mostrar el menú en la posición del cursor
+            self.patient_context_menu.post(event.x_root, event.y_root)
+                    
+        except Exception as e:
+            print(f"Error mostrando menú contextual de pacientes: {e}")
+            messagebox.showerror("Error", f"Error mostrando menú: {str(e)}")
+    
+    def context_view_patient_profile(self):
+        """Ver perfil del paciente desde menú contextual"""
+        try:
+            selection = self.doctor_patients_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "No hay paciente seleccionado")
+                return
+                
+            item = selection[0]
+            values = self.doctor_patients_tree.item(item, 'values')
+            if not values:
+                messagebox.showwarning("Advertencia", "Error obteniendo datos del paciente")
+                return
+                
+            # Llamar al método de ver perfil
+            self.view_patient_profile()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando perfil: {str(e)}")
+    
+    def context_view_medical_history(self):
+        """Ver historial médico desde menú contextual"""
+        try:
+            selection = self.doctor_patients_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "No hay paciente seleccionado")
+                return
+                
+            item = selection[0]
+            values = self.doctor_patients_tree.item(item, 'values')
+            if not values:
+                messagebox.showwarning("Advertencia", "Error obteniendo datos del paciente")
+                return
+                
+            # Llamar al método de ver historial
+            self.view_medical_history()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando historial: {str(e)}")
+    
+    def context_schedule_appointment(self):
+        """Programar cita desde menú contextual"""
+        try:
+            selection = self.doctor_patients_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "No hay paciente seleccionado")
+                return
+                
+            item = selection[0]
+            values = self.doctor_patients_tree.item(item, 'values')
+            if not values:
+                messagebox.showwarning("Advertencia", "Error obteniendo datos del paciente")
+                return
+                
+            # Llamar al método de programar cita
+            self.schedule_appointment()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error programando cita: {str(e)}")
+    
+    def filter_patients(self, event=None):
+        """Filtrar pacientes por estado"""
+        try:
+            self.load_doctor_patients()
+        except Exception as e:
+            print(f"Error filtrando pacientes: {e}")
+    
+    def refresh_patients(self):
+        """Actualizar lista de pacientes"""
+        try:
+            self.load_doctor_patients()
+            messagebox.showinfo("Actualizado", "Lista de pacientes actualizada")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error actualizando pacientes: {str(e)}")
+    
+    def show_patient_stats(self):
+        """Mostrar estadísticas de pacientes"""
+        try:
+            messagebox.showinfo("Estadísticas", "Función de estadísticas en desarrollo")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando estadísticas: {str(e)}")
     
     def create_medical_records(self, parent):
         """Gestión de historiales médicos"""
@@ -17587,69 +18740,346 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
     def daily_report(self):
         messagebox.showinfo("Acción", "Reporte diario - En desarrollo")
     
-    def filter_doctor_appointments(self, event=None):
-        self.load_doctor_appointments()
-    
     def load_doctor_appointments(self):
-        """Cargar citas del doctor"""
+        """Cargar citas del doctor con datos completos"""
         try:
             # Limpiar tabla
             for item in self.doctor_appointments_tree.get_children():
                 self.doctor_appointments_tree.delete(item)
             
-            # Obtener citas según filtro
-            filter_value = self.appointment_filter.get()
-            doctor_id = self.current_user.id
-            
             conn = self.db_manager.get_connection()
             cursor = conn.cursor()
             
-            # Construir query según filtro
-            today = datetime.now().strftime('%Y-%m-%d')
-            where_clause = "WHERE c.doctor_id = ?"
-            params = [doctor_id]
-            
-            if filter_value == 'Hoy':
-                where_clause += " AND DATE(c.fecha_hora) = ?"
-                params.append(today)
-            elif filter_value == 'Esta Semana':
-                start_week = datetime.now() - timedelta(days=datetime.now().weekday())
-                end_week = start_week + timedelta(days=6)
-                where_clause += " AND DATE(c.fecha_hora) BETWEEN ? AND ?"
-                params.extend([start_week.strftime('%Y-%m-%d'), end_week.strftime('%Y-%m-%d')])
-            elif filter_value == 'Este Mes':
-                current_month = datetime.now().strftime('%Y-%m')
-                where_clause += " AND strftime('%Y-%m', c.fecha_hora) = ?"
-                params.append(current_month)
-            
-            cursor.execute(f"""
-                SELECT c.fecha_hora, u.nombre || ' ' || u.apellido as paciente_nombre,
-                       c.motivo, c.estado, c.duracion_minutos
+            # Query mejorada con más información
+            query = """
+                SELECT 
+                    c.id,
+                    c.fecha_hora,
+                    u.nombre || ' ' || u.apellido as paciente_nombre,
+                    c.motivo,
+                    c.estado,
+                    c.duracion_minutos,
+                    CASE 
+                        WHEN c.motivo LIKE '%urgencia%' OR c.motivo LIKE '%emergencia%' THEN 'Urgencia'
+                        WHEN c.motivo LIKE '%control%' OR c.motivo LIKE '%seguimiento%' THEN 'Control'
+                        ELSE 'Consulta'
+                    END as tipo_cita,
+                    c.notas
                 FROM citas c
                 JOIN usuarios u ON c.paciente_id = u.id
-                {where_clause}
+                WHERE c.doctor_id = ?
                 ORDER BY c.fecha_hora DESC
-            """, params)
+            """
             
-            for row in cursor.fetchall():
-                # Formatear fecha/hora
-                fecha_hora = row[0]
+            cursor.execute(query, (self.current_user.id,))
+            appointments = cursor.fetchall()
+            
+            for apt in appointments:
+                # Formatear fecha y hora
                 try:
-                    dt = datetime.fromisoformat(fecha_hora)
-                    fecha_hora_formatted = dt.strftime('%d/%m/%Y %H:%M')
+                    dt = datetime.fromisoformat(apt[1])
+                    fecha_formateada = dt.strftime('%d/%m/%Y %H:%M')
                 except:
-                    fecha_hora_formatted = fecha_hora
+                    fecha_formateada = apt[1]
+                
+                # Formatear duración
+                duracion = f"{apt[5] or 30} min"
+                
+                # Color según estado
+                estado = apt[4].capitalize()
                 
                 self.doctor_appointments_tree.insert('', 'end', values=(
-                    fecha_hora_formatted, row[1], row[2], row[3], 
-                    f"{row[4]} min" if row[4] else 'N/A', 'Ver'
+                    apt[0],  # ID
+                    fecha_formateada,  # Fecha/Hora
+                    apt[2],  # Paciente
+                    apt[3] or 'Sin especificar',  # Motivo
+                    estado,  # Estado
+                    duracion,  # Duración
+                    apt[6] or 'Consulta'  # Tipo
                 ))
             
             cursor.close()
             conn.close()
             
+            # Los filtros se aplicarán cuando el usuario los use
+            
         except Exception as e:
             messagebox.showerror("Error", f"Error cargando citas: {str(e)}")
+    
+    def filter_doctor_appointments(self, event=None):
+        """Filtrar citas según criterios seleccionados"""
+        self.load_filtered_appointments()
+    
+    def apply_appointment_filters(self):
+        """Aplicar filtros a las citas mostradas"""
+        try:
+            # Obtener valores de filtros
+            period_filter = self.appointment_filter.get()
+            status_filter = self.status_filter.get() if hasattr(self, 'status_filter') else 'Todos'
+            patient_search = self.patient_search.get().lower() if hasattr(self, 'patient_search') else ''
+            
+            # Obtener todas las citas de la tabla
+            all_items = self.doctor_appointments_tree.get_children()
+            
+            for item in all_items:
+                values = self.doctor_appointments_tree.item(item, 'values')
+                if not values:
+                    continue
+                
+                show_item = True
+                
+                # Filtro por período
+                if period_filter != 'Todas':
+                    fecha_str = values[1]  # Fecha/Hora
+                    try:
+                        fecha_cita = datetime.strptime(fecha_str.split(' ')[0], '%d/%m/%Y')
+                        hoy = datetime.now()
+                        
+                        if period_filter == 'Hoy':
+                            show_item = fecha_cita.date() == hoy.date()
+                        elif period_filter == 'Mañana':
+                            manana = hoy + timedelta(days=1)
+                            show_item = fecha_cita.date() == manana.date()
+                        elif period_filter == 'Esta Semana':
+                            inicio_semana = hoy - timedelta(days=hoy.weekday())
+                            fin_semana = inicio_semana + timedelta(days=6)
+                            show_item = inicio_semana.date() <= fecha_cita.date() <= fin_semana.date()
+                        elif period_filter == 'Este Mes':
+                            show_item = (fecha_cita.year == hoy.year and 
+                                       fecha_cita.month == hoy.month)
+                    except:
+                        show_item = True
+                
+                # Filtro por estado
+                if show_item and status_filter != 'Todos':
+                    estado_cita = values[4].lower()  # Estado
+                    show_item = estado_cita == status_filter.lower()
+                
+                # Filtro por paciente
+                if show_item and patient_search:
+                    paciente_nombre = values[2].lower()  # Paciente
+                    show_item = patient_search in paciente_nombre
+                
+                # Mostrar u ocultar item
+                if show_item:
+                    self.doctor_appointments_tree.reattach(item, '', 'end')
+                else:
+                    self.doctor_appointments_tree.detach(item)
+                    
+        except Exception as e:
+            print(f"Error aplicando filtros: {e}")
+    
+    def search_appointments_by_patient(self, event=None):
+        """Buscar citas por nombre de paciente"""
+        self.apply_appointment_filters()
+    
+    def on_appointment_select(self, event):
+        """Manejar selección de cita - Panel eliminado, solo doble clic"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if selection:
+                # Panel de detalles eliminado - usar doble clic para ver detalles
+                print("Cita seleccionada - Doble clic para ver detalles")
+        except Exception as e:
+            print(f"Error en selección: {e}")
+    
+    def show_appointment_details(self, cita_id):
+        """Mostrar detalles completos de una cita"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Obtener datos completos de la cita
+            query = """
+                SELECT 
+                    c.id, c.fecha_hora, c.motivo, c.estado, c.duracion_minutos,
+                    c.notas, c.tarifa_consulta, c.seguro_aplicable,
+                    u.nombre, u.apellido, u.email, u.telefono,
+                    u.fecha_nacimiento, u.direccion
+                FROM citas c
+                JOIN usuarios u ON c.paciente_id = u.id
+                WHERE c.id = ? AND c.doctor_id = ?
+            """
+            
+            cursor.execute(query, (cita_id, self.current_user.id))
+            cita_data = cursor.fetchone()
+            
+            if not cita_data:
+                tk.Label(self.appointment_details_frame, text="Cita no encontrada", 
+                        bg='white', fg='red').pack(pady=20)
+                return
+            
+            # Crear contenido de detalles
+            details_content = tk.Frame(self.appointment_details_frame, bg='white')
+            details_content.pack(fill='both', expand=True, padx=15, pady=15)
+            
+            # Header del paciente
+            patient_header = tk.Frame(details_content, bg='#F3F4F6', padx=10, pady=10)
+            patient_header.pack(fill='x', pady=(0, 15))
+            
+            tk.Label(patient_header, text="👤 Información del Paciente", 
+                    font=('Arial', 12, 'bold'), bg='#F3F4F6', fg='#1F2937').pack(anchor='w')
+            
+            paciente_nombre = f"{cita_data[8]} {cita_data[9]}"
+            tk.Label(patient_header, text=paciente_nombre, 
+                    font=('Arial', 14, 'bold'), bg='#F3F4F6', fg='#059669').pack(anchor='w')
+            
+            # Información de contacto
+            contact_info = [
+                f"📧 {cita_data[10]}" if cita_data[10] else "",
+                f"📞 {cita_data[11]}" if cita_data[11] else "",
+            ]
+            
+            for info in contact_info:
+                if info:
+                    tk.Label(patient_header, text=info, font=('Arial', 9), 
+                            bg='#F3F4F6', fg='#6B7280').pack(anchor='w')
+            
+            # Detalles de la cita
+            cita_details = tk.Frame(details_content, bg='white')
+            cita_details.pack(fill='x', pady=10)
+            
+            tk.Label(cita_details, text="📅 Detalles de la Cita", 
+                    font=('Arial', 12, 'bold'), bg='white', fg='#1F2937').pack(anchor='w', pady=(0, 10))
+            
+            # Formatear fecha
+            try:
+                dt = datetime.fromisoformat(cita_data[1])
+                fecha_formateada = dt.strftime('%d de %B de %Y a las %H:%M')
+            except:
+                fecha_formateada = cita_data[1]
+            
+            # Información de la cita
+            motivo = cita_data[2] or "Sin especificar"
+            tipo_cita = "Urgencia" if any(palabra in motivo.lower() for palabra in ['urgencia', 'emergencia']) else \
+                       "Control" if any(palabra in motivo.lower() for palabra in ['control', 'seguimiento']) else \
+                       "Consulta Regular"
+            
+            cita_info = [
+                ("🕐 Fecha y Hora:", fecha_formateada),
+                ("🏥 Motivo:", motivo),
+                ("⏱️ Duración:", f"{cita_data[4] or 30} minutos"),
+                ("🔄 Estado:", cita_data[3].capitalize()),
+                ("🚨 Tipo:", tipo_cita),
+                ("💰 Tarifa:", f"RD$ {cita_data[6]:,.2f}" if cita_data[6] else "No definida"),
+                ("🏥 Seguro:", "Sí" if cita_data[7] else "No")
+            ]
+            
+            for label, value in cita_info:
+                info_frame = tk.Frame(cita_details, bg='white')
+                info_frame.pack(fill='x', pady=2)
+                
+                tk.Label(info_frame, text=label, font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151').pack(side='left')
+                tk.Label(info_frame, text=value, font=('Arial', 10), 
+                        bg='white', fg='#6B7280').pack(side='left', padx=(10, 0))
+            
+            # Notas de la cita
+            if cita_data[5]:
+                notes_frame = tk.Frame(details_content, bg='#FFFBEB', padx=10, pady=10)
+                notes_frame.pack(fill='x', pady=(15, 0))
+                
+                tk.Label(notes_frame, text="📝 Notas:", 
+                        font=('Arial', 11, 'bold'), bg='#FFFBEB', fg='#92400E').pack(anchor='w')
+                
+                notes_text = tk.Text(notes_frame, height=4, font=('Arial', 9), 
+                                   bg='#FFFBEB', fg='#78350F', wrap='word', bd=0)
+                notes_text.pack(fill='x', pady=(5, 0))
+                notes_text.insert('1.0', cita_data[5])
+                notes_text.config(state='disabled')
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            tk.Label(self.appointment_details_frame, text=f"Error: {str(e)}", 
+                    bg='white', fg='red').pack(pady=20)
+    
+    def refresh_appointments(self):
+        """Actualizar lista de citas"""
+        self.load_doctor_appointments()
+        messagebox.showinfo("Actualizado", "Lista de citas actualizada correctamente")
+    
+    def schedule_new_appointment(self):
+        """Programar nueva cita - placeholder"""
+        messagebox.showinfo("Función", "Función de nueva cita - implementar según necesidades")
+    
+    def show_appointment_stats(self):
+        """Mostrar estadísticas de citas"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Estadísticas básicas
+            stats_queries = {
+                'total': "SELECT COUNT(*) FROM citas WHERE doctor_id = ?",
+                'programadas': "SELECT COUNT(*) FROM citas WHERE doctor_id = ? AND estado = 'programada'",
+                'completadas': "SELECT COUNT(*) FROM citas WHERE doctor_id = ? AND estado = 'completada'",
+                'canceladas': "SELECT COUNT(*) FROM citas WHERE doctor_id = ? AND estado = 'cancelada'",
+                'hoy': "SELECT COUNT(*) FROM citas WHERE doctor_id = ? AND DATE(fecha_hora) = DATE('now')",
+                'semana': "SELECT COUNT(*) FROM citas WHERE doctor_id = ? AND DATE(fecha_hora) BETWEEN DATE('now', 'weekday 0', '-7 days') AND DATE('now', 'weekday 0')"
+            }
+            
+            stats = {}
+            for key, query in stats_queries.items():
+                cursor.execute(query, (self.current_user.id,))
+                stats[key] = cursor.fetchone()[0]
+            
+            cursor.close()
+            conn.close()
+            
+            # Mostrar estadísticas en ventana
+            stats_window = tk.Toplevel(self.root)
+            stats_window.title("Estadísticas de Citas")
+            stats_window.geometry("400x300")
+            stats_window.configure(bg='white')
+            
+            # Título
+            tk.Label(stats_window, text="📊 Estadísticas de Citas", 
+                    font=('Arial', 16, 'bold'), bg='white', fg='#1F2937').pack(pady=20)
+            
+            # Estadísticas
+            stats_frame = tk.Frame(stats_window, bg='white')
+            stats_frame.pack(fill='both', expand=True, padx=30)
+            
+            stats_labels = [
+                ("Total de Citas:", stats['total'], '#3B82F6'),
+                ("Programadas:", stats['programadas'], '#10B981'),
+                ("Completadas:", stats['completadas'], '#059669'),
+                ("Canceladas:", stats['canceladas'], '#EF4444'),
+                ("Citas Hoy:", stats['hoy'], '#F59E0B'),
+                ("Esta Semana:", stats['semana'], '#8B5CF6')
+            ]
+            
+            for label, value, color in stats_labels:
+                stat_frame = tk.Frame(stats_frame, bg='white')
+                stat_frame.pack(fill='x', pady=5)
+                
+                tk.Label(stat_frame, text=label, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(side='left')
+                tk.Label(stat_frame, text=str(value), font=('Arial', 11, 'bold'), 
+                        bg='white', fg=color).pack(side='right')
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error obteniendo estadísticas: {str(e)}")
+    
+    def edit_appointment(self):
+        """Editar cita seleccionada"""
+        selection = self.doctor_appointments_tree.selection()
+        if not selection:
+            messagebox.showwarning("Selección", "Por favor selecciona una cita para editar")
+            return
+        
+        messagebox.showinfo("Función", "Función de editar cita - implementar según necesidades")
+    
+    def print_appointment(self):
+        """Imprimir detalles de la cita"""
+        selection = self.doctor_appointments_tree.selection()
+        if not selection:
+            messagebox.showwarning("Selección", "Por favor selecciona una cita para imprimir")
+            return
+        
+        messagebox.showinfo("Función", "Función de imprimir cita - implementar según necesidades")
     
     def load_doctor_patients(self):
         """Cargar pacientes del doctor"""
@@ -17722,19 +19152,1681 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
         except Exception as e:
             messagebox.showerror("Error", f"Error cargando pacientes: {str(e)}")
     
-    # Más funciones placeholder para completar la funcionalidad
-    def add_appointment_notes(self): 
-        messagebox.showinfo("Acción", "Agregar notas - En desarrollo")
-    def search_patients(self, event=None): 
-        messagebox.showinfo("Acción", "Buscar pacientes - En desarrollo")
-    def view_patient_profile(self): 
-        messagebox.showinfo("Acción", "Ver perfil de paciente - En desarrollo")
-    def view_medical_history(self): 
-        messagebox.showinfo("Acción", "Ver historial médico - En desarrollo")
-    def schedule_appointment(self): 
-        messagebox.showinfo("Acción", "Programar cita - En desarrollo")
-    def load_patient_medical_records(self, event=None): 
-        messagebox.showinfo("Acción", "Cargar historiales médicos - En desarrollo")
+    # ==================== FUNCIONES ESPECÍFICAS PARA DOCTORES ====================
+    
+    def view_appointment_details(self):
+        """Ver detalles de la cita seleccionada"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Seleccione una cita para ver los detalles")
+                return
+            
+            # Obtener los valores de la fila seleccionada
+            item = self.doctor_appointments_tree.item(selection[0])
+            fecha_hora = item['values'][0]
+            paciente_nombre = item['values'][1]
+            motivo = item['values'][2]
+            estado = item['values'][3]
+            
+            # Crear ventana de detalles
+            details_window = tk.Toplevel(self.root)
+            details_window.title("Detalles de la Cita")
+            details_window.geometry("500x400")
+            details_window.configure(bg='#F8FAFC')
+            details_window.resizable(False, False)
+            
+            # Centrar ventana
+            details_window.transient(self.root)
+            details_window.grab_set()
+            
+            # Frame principal
+            main_frame = tk.Frame(details_window, bg='#F8FAFC', padx=20, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            title_label = tk.Label(main_frame, text="📋 Detalles de la Cita", 
+                                 font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
+            title_label.pack(pady=(0, 20))
+            
+            # Información de la cita
+            info_frame = tk.LabelFrame(main_frame, text="Información", font=('Arial', 12, 'bold'), 
+                                     bg='white', padx=15, pady=15)
+            info_frame.pack(fill='x', pady=(0, 20))
+            
+            info_data = [
+                ("📅 Fecha/Hora:", fecha_hora),
+                ("👤 Paciente:", paciente_nombre),
+                ("📋 Motivo:", motivo),
+                ("📊 Estado:", estado)
+            ]
+            
+            for label, value in info_data:
+                field_frame = tk.Frame(info_frame, bg='white')
+                field_frame.pack(fill='x', pady=5)
+                
+                tk.Label(field_frame, text=label, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(side='left')
+                tk.Label(field_frame, text=value, font=('Arial', 11), 
+                        bg='white', fg='#1F2937').pack(side='left', padx=(10, 0))
+            
+            # Botones de acción
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=10)
+            
+            if estado == 'programada':
+                tk.Button(buttons_frame, text="✅ Marcar Completada", bg='#059669', fg='white',
+                         font=('Arial', 10, 'bold'), padx=15, pady=8,
+                         command=lambda: self.complete_appointment_from_details(details_window)).pack(side='left', padx=5)
+                
+                tk.Button(buttons_frame, text="❌ Cancelar", bg='#DC2626', fg='white',
+                         font=('Arial', 10, 'bold'), padx=15, pady=8,
+                         command=lambda: self.cancel_appointment_from_details(details_window)).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="📝 Agregar Notas", bg='#0B5394', fg='white',
+                     font=('Arial', 10, 'bold'), padx=15, pady=8,
+                     command=lambda: self.add_appointment_notes_from_details(details_window)).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cerrar", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), padx=15, pady=8,
+                     command=details_window.destroy).pack(side='right', padx=5)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando detalles: {str(e)}")
+    
+    def complete_appointment(self):
+        """Marcar cita como completada"""
+        try:
+            appointment_id = self.get_appointment_id_from_selection()
+            if not appointment_id:
+                messagebox.showwarning("Advertencia", "Seleccione una cita para completar")
+                return
+            
+            # Obtener información de la cita
+            selection = self.doctor_appointments_tree.selection()
+            item = self.doctor_appointments_tree.item(selection[0])
+            paciente_nombre = item['values'][1]
+            estado = item['values'][3]
+            
+            if estado != 'programada':
+                messagebox.showwarning("Advertencia", "Solo se pueden completar citas programadas")
+                return
+            
+            # Confirmar acción
+            response = messagebox.askyesno("Confirmar", 
+                                         f"¿Confirma que la cita con {paciente_nombre} fue completada?")
+            
+            if response:
+                # Actualizar en base de datos
+                if self.update_appointment_status_db(appointment_id, 'completada'):
+                    messagebox.showinfo("Éxito", "Cita marcada como completada")
+                    self.load_doctor_appointments()  # Recargar datos
+                else:
+                    messagebox.showerror("Error", "No se pudo actualizar la cita")
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error completando cita: {str(e)}")
+    
+    def cancel_appointment(self):
+        """Cancelar cita seleccionada"""
+        try:
+            appointment_id = self.get_appointment_id_from_selection()
+            if not appointment_id:
+                messagebox.showwarning("Advertencia", "Seleccione una cita para cancelar")
+                return
+            
+            # Obtener información de la cita
+            selection = self.doctor_appointments_tree.selection()
+            item = self.doctor_appointments_tree.item(selection[0])
+            paciente_nombre = item['values'][1]
+            estado = item['values'][3]
+            
+            if estado == 'cancelada':
+                messagebox.showwarning("Advertencia", "La cita ya está cancelada")
+                return
+            
+            # Ventana para motivo de cancelación
+            cancel_window = tk.Toplevel(self.root)
+            cancel_window.title("Cancelar Cita")
+            cancel_window.geometry("400x250")
+            cancel_window.configure(bg='#F8FAFC')
+            cancel_window.resizable(False, False)
+            cancel_window.transient(self.root)
+            cancel_window.grab_set()
+            
+            # Frame principal
+            main_frame = tk.Frame(cancel_window, bg='#F8FAFC', padx=20, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            tk.Label(main_frame, text=f"Cancelar cita con {paciente_nombre}", 
+                    font=('Arial', 14, 'bold'), bg='#F8FAFC', fg='#DC2626').pack(pady=(0, 15))
+            
+            # Motivo
+            tk.Label(main_frame, text="Motivo de cancelación:", 
+                    font=('Arial', 11, 'bold'), bg='#F8FAFC').pack(anchor='w')
+            
+            reason_var = tk.StringVar()
+            reason_combo = ttk.Combobox(main_frame, textvariable=reason_var, width=35,
+                                       values=['Emergencia médica', 'Enfermedad del paciente', 
+                                             'Problema personal', 'Cambio de horario', 'Otro'])
+            reason_combo.pack(pady=5, fill='x')
+            
+            # Notas adicionales
+            tk.Label(main_frame, text="Notas adicionales:", 
+                    font=('Arial', 11, 'bold'), bg='#F8FAFC').pack(anchor='w', pady=(10, 0))
+            
+            notes_text = tk.Text(main_frame, height=4, width=40, font=('Arial', 10))
+            notes_text.pack(pady=5, fill='x')
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=15)
+            
+            def confirm_cancel():
+                if not reason_var.get():
+                    messagebox.showwarning("Advertencia", "Debe especificar un motivo")
+                    return
+                
+                cancel_notes = f"Motivo: {reason_var.get()}\nNotas: {notes_text.get('1.0', tk.END).strip()}"
+                
+                # Actualizar en base de datos
+                if self.update_appointment_status_db(appointment_id, 'cancelada', cancel_notes):
+                    messagebox.showinfo("Éxito", "Cita cancelada correctamente")
+                    cancel_window.destroy()
+                    self.load_doctor_appointments()
+                else:
+                    messagebox.showerror("Error", "No se pudo cancelar la cita")
+            
+            tk.Button(buttons_frame, text="Cancelar Cita", bg='#DC2626', fg='white',
+                     font=('Arial', 10, 'bold'), command=confirm_cancel).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cerrar", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), command=cancel_window.destroy).pack(side='right', padx=5)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error cancelando cita: {str(e)}")
+    
+    def add_appointment_notes(self):
+        """Agregar notas a la cita seleccionada"""
+        try:
+            appointment_id = self.get_appointment_id_from_selection()
+            if not appointment_id:
+                messagebox.showwarning("Advertencia", "Seleccione una cita para agregar notas")
+                return
+            
+            # Obtener información de la cita
+            selection = self.doctor_appointments_tree.selection()
+            item = self.doctor_appointments_tree.item(selection[0])
+            paciente_nombre = item['values'][1]
+            fecha_hora = item['values'][0]
+            
+            # Ventana para notas
+            notes_window = tk.Toplevel(self.root)
+            notes_window.title("Agregar Notas")
+            notes_window.geometry("500x400")
+            notes_window.configure(bg='#F8FAFC')
+            notes_window.resizable(True, True)
+            notes_window.transient(self.root)
+            notes_window.grab_set()
+            
+            # Frame principal
+            main_frame = tk.Frame(notes_window, bg='#F8FAFC', padx=20, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            tk.Label(main_frame, text=f"📝 Notas - {paciente_nombre}", 
+                    font=('Arial', 14, 'bold'), bg='#F8FAFC', fg='#1E3A8A').pack(pady=(0, 10))
+            
+            tk.Label(main_frame, text=f"Cita: {fecha_hora}", 
+                    font=('Arial', 10), bg='#F8FAFC', fg='#6B7280').pack(pady=(0, 15))
+            
+            # Área de notas
+            tk.Label(main_frame, text="Notas de la consulta:", 
+                    font=('Arial', 11, 'bold'), bg='#F8FAFC').pack(anchor='w')
+            
+            notes_text = tk.Text(main_frame, height=15, width=60, font=('Arial', 10),
+                                wrap=tk.WORD, padx=10, pady=10)
+            notes_text.pack(pady=5, fill='both', expand=True)
+            
+            # Scrollbar
+            scrollbar = ttk.Scrollbar(notes_text, orient="vertical", command=notes_text.yview)
+            notes_text.configure(yscrollcommand=scrollbar.set)
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=15)
+            
+            def save_notes():
+                notes_content = notes_text.get("1.0", tk.END).strip()
+                if notes_content:
+                    # Guardar notas en base de datos
+                    if self.save_appointment_notes_db(appointment_id, notes_content):
+                        messagebox.showinfo("Éxito", "Notas guardadas correctamente")
+                        notes_window.destroy()
+                    else:
+                        messagebox.showerror("Error", "No se pudieron guardar las notas")
+                else:
+                    messagebox.showwarning("Advertencia", "Debe escribir alguna nota")
+            
+            tk.Button(buttons_frame, text="💾 Guardar Notas", bg='#059669', fg='white',
+                     font=('Arial', 10, 'bold'), command=save_notes).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cerrar", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), command=notes_window.destroy).pack(side='right', padx=5)
+            
+            # Enfocar en el área de texto
+            notes_text.focus_set()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error agregando notas: {str(e)}")
+    
+    def search_patients(self, event=None):
+        """Buscar pacientes del doctor"""
+        try:
+            search_term = self.patient_search_entry.get().lower()
+            
+            # Limpiar tabla
+            for item in self.doctor_patients_tree.get_children():
+                self.doctor_patients_tree.delete(item)
+            
+            if not search_term:
+                self.load_doctor_patients()
+                return
+            
+            doctor_id = self.current_user.id
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT DISTINCT u.nombre, u.apellido, u.email, u.telefono,
+                       MAX(c.fecha_hora) as ultima_consulta,
+                       CASE WHEN u.activo THEN 'Activo' ELSE 'Inactivo' END as estado
+                FROM usuarios u
+                JOIN citas c ON u.id = c.paciente_id
+                WHERE c.doctor_id = ? AND u.tipo_usuario = 'paciente'
+                  AND (LOWER(u.nombre) LIKE ? OR LOWER(u.apellido) LIKE ? OR LOWER(u.email) LIKE ?)
+                GROUP BY u.id, u.nombre, u.apellido, u.email, u.telefono, u.activo
+                ORDER BY MAX(c.fecha_hora) DESC
+            """, (doctor_id, f'%{search_term}%', f'%{search_term}%', f'%{search_term}%'))
+            
+            for row in cursor.fetchall():
+                # Formatear última consulta
+                ultima_consulta = row[4]
+                if ultima_consulta:
+                    try:
+                        dt = datetime.fromisoformat(ultima_consulta)
+                        ultima_consulta_formatted = dt.strftime('%d/%m/%Y')
+                    except:
+                        ultima_consulta_formatted = ultima_consulta
+                else:
+                    ultima_consulta_formatted = 'Nunca'
+                
+                self.doctor_patients_tree.insert('', 'end', values=(
+                    row[0], row[1], row[2], row[3], ultima_consulta_formatted, row[5]
+                ))
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error buscando pacientes: {str(e)}")
+    
+    def view_patient_profile(self):
+        """Ver perfil completo del paciente seleccionado"""
+        try:
+            selection = self.doctor_patients_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Seleccione un paciente para ver su perfil")
+                return
+            
+            # Obtener información del paciente
+            item = self.doctor_patients_tree.item(selection[0])
+            nombre = item['values'][0]
+            apellido = item['values'][1]
+            email = item['values'][2]
+            
+            # Buscar ID del paciente
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT u.*, p.numero_expediente, p.contacto_emergencia, p.telefono_emergencia,
+                       p.fecha_nacimiento, p.direccion, s.nombre as seguro_nombre
+                FROM usuarios u
+                LEFT JOIN pacientes p ON u.id = p.id
+                LEFT JOIN seguros_medicos s ON p.seguro_medico_id = s.id
+                WHERE u.nombre = ? AND u.apellido = ? AND u.email = ?
+            """, (nombre, apellido, email))
+            
+            patient_data = cursor.fetchone()
+            
+            if not patient_data:
+                messagebox.showerror("Error", "No se encontró información del paciente")
+                return
+            
+            # Crear ventana de perfil
+            profile_window = tk.Toplevel(self.root)
+            profile_window.title(f"Perfil - {nombre} {apellido}")
+            profile_window.geometry("600x500")
+            profile_window.configure(bg='#F8FAFC')
+            profile_window.resizable(True, True)
+            
+            # Frame principal con scroll
+            canvas = tk.Canvas(profile_window, bg='#F8FAFC')
+            scrollbar = ttk.Scrollbar(profile_window, orient="vertical", command=canvas.yview)
+            scrollable_frame = tk.Frame(canvas, bg='#F8FAFC')
+            
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+            
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            # Layout
+            canvas.pack(side="left", fill="both", expand=True, padx=20, pady=20)
+            scrollbar.pack(side="right", fill="y")
+            
+            # Contenido del perfil
+            # Header
+            header_frame = tk.Frame(scrollable_frame, bg='#1E3A8A', height=80)
+            header_frame.pack(fill='x', pady=(0, 20))
+            header_frame.pack_propagate(False)
+            
+            tk.Label(header_frame, text="👤", font=('Arial', 30), bg='#1E3A8A', fg='white').pack(side='left', padx=20, pady=20)
+            
+            info_frame = tk.Frame(header_frame, bg='#1E3A8A')
+            info_frame.pack(side='left', fill='both', expand=True, pady=20)
+            
+            tk.Label(info_frame, text=f"{nombre} {apellido}", 
+                    font=('Arial', 16, 'bold'), bg='#1E3A8A', fg='white').pack(anchor='w')
+            tk.Label(info_frame, text=f"Expediente: {patient_data[7] if len(patient_data) > 7 else 'N/A'}", 
+                    font=('Arial', 10), bg='#1E3A8A', fg='#CBD5E1').pack(anchor='w')
+            
+            # Información personal
+            personal_frame = tk.LabelFrame(scrollable_frame, text="📋 Información Personal", 
+                                         font=('Arial', 12, 'bold'), bg='white', padx=15, pady=15)
+            personal_frame.pack(fill='x', pady=(0, 15))
+            
+            personal_data = [
+                ("Email:", patient_data[3]),
+                ("Teléfono:", patient_data[4]),
+                ("Fecha de Nacimiento:", patient_data[10] if len(patient_data) > 10 else 'N/A'),
+                ("Dirección:", patient_data[11] if len(patient_data) > 11 else 'N/A')
+            ]
+            
+            for label, value in personal_data:
+                field_frame = tk.Frame(personal_frame, bg='white')
+                field_frame.pack(fill='x', pady=3)
+                
+                tk.Label(field_frame, text=label, font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151', width=20, anchor='w').pack(side='left')
+                tk.Label(field_frame, text=value or 'N/A', font=('Arial', 10), 
+                        bg='white', fg='#1F2937').pack(side='left', padx=(10, 0))
+            
+            # Contacto de emergencia
+            emergency_frame = tk.LabelFrame(scrollable_frame, text="🚨 Contacto de Emergencia", 
+                                          font=('Arial', 12, 'bold'), bg='white', padx=15, pady=15)
+            emergency_frame.pack(fill='x', pady=(0, 15))
+            
+            emergency_data = [
+                ("Contacto:", patient_data[8] if len(patient_data) > 8 else 'N/A'),
+                ("Teléfono:", patient_data[9] if len(patient_data) > 9 else 'N/A')
+            ]
+            
+            for label, value in emergency_data:
+                field_frame = tk.Frame(emergency_frame, bg='white')
+                field_frame.pack(fill='x', pady=3)
+                
+                tk.Label(field_frame, text=label, font=('Arial', 10, 'bold'), 
+                        bg='white', fg='#374151', width=20, anchor='w').pack(side='left')
+                tk.Label(field_frame, text=value or 'N/A', font=('Arial', 10), 
+                        bg='white', fg='#1F2937').pack(side='left', padx=(10, 0))
+            
+            # Seguro médico
+            insurance_frame = tk.LabelFrame(scrollable_frame, text="🏥 Seguro Médico", 
+                                          font=('Arial', 12, 'bold'), bg='white', padx=15, pady=15)
+            insurance_frame.pack(fill='x', pady=(0, 15))
+            
+            seguro_nombre = patient_data[12] if len(patient_data) > 12 and patient_data[12] else 'Sin seguro'
+            tk.Label(insurance_frame, text=f"Seguro: {seguro_nombre}", 
+                    font=('Arial', 11), bg='white').pack(anchor='w')
+            
+            # Botones
+            buttons_frame = tk.Frame(scrollable_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=15)
+            
+            tk.Button(buttons_frame, text="📋 Ver Historial", bg='#0B5394', fg='white',
+                     font=('Arial', 10, 'bold'), command=lambda: self.view_patient_medical_history(patient_data[0])).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="📅 Nueva Cita", bg='#059669', fg='white',
+                     font=('Arial', 10, 'bold'), command=lambda: self.schedule_appointment_for_patient(patient_data[0])).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cerrar", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), command=profile_window.destroy).pack(side='right', padx=5)
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando perfil: {str(e)}")
+    
+    def view_medical_history(self):
+        """Ver historial médico del paciente seleccionado"""
+        try:
+            selection = self.doctor_patients_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Seleccione un paciente para ver su historial")
+                return
+            
+            # Obtener información del paciente
+            item = self.doctor_patients_tree.item(selection[0])
+            nombre = item['values'][0]
+            apellido = item['values'][1]
+            email = item['values'][2]
+            
+            # Buscar ID del paciente
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT id FROM usuarios WHERE nombre = ? AND apellido = ? AND email = ?", 
+                         (nombre, apellido, email))
+            patient_result = cursor.fetchone()
+            
+            if not patient_result:
+                messagebox.showerror("Error", "No se encontró el paciente")
+                return
+            
+            patient_id = patient_result[0]
+            
+            # Obtener historial médico
+            cursor.execute("""
+                SELECT fecha_consulta, diagnostico, tratamiento, notas, medicamentos
+                FROM historiales_medicos 
+                WHERE paciente_id = ? 
+                ORDER BY fecha_consulta DESC
+            """, (patient_id,))
+            
+            medical_records = cursor.fetchall()
+            
+            # Crear ventana de historial
+            history_window = tk.Toplevel(self.root)
+            history_window.title(f"Historial Médico - {nombre} {apellido}")
+            history_window.geometry("800x600")
+            history_window.configure(bg='#F8FAFC')
+            history_window.resizable(True, True)
+            
+            # Frame principal
+            main_frame = tk.Frame(history_window, bg='#F8FAFC', padx=20, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            title_label = tk.Label(main_frame, text=f"📋 Historial Médico - {nombre} {apellido}", 
+                                 font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
+            title_label.pack(pady=(0, 20))
+            
+            # Tabla de historial
+            columns = ('Fecha', 'Diagnóstico', 'Tratamiento', 'Notas')
+            history_tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=15)
+            
+            for col in columns:
+                history_tree.heading(col, text=col)
+                if col == 'Fecha':
+                    history_tree.column(col, width=100)
+                elif col == 'Diagnóstico':
+                    history_tree.column(col, width=200)
+                else:
+                    history_tree.column(col, width=250)
+            
+            # Scrollbars
+            v_scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=history_tree.yview)
+            h_scrollbar = ttk.Scrollbar(main_frame, orient="horizontal", command=history_tree.xview)
+            history_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+            
+            # Grid layout
+            history_tree.grid(row=0, column=0, sticky='nsew')
+            v_scrollbar.grid(row=0, column=1, sticky='ns')
+            h_scrollbar.grid(row=1, column=0, sticky='ew')
+            
+            # Configurar expansión
+            main_frame.grid_rowconfigure(0, weight=1)
+            main_frame.grid_columnconfigure(0, weight=1)
+            
+            # Cargar datos
+            for record in medical_records:
+                fecha = record[0]
+                try:
+                    dt = datetime.fromisoformat(fecha)
+                    fecha_formatted = dt.strftime('%d/%m/%Y')
+                except:
+                    fecha_formatted = fecha
+                
+                history_tree.insert('', 'end', values=(
+                    fecha_formatted, record[1], record[2], record[3]
+                ))
+            
+            if not medical_records:
+                tk.Label(main_frame, text="No hay registros médicos para este paciente", 
+                        font=('Arial', 12), fg='#6B7280', bg='#F8FAFC').grid(row=2, column=0, pady=20)
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.grid(row=3, column=0, columnspan=2, sticky='ew', pady=15)
+            
+            tk.Button(buttons_frame, text="➕ Nuevo Registro", bg='#059669', fg='white',
+                     font=('Arial', 10, 'bold'), 
+                     command=lambda: self.create_medical_record_for_patient(patient_id, nombre, apellido, history_window)).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cerrar", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), command=history_window.destroy).pack(side='right', padx=5)
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando historial: {str(e)}")
+    
+    def schedule_appointment(self):
+        """Programar nueva cita desde el panel de pacientes"""
+        try:
+            selection = self.doctor_patients_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Seleccione un paciente para programar una cita")
+                return
+            
+            # Obtener información del paciente
+            item = self.doctor_patients_tree.item(selection[0])
+            nombre = item['values'][0]
+            apellido = item['values'][1]
+            email = item['values'][2]
+            
+            # Buscar ID del paciente
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT id FROM usuarios WHERE nombre = ? AND apellido = ? AND email = ?", 
+                         (nombre, apellido, email))
+            patient_result = cursor.fetchone()
+            
+            if not patient_result:
+                messagebox.showerror("Error", "No se encontró el paciente")
+                return
+            
+            patient_id = patient_result[0]
+            cursor.close()
+            conn.close()
+            
+            # Abrir ventana de programación de cita
+            self.schedule_appointment_for_patient(patient_id, f"{nombre} {apellido}")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error programando cita: {str(e)}")
+    
+    def load_patient_medical_records(self, event=None):
+        """Cargar historiales médicos del paciente seleccionado"""
+        try:
+            selection = self.medical_patients_listbox.curselection()
+            if not selection:
+                return
+            
+            # Obtener ID del paciente desde el texto seleccionado
+            selected_text = self.medical_patients_listbox.get(selection[0])
+            # Extraer ID del formato "Nombre Apellido (ID: 123)"
+            import re
+            match = re.search(r'\(ID: (\d+)\)', selected_text)
+            if not match:
+                return
+            
+            patient_id = int(match.group(1))
+            
+            # Limpiar tabla de historiales
+            for item in self.medical_records_tree.get_children():
+                self.medical_records_tree.delete(item)
+            
+            # Obtener historiales
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT fecha_consulta, diagnostico, tratamiento, notas
+                FROM historiales_medicos 
+                WHERE paciente_id = ? 
+                ORDER BY fecha_consulta DESC
+            """, (patient_id,))
+            
+            records = cursor.fetchall()
+            
+            for record in records:
+                fecha = record[0]
+                try:
+                    dt = datetime.fromisoformat(fecha)
+                    fecha_formatted = dt.strftime('%d/%m/%Y')
+                except:
+                    fecha_formatted = fecha
+                
+                self.medical_records_tree.insert('', 'end', values=(
+                    fecha_formatted, record[1], record[2], record[3]
+                ))
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error cargando historiales: {str(e)}")
+    
+    def create_medical_record(self):
+        """Crear nuevo historial médico"""
+        try:
+            selection = self.medical_patients_listbox.curselection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Seleccione un paciente primero")
+                return
+            
+            # Obtener ID del paciente
+            selected_text = self.medical_patients_listbox.get(selection[0])
+            import re
+            match = re.search(r'\(ID: (\d+)\)', selected_text)
+            if not match:
+                messagebox.showerror("Error", "No se pudo obtener el ID del paciente")
+                return
+            
+            patient_id = int(match.group(1))
+            patient_name = selected_text.split(' (ID:')[0]
+            
+            # Crear ventana de nuevo historial
+            record_window = tk.Toplevel(self.root)
+            record_window.title("Nuevo Historial Médico")
+            record_window.geometry("600x500")
+            record_window.configure(bg='#F8FAFC')
+            record_window.resizable(True, True)
+            record_window.transient(self.root)
+            record_window.grab_set()
+            
+            # Frame principal
+            main_frame = tk.Frame(record_window, bg='#F8FAFC', padx=20, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            title_label = tk.Label(main_frame, text=f"📋 Nuevo Historial - {patient_name}", 
+                                 font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
+            title_label.pack(pady=(0, 20))
+            
+            # Fecha de consulta
+            date_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            date_frame.pack(fill='x', pady=(0, 10))
+            
+            tk.Label(date_frame, text="Fecha de Consulta:", font=('Arial', 11, 'bold'), 
+                    bg='#F8FAFC').pack(side='left')
+            
+            date_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
+            date_entry = tk.Entry(date_frame, textvariable=date_var, font=('Arial', 10), width=12)
+            date_entry.pack(side='left', padx=(10, 0))
+            
+            # Diagnóstico
+            diag_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            diag_frame.pack(fill='x', pady=(0, 10))
+            
+            tk.Label(diag_frame, text="Diagnóstico:", font=('Arial', 11, 'bold'), 
+                    bg='#F8FAFC').pack(anchor='w')
+            
+            diag_text = tk.Text(diag_frame, height=3, width=60, font=('Arial', 10), wrap=tk.WORD)
+            diag_text.pack(fill='x', pady=5)
+            
+            # Tratamiento
+            treat_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            treat_frame.pack(fill='x', pady=(0, 10))
+            
+            tk.Label(treat_frame, text="Tratamiento:", font=('Arial', 11, 'bold'), 
+                    bg='#F8FAFC').pack(anchor='w')
+            
+            treat_text = tk.Text(treat_frame, height=3, width=60, font=('Arial', 10), wrap=tk.WORD)
+            treat_text.pack(fill='x', pady=5)
+            
+            # Medicamentos
+            med_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            med_frame.pack(fill='x', pady=(0, 10))
+            
+            tk.Label(med_frame, text="Medicamentos:", font=('Arial', 11, 'bold'), 
+                    bg='#F8FAFC').pack(anchor='w')
+            
+            med_text = tk.Text(med_frame, height=3, width=60, font=('Arial', 10), wrap=tk.WORD)
+            med_text.pack(fill='x', pady=5)
+            
+            # Notas adicionales
+            notes_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            notes_frame.pack(fill='both', expand=True, pady=(0, 10))
+            
+            tk.Label(notes_frame, text="Notas Adicionales:", font=('Arial', 11, 'bold'), 
+                    bg='#F8FAFC').pack(anchor='w')
+            
+            notes_text = tk.Text(notes_frame, height=5, width=60, font=('Arial', 10), wrap=tk.WORD)
+            notes_text.pack(fill='both', expand=True, pady=5)
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=15)
+            
+            def save_record():
+                try:
+                    fecha = date_var.get()
+                    diagnostico = diag_text.get("1.0", tk.END).strip()
+                    tratamiento = treat_text.get("1.0", tk.END).strip()
+                    medicamentos = med_text.get("1.0", tk.END).strip()
+                    notas = notes_text.get("1.0", tk.END).strip()
+                    
+                    if not diagnostico:
+                        messagebox.showwarning("Advertencia", "El diagnóstico es obligatorio")
+                        return
+                    
+                    # Guardar en base de datos
+                    conn = self.db_manager.get_connection()
+                    cursor = conn.cursor()
+                    
+                    cursor.execute("""
+                        INSERT INTO historiales_medicos 
+                        (paciente_id, doctor_id, fecha_consulta, diagnostico, tratamiento, medicamentos, notas)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, (patient_id, self.current_user.id, fecha, diagnostico, tratamiento, medicamentos, notas))
+                    
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                    
+                    messagebox.showinfo("Éxito", "Historial médico guardado correctamente")
+                    record_window.destroy()
+                    
+                    # Recargar historiales si el paciente está seleccionado
+                    self.load_patient_medical_records()
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error guardando historial: {str(e)}")
+            
+            tk.Button(buttons_frame, text="💾 Guardar Historial", bg='#059669', fg='white',
+                     font=('Arial', 10, 'bold'), command=save_record).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cancelar", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), command=record_window.destroy).pack(side='right', padx=5)
+            
+            # Enfocar en diagnóstico
+            diag_text.focus_set()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error creando historial: {str(e)}")
+    
+    def view_medical_record_detail(self):
+        """Ver detalle completo de un historial médico"""
+        try:
+            selection = self.medical_records_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Seleccione un historial para ver los detalles")
+                return
+            
+            # Obtener información del historial
+            item = self.medical_records_tree.item(selection[0])
+            fecha = item['values'][0]
+            diagnostico = item['values'][1]
+            tratamiento = item['values'][2]
+            notas = item['values'][3]
+            
+            # Crear ventana de detalles
+            detail_window = tk.Toplevel(self.root)
+            detail_window.title("Detalle del Historial Médico")
+            detail_window.geometry("600x500")
+            detail_window.configure(bg='#F8FAFC')
+            detail_window.resizable(True, True)
+            
+            # Frame principal con scroll
+            canvas = tk.Canvas(detail_window, bg='#F8FAFC')
+            scrollbar = ttk.Scrollbar(detail_window, orient="vertical", command=canvas.yview)
+            scrollable_frame = tk.Frame(canvas, bg='#F8FAFC')
+            
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+            
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+            
+            canvas.pack(side="left", fill="both", expand=True, padx=20, pady=20)
+            scrollbar.pack(side="right", fill="y")
+            
+            # Título
+            title_label = tk.Label(scrollable_frame, text="📋 Detalle del Historial Médico", 
+                                 font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
+            title_label.pack(pady=(0, 20))
+            
+            # Fecha
+            fecha_frame = tk.LabelFrame(scrollable_frame, text="📅 Fecha de Consulta", 
+                                      font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+            fecha_frame.pack(fill='x', pady=(0, 15))
+            
+            tk.Label(fecha_frame, text=fecha, font=('Arial', 12), bg='white').pack(anchor='w')
+            
+            # Diagnóstico
+            diag_frame = tk.LabelFrame(scrollable_frame, text="🩺 Diagnóstico", 
+                                     font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+            diag_frame.pack(fill='x', pady=(0, 15))
+            
+            diag_text_widget = tk.Text(diag_frame, height=4, font=('Arial', 10), wrap=tk.WORD, state='disabled')
+            diag_text_widget.pack(fill='x')
+            diag_text_widget.config(state='normal')
+            diag_text_widget.insert('1.0', diagnostico)
+            diag_text_widget.config(state='disabled')
+            
+            # Tratamiento
+            treat_frame = tk.LabelFrame(scrollable_frame, text="💊 Tratamiento", 
+                                      font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+            treat_frame.pack(fill='x', pady=(0, 15))
+            
+            treat_text_widget = tk.Text(treat_frame, height=4, font=('Arial', 10), wrap=tk.WORD, state='disabled')
+            treat_text_widget.pack(fill='x')
+            treat_text_widget.config(state='normal')
+            treat_text_widget.insert('1.0', tratamiento)
+            treat_text_widget.config(state='disabled')
+            
+            # Notas
+            if notas and notas.strip():
+                notes_frame = tk.LabelFrame(scrollable_frame, text="📝 Notas Adicionales", 
+                                          font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+                notes_frame.pack(fill='x', pady=(0, 15))
+                
+                notes_text_widget = tk.Text(notes_frame, height=4, font=('Arial', 10), wrap=tk.WORD, state='disabled')
+                notes_text_widget.pack(fill='x')
+                notes_text_widget.config(state='normal')
+                notes_text_widget.insert('1.0', notas)
+                notes_text_widget.config(state='disabled')
+            
+            # Botones
+            buttons_frame = tk.Frame(scrollable_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=20)
+            
+            tk.Button(buttons_frame, text="✏️ Editar", bg='#0B5394', fg='white',
+                     font=('Arial', 10, 'bold'), command=lambda: self.edit_medical_record_detail(detail_window)).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="🖨️ Imprimir", bg='#059669', fg='white',
+                     font=('Arial', 10, 'bold'), command=lambda: self.print_medical_record_detail()).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cerrar", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), command=detail_window.destroy).pack(side='right', padx=5)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error mostrando detalle: {str(e)}")
+    
+    def edit_medical_record(self):
+        """Editar historial médico seleccionado"""
+        try:
+            selection = self.medical_records_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Seleccione un historial para editar")
+                return
+            
+            messagebox.showinfo("Editar Historial", "Función de edición de historial médico - En desarrollo")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error editando historial: {str(e)}")
+    
+    def print_medical_record(self):
+        """Imprimir historial médico seleccionado"""
+        try:
+            selection = self.medical_records_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Seleccione un historial para imprimir")
+                return
+            
+            messagebox.showinfo("Imprimir", "Función de impresión de historial médico - En desarrollo")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error imprimiendo historial: {str(e)}")
+    
+    def edit_doctor_profile(self):
+        """Editar perfil del doctor"""
+        try:
+            # Crear ventana de edición de perfil
+            profile_window = tk.Toplevel(self.root)
+            profile_window.title("Editar Mi Perfil")
+            profile_window.geometry("500x600")
+            profile_window.configure(bg='#F8FAFC')
+            profile_window.resizable(False, False)
+            profile_window.transient(self.root)
+            profile_window.grab_set()
+            
+            # Frame principal
+            main_frame = tk.Frame(profile_window, bg='#F8FAFC', padx=30, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            title_label = tk.Label(main_frame, text="✏️ Editar Mi Perfil", 
+                                 font=('Arial', 18, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
+            title_label.pack(pady=(0, 20))
+            
+            # Formulario
+            form_frame = tk.Frame(main_frame, bg='white', relief='solid', bd=1, padx=20, pady=20)
+            form_frame.pack(fill='both', expand=True)
+            
+            # Variables del formulario
+            nombre_var = tk.StringVar(value=self.current_user.nombre)
+            apellido_var = tk.StringVar(value=self.current_user.apellido)
+            email_var = tk.StringVar(value=self.current_user.email)
+            telefono_var = tk.StringVar(value=self.current_user.telefono)
+            especialidad_var = tk.StringVar(value=getattr(self.current_user, 'especialidad', ''))
+            cedula_var = tk.StringVar(value=getattr(self.current_user, 'cedula_profesional', ''))
+            
+            # Campos del formulario
+            fields = [
+                ("Nombre:", nombre_var),
+                ("Apellido:", apellido_var),
+                ("Email:", email_var),
+                ("Teléfono:", telefono_var),
+                ("Especialidad:", especialidad_var),
+                ("Cédula Profesional:", cedula_var)
+            ]
+            
+            for label_text, var in fields:
+                field_frame = tk.Frame(form_frame, bg='white')
+                field_frame.pack(fill='x', pady=8)
+                
+                tk.Label(field_frame, text=label_text, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151', width=18, anchor='w').pack(side='left')
+                
+                entry = tk.Entry(field_frame, textvariable=var, font=('Arial', 11), width=30)
+                entry.pack(side='left', padx=(10, 0), fill='x', expand=True)
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=20)
+            
+            def save_profile():
+                try:
+                    # Validaciones básicas
+                    if not nombre_var.get().strip():
+                        messagebox.showwarning("Advertencia", "El nombre es obligatorio")
+                        return
+                    
+                    if not apellido_var.get().strip():
+                        messagebox.showwarning("Advertencia", "El apellido es obligatorio")
+                        return
+                    
+                    if not email_var.get().strip():
+                        messagebox.showwarning("Advertencia", "El email es obligatorio")
+                        return
+                    
+                    # Validar formato de email
+                    if not self.validate_email(email_var.get().strip()):
+                        messagebox.showwarning("Advertencia", "El formato del email no es válido")
+                        return
+                    
+                    # Validar teléfono
+                    if telefono_var.get().strip() and not self.validate_phone(telefono_var.get().strip()):
+                        messagebox.showwarning("Advertencia", "El formato del teléfono no es válido")
+                        return
+                    
+                    # Preparar datos del perfil
+                    profile_data = {
+                        'nombre': nombre_var.get().strip(),
+                        'apellido': apellido_var.get().strip(),
+                        'email': email_var.get().strip(),
+                        'telefono': telefono_var.get().strip(),
+                        'especialidad': especialidad_var.get().strip(),
+                        'cedula_profesional': cedula_var.get().strip()
+                    }
+                    
+                    # Actualizar en base de datos
+                    if self.update_doctor_profile_db(self.current_user.id, profile_data):
+                        # Actualizar objeto current_user
+                        self.current_user.nombre = profile_data['nombre']
+                        self.current_user.apellido = profile_data['apellido']
+                        self.current_user.email = profile_data['email']
+                        self.current_user.telefono = profile_data['telefono']
+                        setattr(self.current_user, 'especialidad', profile_data['especialidad'])
+                        setattr(self.current_user, 'cedula_profesional', profile_data['cedula_profesional'])
+                        
+                        messagebox.showinfo("Éxito", "Perfil actualizado correctamente")
+                        profile_window.destroy()
+                        
+                        # Recargar la pestaña de perfil
+                        self.switch_doctor_tab("Mi Perfil")
+                    else:
+                        messagebox.showerror("Error", "No se pudo actualizar el perfil")
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error guardando perfil: {str(e)}")
+            
+            tk.Button(buttons_frame, text="💾 Guardar Cambios", bg='#059669', fg='white',
+                     font=('Arial', 12, 'bold'), command=save_profile).pack(side='left', padx=10)
+            
+            tk.Button(buttons_frame, text="Cancelar", bg='#6B7280', fg='white',
+                     font=('Arial', 12, 'bold'), command=profile_window.destroy).pack(side='right', padx=10)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error editando perfil: {str(e)}")
+    
+    def change_password(self):
+        """Cambiar contraseña del doctor"""
+        try:
+            # Crear ventana de cambio de contraseña
+            password_window = tk.Toplevel(self.root)
+            password_window.title("Cambiar Contraseña")
+            password_window.geometry("400x300")
+            password_window.configure(bg='#F8FAFC')
+            password_window.resizable(False, False)
+            password_window.transient(self.root)
+            password_window.grab_set()
+            
+            # Frame principal
+            main_frame = tk.Frame(password_window, bg='#F8FAFC', padx=30, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            title_label = tk.Label(main_frame, text="🔑 Cambiar Contraseña", 
+                                 font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
+            title_label.pack(pady=(0, 20))
+            
+            # Formulario
+            form_frame = tk.Frame(main_frame, bg='white', relief='solid', bd=1, padx=20, pady=20)
+            form_frame.pack(fill='both', expand=True)
+            
+            # Variables
+            current_password_var = tk.StringVar()
+            new_password_var = tk.StringVar()
+            confirm_password_var = tk.StringVar()
+            
+            # Campos
+            fields = [
+                ("Contraseña Actual:", current_password_var),
+                ("Nueva Contraseña:", new_password_var),
+                ("Confirmar Nueva:", confirm_password_var)
+            ]
+            
+            for label_text, var in fields:
+                field_frame = tk.Frame(form_frame, bg='white')
+                field_frame.pack(fill='x', pady=10)
+                
+                tk.Label(field_frame, text=label_text, font=('Arial', 11, 'bold'), 
+                        bg='white', fg='#374151').pack(anchor='w')
+                
+                entry = tk.Entry(field_frame, textvariable=var, font=('Arial', 11), 
+                               show='*', width=30)
+                entry.pack(fill='x', pady=5)
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=15)
+            
+            def change_password_action():
+                try:
+                    current = current_password_var.get()
+                    new = new_password_var.get()
+                    confirm = confirm_password_var.get()
+                    
+                    if not current or not new or not confirm:
+                        messagebox.showwarning("Advertencia", "Todos los campos son obligatorios")
+                        return
+                    
+                    if new != confirm:
+                        messagebox.showerror("Error", "Las contraseñas nuevas no coinciden")
+                        return
+                    
+                    if len(new) < 6:
+                        messagebox.showwarning("Advertencia", "La nueva contraseña debe tener al menos 6 caracteres")
+                        return
+                    
+                    # Verificar contraseña actual
+                    if not self.verify_doctor_password(self.current_user.id, current):
+                        messagebox.showerror("Error", "La contraseña actual es incorrecta")
+                        return
+                    
+                    # Actualizar contraseña
+                    import hashlib
+                    new_hash = hashlib.sha256(new.encode()).hexdigest()
+                    
+                    if self.update_doctor_password_db(self.current_user.id, new_hash):
+                        messagebox.showinfo("Éxito", "Contraseña cambiada correctamente")
+                        password_window.destroy()
+                    else:
+                        messagebox.showerror("Error", "No se pudo cambiar la contraseña")
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error cambiando contraseña: {str(e)}")
+            
+            tk.Button(buttons_frame, text="🔑 Cambiar Contraseña", bg='#059669', fg='white',
+                     font=('Arial', 11, 'bold'), command=change_password_action).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cancelar", bg='#6B7280', fg='white',
+                     font=('Arial', 11, 'bold'), command=password_window.destroy).pack(side='right', padx=5)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error en cambio de contraseña: {str(e)}")
+    
+    def configure_schedule(self):
+        """Configurar horarios de atención del doctor"""
+        try:
+            # Crear ventana de configuración de horarios
+            schedule_window = tk.Toplevel(self.root)
+            schedule_window.title("Configurar Horarios")
+            schedule_window.geometry("500x400")
+            schedule_window.configure(bg='#F8FAFC')
+            schedule_window.resizable(False, False)
+            schedule_window.transient(self.root)
+            schedule_window.grab_set()
+            
+            # Frame principal
+            main_frame = tk.Frame(schedule_window, bg='#F8FAFC', padx=20, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            title_label = tk.Label(main_frame, text="⏰ Configurar Horarios de Atención", 
+                                 font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
+            title_label.pack(pady=(0, 20))
+            
+            # Frame para horarios
+            schedule_frame = tk.LabelFrame(main_frame, text="Horarios por Día", 
+                                         font=('Arial', 12, 'bold'), bg='white', padx=15, pady=15)
+            schedule_frame.pack(fill='both', expand=True)
+            
+            # Días de la semana
+            dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+            horarios = {}
+            
+            for i, dia in enumerate(dias):
+                day_frame = tk.Frame(schedule_frame, bg='white')
+                day_frame.pack(fill='x', pady=5)
+                
+                # Checkbox para día activo
+                active_var = tk.BooleanVar()
+                horarios[dia] = {'active': active_var}
+                
+                cb = tk.Checkbutton(day_frame, text=dia, variable=active_var, 
+                                   font=('Arial', 10, 'bold'), bg='white', width=10, anchor='w')
+                cb.pack(side='left')
+                
+                # Hora inicio
+                tk.Label(day_frame, text="Desde:", font=('Arial', 9), bg='white').pack(side='left', padx=(10, 5))
+                inicio_var = tk.StringVar(value="08:00")
+                horarios[dia]['inicio'] = inicio_var
+                inicio_entry = tk.Entry(day_frame, textvariable=inicio_var, font=('Arial', 9), width=8)
+                inicio_entry.pack(side='left')
+                
+                # Hora fin
+                tk.Label(day_frame, text="Hasta:", font=('Arial', 9), bg='white').pack(side='left', padx=(10, 5))
+                fin_var = tk.StringVar(value="17:00")
+                horarios[dia]['fin'] = fin_var
+                fin_entry = tk.Entry(day_frame, textvariable=fin_var, font=('Arial', 9), width=8)
+                fin_entry.pack(side='left')
+            
+            # Configuraciones adicionales
+            config_frame = tk.LabelFrame(main_frame, text="Configuraciones", 
+                                       font=('Arial', 12, 'bold'), bg='white', padx=15, pady=10)
+            config_frame.pack(fill='x', pady=(10, 0))
+            
+            # Duración de cita
+            duration_frame = tk.Frame(config_frame, bg='white')
+            duration_frame.pack(fill='x', pady=5)
+            
+            tk.Label(duration_frame, text="Duración por cita (min):", 
+                    font=('Arial', 10, 'bold'), bg='white').pack(side='left')
+            
+            duration_var = tk.StringVar(value="30")
+            duration_entry = tk.Entry(duration_frame, textvariable=duration_var, 
+                                    font=('Arial', 10), width=8)
+            duration_entry.pack(side='left', padx=(10, 0))
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=15)
+            
+            def save_schedule():
+                try:
+                    # Validar y guardar horarios
+                    schedule_data = {}
+                    for dia, config in horarios.items():
+                        if config['active'].get():
+                            inicio = config['inicio'].get()
+                            fin = config['fin'].get()
+                            
+                            # Validar formato de hora
+                            try:
+                                datetime.strptime(inicio, '%H:%M')
+                                datetime.strptime(fin, '%H:%M')
+                            except ValueError:
+                                messagebox.showwarning("Advertencia", f"Formato de hora inválido para {dia}")
+                                return
+                            
+                            # Validar que hora fin sea mayor que hora inicio
+                            if inicio >= fin:
+                                messagebox.showwarning("Advertencia", f"La hora de fin debe ser mayor que la de inicio para {dia}")
+                                return
+                        
+                        schedule_data[dia] = config
+                    
+                    # Guardar en base de datos
+                    if self.save_doctor_schedule_db(self.current_user.id, schedule_data):
+                        messagebox.showinfo("Éxito", "Horarios guardados correctamente")
+                        schedule_window.destroy()
+                    else:
+                        messagebox.showerror("Error", "No se pudieron guardar los horarios")
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error guardando horarios: {str(e)}")
+            
+            tk.Button(buttons_frame, text="💾 Guardar Horarios", bg='#059669', fg='white',
+                     font=('Arial', 11, 'bold'), command=save_schedule).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cancelar", bg='#6B7280', fg='white',
+                     font=('Arial', 11, 'bold'), command=schedule_window.destroy).pack(side='right', padx=5)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error configurando horarios: {str(e)}")
+    
+    # Funciones auxiliares para las ventanas de detalles
+    def complete_appointment_from_details(self, details_window):
+        """Completar cita desde ventana de detalles"""
+        try:
+            appointment_id = self.get_appointment_id_from_selection()
+            if appointment_id:
+                response = messagebox.askyesno("Confirmar", "¿Confirma que la cita fue completada?")
+                if response:
+                    if self.update_appointment_status_db(appointment_id, 'completada'):
+                        messagebox.showinfo("Éxito", "Cita marcada como completada")
+                        details_window.destroy()
+                        self.load_doctor_appointments()
+                    else:
+                        messagebox.showerror("Error", "No se pudo actualizar la cita")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error completando cita: {str(e)}")
+    
+    def cancel_appointment_from_details(self, details_window):
+        """Cancelar cita desde ventana de detalles"""
+        try:
+            appointment_id = self.get_appointment_id_from_selection()
+            if appointment_id:
+                response = messagebox.askyesno("Confirmar", "¿Está seguro que desea cancelar esta cita?")
+                if response:
+                    cancel_notes = "Cancelada desde ventana de detalles"
+                    if self.update_appointment_status_db(appointment_id, 'cancelada', cancel_notes):
+                        messagebox.showinfo("Éxito", "Cita cancelada")
+                        details_window.destroy()
+                        self.load_doctor_appointments()
+                    else:
+                        messagebox.showerror("Error", "No se pudo cancelar la cita")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error cancelando cita: {str(e)}")
+    
+    def add_appointment_notes_from_details(self, details_window):
+        """Agregar notas desde ventana de detalles"""
+        try:
+            self.add_appointment_notes()
+        except Exception as e:
+            messagebox.showerror("Error", f"Error agregando notas: {str(e)}")
+    
+    # Funciones para crear citas y historiales desde otras ventanas
+    def schedule_appointment_for_patient(self, patient_id, patient_name=None):
+        """Programar cita para un paciente específico"""
+        try:
+            # Crear ventana de programación de cita
+            appointment_window = tk.Toplevel(self.root)
+            appointment_window.title(f"Nueva Cita - {patient_name or 'Paciente'}")
+            appointment_window.geometry("450x500")
+            appointment_window.configure(bg='#F8FAFC')
+            appointment_window.resizable(False, False)
+            appointment_window.transient(self.root)
+            appointment_window.grab_set()
+            
+            # Frame principal
+            main_frame = tk.Frame(appointment_window, bg='#F8FAFC', padx=20, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            tk.Label(main_frame, text=f"📅 Nueva Cita", 
+                    font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A').pack(pady=(0, 10))
+            
+            if patient_name:
+                tk.Label(main_frame, text=f"Paciente: {patient_name}", 
+                        font=('Arial', 12), bg='#F8FAFC', fg='#6B7280').pack(pady=(0, 20))
+            
+            # Formulario
+            form_frame = tk.Frame(main_frame, bg='white', relief='solid', bd=1, padx=20, pady=20)
+            form_frame.pack(fill='both', expand=True)
+            
+            # Fecha
+            date_frame = tk.Frame(form_frame, bg='white')
+            date_frame.pack(fill='x', pady=5)
+            
+            tk.Label(date_frame, text="Fecha:", font=('Arial', 11, 'bold'), bg='white').pack(anchor='w')
+            date_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
+            date_entry = tk.Entry(date_frame, textvariable=date_var, font=('Arial', 10))
+            date_entry.pack(fill='x', pady=5)
+            
+            # Hora
+            time_frame = tk.Frame(form_frame, bg='white')
+            time_frame.pack(fill='x', pady=5)
+            
+            tk.Label(time_frame, text="Hora:", font=('Arial', 11, 'bold'), bg='white').pack(anchor='w')
+            time_var = tk.StringVar(value="09:00")
+            time_entry = tk.Entry(time_frame, textvariable=time_var, font=('Arial', 10))
+            time_entry.pack(fill='x', pady=5)
+            
+            # Duración
+            duration_frame = tk.Frame(form_frame, bg='white')
+            duration_frame.pack(fill='x', pady=5)
+            
+            tk.Label(duration_frame, text="Duración (minutos):", font=('Arial', 11, 'bold'), bg='white').pack(anchor='w')
+            duration_var = tk.StringVar(value="30")
+            duration_entry = tk.Entry(duration_frame, textvariable=duration_var, font=('Arial', 10))
+            duration_entry.pack(fill='x', pady=5)
+            
+            # Motivo
+            motivo_frame = tk.Frame(form_frame, bg='white')
+            motivo_frame.pack(fill='x', pady=5)
+            
+            tk.Label(motivo_frame, text="Motivo de la consulta:", font=('Arial', 11, 'bold'), bg='white').pack(anchor='w')
+            motivo_text = tk.Text(motivo_frame, height=5, font=('Arial', 10), wrap=tk.WORD)
+            motivo_text.pack(fill='x', pady=5)
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=15)
+            
+            def save_appointment():
+                try:
+                    fecha = date_var.get()
+                    hora = time_var.get()
+                    duracion = duration_var.get()
+                    motivo = motivo_text.get("1.0", tk.END).strip()
+                    
+                    if not fecha or not hora:
+                        messagebox.showwarning("Advertencia", "Fecha y hora son obligatorios")
+                        return
+                    
+                    if not motivo:
+                        messagebox.showwarning("Advertencia", "El motivo es obligatorio")
+                        return
+                    
+                    # Validar duración
+                    try:
+                        duracion_int = int(duracion)
+                        if duracion_int <= 0:
+                            raise ValueError()
+                    except ValueError:
+                        messagebox.showwarning("Advertencia", "La duración debe ser un número positivo")
+                        return
+                    
+                    # Combinar fecha y hora
+                    fecha_hora = f"{fecha} {hora}:00"
+                    
+                    # Crear datos de la cita
+                    appointment_data = {
+                        'paciente_id': patient_id,
+                        'doctor_id': self.current_user.id,
+                        'fecha_hora': fecha_hora,
+                        'motivo': motivo,
+                        'duracion_minutos': duracion_int
+                    }
+                    
+                    # Guardar en base de datos
+                    appointment_id = self.create_appointment_db(appointment_data)
+                    if appointment_id:
+                        messagebox.showinfo("Éxito", "Cita programada correctamente")
+                        appointment_window.destroy()
+                        # Recargar citas si estamos en esa pestaña
+                        if hasattr(self, 'active_doctor_tab') and self.active_doctor_tab.get() == "Mis Citas":
+                            self.load_doctor_appointments()
+                    else:
+                        messagebox.showerror("Error", "No se pudo programar la cita")
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error programando cita: {str(e)}")
+            
+            tk.Button(buttons_frame, text="📅 Programar Cita", bg='#059669', fg='white',
+                     font=('Arial', 11, 'bold'), command=save_appointment).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cancelar", bg='#6B7280', fg='white',
+                     font=('Arial', 11, 'bold'), command=appointment_window.destroy).pack(side='right', padx=5)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error programando cita: {str(e)}")
+    
+    def view_patient_medical_history(self, patient_id):
+        """Ver historial médico completo de un paciente"""
+        try:
+            # Obtener información del paciente
+            patient_info = self.get_patient_full_info(patient_id)
+            if not patient_info:
+                messagebox.showerror("Error", "No se encontró información del paciente")
+                return
+            
+            patient_name = f"{patient_info['nombre']} {patient_info['apellido']}"
+            
+            # Crear ventana de historial
+            history_window = tk.Toplevel(self.root)
+            history_window.title(f"Historial Médico - {patient_name}")
+            history_window.geometry("900x600")
+            history_window.configure(bg='#F8FAFC')
+            history_window.resizable(True, True)
+            
+            # Frame principal
+            main_frame = tk.Frame(history_window, bg='#F8FAFC', padx=20, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            title_label = tk.Label(main_frame, text=f"📋 Historial Médico Completo", 
+                                 font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
+            title_label.pack(pady=(0, 10))
+            
+            tk.Label(main_frame, text=f"Paciente: {patient_name}", 
+                    font=('Arial', 12), bg='#F8FAFC', fg='#6B7280').pack(pady=(0, 20))
+            
+            # Tabla de historial
+            columns = ('Fecha', 'Diagnóstico', 'Tratamiento', 'Medicamentos', 'Notas')
+            history_tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=15)
+            
+            for col in columns:
+                history_tree.heading(col, text=col)
+                if col == 'Fecha':
+                    history_tree.column(col, width=100)
+                elif col == 'Diagnóstico':
+                    history_tree.column(col, width=200)
+                else:
+                    history_tree.column(col, width=150)
+            
+            # Scrollbars
+            v_scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=history_tree.yview)
+            h_scrollbar = ttk.Scrollbar(main_frame, orient="horizontal", command=history_tree.xview)
+            history_tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+            
+            # Grid layout
+            history_tree.grid(row=0, column=0, sticky='nsew')
+            v_scrollbar.grid(row=0, column=1, sticky='ns')
+            h_scrollbar.grid(row=1, column=0, sticky='ew')
+            
+            # Configurar expansión
+            main_frame.grid_rowconfigure(0, weight=1)
+            main_frame.grid_columnconfigure(0, weight=1)
+            
+            # Cargar datos del historial
+            try:
+                conn = self.db_manager.get_connection()
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    SELECT fecha_consulta, diagnostico, tratamiento, medicamentos, notas
+                    FROM historiales_medicos 
+                    WHERE paciente_id = ? 
+                    ORDER BY fecha_consulta DESC
+                """, (patient_id,))
+                
+                medical_records = cursor.fetchall()
+                
+                for record in medical_records:
+                    fecha = self.format_date_for_display(record[0])
+                    
+                    history_tree.insert('', 'end', values=(
+                        fecha, record[1], record[2], record[3] or 'N/A', record[4] or 'N/A'
+                    ))
+                
+                cursor.close()
+                conn.close()
+                
+                if not medical_records:
+                    tk.Label(main_frame, text="No hay registros médicos para este paciente", 
+                            font=('Arial', 12), fg='#6B7280', bg='#F8FAFC').grid(row=2, column=0, pady=20)
+                
+            except Exception as e:
+                tk.Label(main_frame, text=f"Error cargando historial: {str(e)}", 
+                        font=('Arial', 12), fg='#EF4444', bg='#F8FAFC').grid(row=2, column=0, pady=20)
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.grid(row=3, column=0, columnspan=2, sticky='ew', pady=15)
+            
+            tk.Button(buttons_frame, text="➕ Nuevo Registro", bg='#059669', fg='white',
+                     font=('Arial', 10, 'bold'), 
+                     command=lambda: self.create_medical_record_for_patient(patient_id, patient_info['nombre'], patient_info['apellido'], history_window)).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cerrar", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), command=history_window.destroy).pack(side='right', padx=5)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error viendo historial: {str(e)}")
+    
+    def create_medical_record_for_patient(self, patient_id, nombre, apellido, parent_window):
+        """Crear historial médico para un paciente específico"""
+        try:
+            patient_name = f"{nombre} {apellido}"
+            
+            # Crear ventana de nuevo historial
+            record_window = tk.Toplevel(parent_window)
+            record_window.title("Nuevo Historial Médico")
+            record_window.geometry("600x500")
+            record_window.configure(bg='#F8FAFC')
+            record_window.resizable(True, True)
+            record_window.transient(parent_window)
+            record_window.grab_set()
+            
+            # Frame principal
+            main_frame = tk.Frame(record_window, bg='#F8FAFC', padx=20, pady=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Título
+            title_label = tk.Label(main_frame, text=f"📋 Nuevo Historial - {patient_name}", 
+                                 font=('Arial', 16, 'bold'), bg='#F8FAFC', fg='#1E3A8A')
+            title_label.pack(pady=(0, 20))
+            
+            # Formulario
+            form_frame = tk.Frame(main_frame, bg='white', relief='solid', bd=1, padx=20, pady=20)
+            form_frame.pack(fill='both', expand=True)
+            
+            # Fecha de consulta
+            date_frame = tk.Frame(form_frame, bg='white')
+            date_frame.pack(fill='x', pady=(0, 10))
+            
+            tk.Label(date_frame, text="Fecha de Consulta:", font=('Arial', 11, 'bold'), 
+                    bg='white').pack(side='left')
+            
+            date_var = tk.StringVar(value=datetime.now().strftime('%Y-%m-%d'))
+            date_entry = tk.Entry(date_frame, textvariable=date_var, font=('Arial', 10), width=12)
+            date_entry.pack(side='left', padx=(10, 0))
+            
+            # Diagnóstico
+            diag_frame = tk.Frame(form_frame, bg='white')
+            diag_frame.pack(fill='x', pady=(0, 10))
+            
+            tk.Label(diag_frame, text="Diagnóstico:", font=('Arial', 11, 'bold'), 
+                    bg='white').pack(anchor='w')
+            
+            diag_text = tk.Text(diag_frame, height=3, width=60, font=('Arial', 10), wrap=tk.WORD)
+            diag_text.pack(fill='x', pady=5)
+            
+            # Tratamiento
+            treat_frame = tk.Frame(form_frame, bg='white')
+            treat_frame.pack(fill='x', pady=(0, 10))
+            
+            tk.Label(treat_frame, text="Tratamiento:", font=('Arial', 11, 'bold'), 
+                    bg='white').pack(anchor='w')
+            
+            treat_text = tk.Text(treat_frame, height=3, width=60, font=('Arial', 10), wrap=tk.WORD)
+            treat_text.pack(fill='x', pady=5)
+            
+            # Medicamentos
+            med_frame = tk.Frame(form_frame, bg='white')
+            med_frame.pack(fill='x', pady=(0, 10))
+            
+            tk.Label(med_frame, text="Medicamentos:", font=('Arial', 11, 'bold'), 
+                    bg='white').pack(anchor='w')
+            
+            med_text = tk.Text(med_frame, height=3, width=60, font=('Arial', 10), wrap=tk.WORD)
+            med_text.pack(fill='x', pady=5)
+            
+            # Notas adicionales
+            notes_frame = tk.Frame(form_frame, bg='white')
+            notes_frame.pack(fill='both', expand=True, pady=(0, 10))
+            
+            tk.Label(notes_frame, text="Notas Adicionales:", font=('Arial', 11, 'bold'), 
+                    bg='white').pack(anchor='w')
+            
+            notes_text = tk.Text(notes_frame, height=5, width=60, font=('Arial', 10), wrap=tk.WORD)
+            notes_text.pack(fill='both', expand=True, pady=5)
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=15)
+            
+            def save_record():
+                try:
+                    fecha = date_var.get()
+                    diagnostico = diag_text.get("1.0", tk.END).strip()
+                    tratamiento = treat_text.get("1.0", tk.END).strip()
+                    medicamentos = med_text.get("1.0", tk.END).strip()
+                    notas = notes_text.get("1.0", tk.END).strip()
+                    
+                    if not diagnostico:
+                        messagebox.showwarning("Advertencia", "El diagnóstico es obligatorio")
+                        return
+                    
+                    # Guardar en base de datos
+                    if self.save_medical_record_db(patient_id, self.current_user.id, fecha, 
+                                                 diagnostico, tratamiento, medicamentos, notas):
+                        messagebox.showinfo("Éxito", "Historial médico guardado correctamente")
+                        record_window.destroy()
+                        
+                        # Cerrar y reabrir la ventana de historial para actualizar
+                        parent_window.destroy()
+                        self.view_patient_medical_history(patient_id)
+                    else:
+                        messagebox.showerror("Error", "No se pudo guardar el historial médico")
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error guardando historial: {str(e)}")
+            
+            tk.Button(buttons_frame, text="💾 Guardar Historial", bg='#059669', fg='white',
+                     font=('Arial', 10, 'bold'), command=save_record).pack(side='left', padx=5)
+            
+            tk.Button(buttons_frame, text="Cancelar", bg='#6B7280', fg='white',
+                     font=('Arial', 10, 'bold'), command=record_window.destroy).pack(side='right', padx=5)
+            
+            # Enfocar en diagnóstico
+            diag_text.focus_set()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error creando historial: {str(e)}")
+    
+    def edit_medical_record_detail(self, parent_window):
+        """Editar historial médico desde ventana de detalles"""
+        try:
+            messagebox.showinfo("Editar", "Función de edición desde detalles - En desarrollo\n\n"
+                                         "Esta función permitirá editar historiales médicos existentes.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error editando: {str(e)}")
+    
+    def print_medical_record_detail(self):
+        """Imprimir historial médico desde ventana de detalles"""
+        try:
+            messagebox.showinfo("Imprimir", "Función de impresión desde detalles - En desarrollo\n\n"
+                                           "Esta función permitirá generar PDFs de los historiales médicos.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error imprimiendo: {str(e)}")
     
     # ==================== FUNCIONES HISTORIAL MÉDICO ====================
     
@@ -19143,7 +22235,93 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
     def show_appointment_calendar(self): 
         messagebox.showinfo("Acción", "Mostrar calendario - En desarrollo")
     def apply_appointment_filters(self): 
-        self.load_secretaria_appointments()
+        """Aplicar filtros a las citas del doctor"""
+        if hasattr(self, 'doctor_appointments_tree'):
+            # Solo recargar las citas con filtros, sin recursión
+            self.load_filtered_appointments()
+    
+    def load_filtered_appointments(self):
+        """Cargar citas aplicando filtros sin recursión"""
+        try:
+            # Obtener valores de filtros
+            period_filter = getattr(self, 'appointment_filter', None)
+            status_filter = getattr(self, 'status_filter', None)
+            patient_search = getattr(self, 'patient_search', None)
+            
+            period_value = period_filter.get() if period_filter else 'Todas'
+            status_value = status_filter.get() if status_filter else 'Todos'
+            search_value = patient_search.get().lower() if patient_search else ''
+            
+            # Limpiar tabla
+            for item in self.doctor_appointments_tree.get_children():
+                self.doctor_appointments_tree.delete(item)
+            
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Query base
+            query = """
+                SELECT 
+                    c.id,
+                    c.fecha_hora,
+                    u.nombre || ' ' || u.apellido as paciente_nombre,
+                    c.motivo,
+                    c.estado,
+                    c.duracion_minutos,
+                    CASE 
+                        WHEN c.motivo LIKE '%urgencia%' OR c.motivo LIKE '%emergencia%' THEN 'Urgencia'
+                        WHEN c.motivo LIKE '%control%' OR c.motivo LIKE '%seguimiento%' THEN 'Control'
+                        ELSE 'Consulta'
+                    END as tipo_cita
+                FROM citas c
+                JOIN usuarios u ON c.paciente_id = u.id
+                WHERE c.doctor_id = ?
+            """
+            
+            # Aplicar filtros
+            if period_value == 'Hoy':
+                query += " AND DATE(c.fecha_hora) = DATE('now')"
+            elif period_value == 'Mañana':
+                query += " AND DATE(c.fecha_hora) = DATE('now', '+1 day')"
+            elif period_value == 'Esta Semana':
+                query += " AND c.fecha_hora >= DATE('now') AND c.fecha_hora <= DATE('now', '+7 days')"
+            elif period_value == 'Este Mes':
+                query += " AND strftime('%Y-%m', c.fecha_hora) = strftime('%Y-%m', 'now')"
+            
+            if status_value != 'Todos':
+                query += f" AND c.estado = '{status_value.lower()}'"
+            
+            if search_value:
+                query += f" AND (u.nombre LIKE '%{search_value}%' OR u.apellido LIKE '%{search_value}%')"
+            
+            query += " ORDER BY c.fecha_hora"
+            
+            cursor.execute(query, (self.current_user.id,))
+            appointments = cursor.fetchall()
+            
+            # Llenar tabla
+            for apt in appointments:
+                try:
+                    dt = datetime.fromisoformat(apt[1])
+                    fecha_formatted = dt.strftime('%d/%m/%Y %H:%M')
+                except:
+                    fecha_formatted = apt[1]
+                
+                self.doctor_appointments_tree.insert('', 'end', values=(
+                    apt[0],
+                    fecha_formatted,
+                    apt[2],
+                    apt[3] or 'Sin motivo',
+                    apt[4].capitalize(),
+                    f"{apt[5] or 30} min",
+                    apt[6] or 'Consulta'
+                ))
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error cargando citas filtradas: {str(e)}")
     def load_appointment_doctors(self): 
         """Cargar doctores para filtro"""
         try:
@@ -19210,12 +22388,22 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
     def confirm_appointment(self):
         """Confirmar cita seleccionada - método de acceso rápido"""
         try:
-            selection = self.appointments_tree.selection()
+            # Verificar si estamos en la vista de doctor
+            if hasattr(self, 'doctor_appointments_tree'):
+                selection = self.doctor_appointments_tree.selection()
+                tree = self.doctor_appointments_tree
+            elif hasattr(self, 'appointments_tree'):
+                selection = self.appointments_tree.selection()
+                tree = self.appointments_tree
+            else:
+                messagebox.showwarning("Advertencia", "No se encontró la tabla de citas")
+                return
+                
             if not selection:
                 messagebox.showwarning("Advertencia", "Por favor seleccione una cita para confirmar")
                 return
             
-            item = self.appointments_tree.item(selection[0])
+            item = tree.item(selection[0])
             appointment_id = item['values'][0]
             
             self.change_appointment_status(appointment_id, 'confirmada')
@@ -19226,12 +22414,22 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
     def cancel_appointment(self):
         """Cancelar cita seleccionada - método de acceso rápido"""
         try:
-            selection = self.appointments_tree.selection()
+            # Verificar si estamos en la vista de doctor
+            if hasattr(self, 'doctor_appointments_tree'):
+                selection = self.doctor_appointments_tree.selection()
+                tree = self.doctor_appointments_tree
+            elif hasattr(self, 'appointments_tree'):
+                selection = self.appointments_tree.selection()
+                tree = self.appointments_tree
+            else:
+                messagebox.showwarning("Advertencia", "No se encontró la tabla de citas")
+                return
+                
             if not selection:
                 messagebox.showwarning("Advertencia", "Por favor seleccione una cita para cancelar")
                 return
             
-            item = self.appointments_tree.item(selection[0])
+            item = tree.item(selection[0])
             appointment_id = item['values'][0]
             
             self.cancel_appointment_with_reason(appointment_id)
@@ -21722,6 +24920,395 @@ Estado de cuenta actualizado al {datetime.now().strftime('%d/%m/%Y')}"""
         except Exception as e:
             messagebox.showerror("Error", f"Error al mostrar detalles: {str(e)}")
             print(f"Error en view_history_detail_simple: {e}")
+
+    # ==================== FUNCIONES AUXILIARES PARA DOCTORES ====================
+    
+    def update_appointment_status_db(self, appointment_id, new_status, notes=None):
+        """Actualizar estado de cita en base de datos"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            if notes:
+                cursor.execute("""
+                    UPDATE citas SET estado = ?, notas = ? WHERE id = ?
+                """, (new_status, notes, appointment_id))
+            else:
+                cursor.execute("""
+                    UPDATE citas SET estado = ? WHERE id = ?
+                """, (new_status, appointment_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            print(f"Error actualizando estado de cita: {e}")
+            return False
+    
+    def get_appointment_id_from_selection(self):
+        """Obtener ID de cita desde la selección actual"""
+        try:
+            selection = self.doctor_appointments_tree.selection()
+            if not selection:
+                return None
+            
+            item = self.doctor_appointments_tree.item(selection[0])
+            fecha_hora = item['values'][0]
+            paciente_nombre = item['values'][1]
+            
+            # Buscar ID de la cita
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT c.id FROM citas c
+                JOIN usuarios u ON c.paciente_id = u.id
+                WHERE c.doctor_id = ? AND u.nombre || ' ' || u.apellido = ?
+                ORDER BY ABS(strftime('%s', c.fecha_hora) - strftime('%s', ?)) ASC
+                LIMIT 1
+            """, (self.current_user.id, paciente_nombre, fecha_hora))
+            
+            result = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            return result[0] if result else None
+            
+        except Exception as e:
+            print(f"Error obteniendo ID de cita: {e}")
+            return None
+    
+    def save_appointment_notes_db(self, appointment_id, notes):
+        """Guardar notas de cita en base de datos"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE citas SET notas = ? WHERE id = ?
+            """, (notes, appointment_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            print(f"Error guardando notas: {e}")
+            return False
+    
+    def save_medical_record_db(self, patient_id, doctor_id, fecha, diagnostico, tratamiento, medicamentos, notas):
+        """Guardar historial médico en base de datos"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO historiales_medicos 
+                (paciente_id, doctor_id, fecha_consulta, diagnostico, tratamiento, medicamentos, notas, fecha_creacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+            """, (patient_id, doctor_id, fecha, diagnostico, tratamiento, medicamentos, notas))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            print(f"Error guardando historial médico: {e}")
+            return False
+    
+    def update_doctor_profile_db(self, doctor_id, profile_data):
+        """Actualizar perfil de doctor en base de datos"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Actualizar tabla usuarios
+            cursor.execute("""
+                UPDATE usuarios SET nombre = ?, apellido = ?, email = ?, telefono = ?
+                WHERE id = ?
+            """, (profile_data['nombre'], profile_data['apellido'], 
+                  profile_data['email'], profile_data['telefono'], doctor_id))
+            
+            # Actualizar tabla doctores
+            cursor.execute("""
+                UPDATE doctores SET especialidad = ?, cedula_profesional = ?
+                WHERE id = ?
+            """, (profile_data['especialidad'], profile_data['cedula_profesional'], doctor_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            print(f"Error actualizando perfil: {e}")
+            return False
+    
+    def update_doctor_password_db(self, doctor_id, new_password_hash):
+        """Actualizar contraseña de doctor en base de datos"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE usuarios SET password = ? WHERE id = ?
+            """, (new_password_hash, doctor_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            print(f"Error actualizando contraseña: {e}")
+            return False
+    
+    def verify_doctor_password(self, doctor_id, current_password):
+        """Verificar contraseña actual del doctor"""
+        try:
+            import hashlib
+            
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT password FROM usuarios WHERE id = ?", (doctor_id,))
+            result = cursor.fetchone()
+            
+            cursor.close()
+            conn.close()
+            
+            if result:
+                stored_hash = result[0]
+                current_hash = hashlib.sha256(current_password.encode()).hexdigest()
+                return stored_hash == current_hash
+            
+            return False
+            
+        except Exception as e:
+            print(f"Error verificando contraseña: {e}")
+            return False
+    
+    def save_doctor_schedule_db(self, doctor_id, schedule_data):
+        """Guardar horarios de doctor en base de datos"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            # Crear tabla de horarios si no existe
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS doctor_schedules (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    doctor_id INTEGER,
+                    dia_semana TEXT,
+                    hora_inicio TEXT,
+                    hora_fin TEXT,
+                    activo BOOLEAN DEFAULT 1,
+                    FOREIGN KEY (doctor_id) REFERENCES usuarios (id)
+                )
+            """)
+            
+            # Eliminar horarios existentes
+            cursor.execute("DELETE FROM doctor_schedules WHERE doctor_id = ?", (doctor_id,))
+            
+            # Insertar nuevos horarios
+            for dia, config in schedule_data.items():
+                if config['active'].get():
+                    cursor.execute("""
+                        INSERT INTO doctor_schedules (doctor_id, dia_semana, hora_inicio, hora_fin, activo)
+                        VALUES (?, ?, ?, ?, 1)
+                    """, (doctor_id, dia, config['inicio'].get(), config['fin'].get()))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            print(f"Error guardando horarios: {e}")
+            return False
+    
+    def get_doctor_schedule_db(self, doctor_id):
+        """Obtener horarios de doctor desde base de datos"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT dia_semana, hora_inicio, hora_fin, activo
+                FROM doctor_schedules WHERE doctor_id = ? AND activo = 1
+            """, (doctor_id,))
+            
+            schedule = {}
+            for row in cursor.fetchall():
+                schedule[row[0]] = {
+                    'hora_inicio': row[1],
+                    'hora_fin': row[2],
+                    'activo': bool(row[3])
+                }
+            
+            cursor.close()
+            conn.close()
+            return schedule
+            
+        except Exception as e:
+            print(f"Error obteniendo horarios: {e}")
+            return {}
+    
+    def create_appointment_db(self, appointment_data):
+        """Crear nueva cita en base de datos"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO citas (paciente_id, doctor_id, fecha_hora, motivo, estado, duracion_minutos, fecha_creacion)
+                VALUES (?, ?, ?, ?, 'programada', ?, datetime('now'))
+            """, (
+                appointment_data['paciente_id'],
+                appointment_data['doctor_id'],
+                appointment_data['fecha_hora'],
+                appointment_data['motivo'],
+                appointment_data.get('duracion_minutos', 30)
+            ))
+            
+            appointment_id = cursor.lastrowid
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return appointment_id
+            
+        except Exception as e:
+            print(f"Error creando cita: {e}")
+            return None
+    
+    def get_patient_full_info(self, patient_id):
+        """Obtener información completa del paciente"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT u.*, p.numero_expediente, p.contacto_emergencia, p.telefono_emergencia,
+                       p.fecha_nacimiento, p.direccion, s.nombre as seguro_nombre,
+                       CASE 
+                           WHEN u.fecha_nacimiento IS NOT NULL 
+                           THEN CAST((julianday('now') - julianday(u.fecha_nacimiento)) / 365.25 AS INTEGER)
+                           ELSE 0 
+                       END as edad
+                FROM usuarios u
+                LEFT JOIN pacientes p ON u.id = p.id
+                LEFT JOIN seguros_medicos s ON p.seguro_medico_id = s.id
+                WHERE u.id = ?
+            """, (patient_id,))
+            
+            result = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if result:
+                columns = [description[0] for description in cursor.description]
+                return dict(zip(columns, result))
+            
+            return None
+            
+        except Exception as e:
+            print(f"Error obteniendo información del paciente: {e}")
+            return None
+    
+    def search_patients_for_doctor(self, doctor_id, search_term):
+        """Buscar pacientes específicos del doctor"""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT DISTINCT u.id, u.nombre, u.apellido, u.email, u.telefono,
+                       MAX(c.fecha_hora) as ultima_consulta,
+                       CASE WHEN u.activo THEN 'Activo' ELSE 'Inactivo' END as estado
+                FROM usuarios u
+                JOIN citas c ON u.id = c.paciente_id
+                WHERE c.doctor_id = ? AND u.tipo_usuario = 'paciente'
+                  AND (LOWER(u.nombre) LIKE ? OR LOWER(u.apellido) LIKE ? OR LOWER(u.email) LIKE ?)
+                GROUP BY u.id, u.nombre, u.apellido, u.email, u.telefono, u.activo
+                ORDER BY MAX(c.fecha_hora) DESC
+            """, (doctor_id, f'%{search_term}%', f'%{search_term}%', f'%{search_term}%'))
+            
+            results = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            
+            return results
+            
+        except Exception as e:
+            print(f"Error buscando pacientes: {e}")
+            return []
+    
+    def format_datetime_for_display(self, datetime_str):
+        """Formatear fecha/hora para mostrar"""
+        try:
+            if not datetime_str:
+                return 'N/A'
+            
+            dt = datetime.fromisoformat(datetime_str)
+            return dt.strftime('%d/%m/%Y %H:%M')
+        except:
+            return datetime_str
+    
+    def format_date_for_display(self, date_str):
+        """Formatear fecha para mostrar"""
+        try:
+            if not date_str:
+                return 'N/A'
+            
+            if 'T' in date_str:
+                dt = datetime.fromisoformat(date_str)
+                return dt.strftime('%d/%m/%Y')
+            else:
+                # Asumir formato YYYY-MM-DD
+                dt = datetime.strptime(date_str, '%Y-%m-%d')
+                return dt.strftime('%d/%m/%Y')
+        except:
+            return date_str
+    
+    def calculate_age(self, birth_date):
+        """Calcular edad desde fecha de nacimiento"""
+        try:
+            if not birth_date:
+                return 0
+            
+            if isinstance(birth_date, str):
+                birth_dt = datetime.strptime(birth_date, '%Y-%m-%d')
+            else:
+                birth_dt = birth_date
+            
+            today = datetime.now()
+            age = today.year - birth_dt.year
+            
+            if today.month < birth_dt.month or (today.month == birth_dt.month and today.day < birth_dt.day):
+                age -= 1
+            
+            return age
+        except:
+            return 0
+    
+    def validate_email(self, email):
+        """Validar formato de email"""
+        import re
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email) is not None
+    
+    def validate_phone(self, phone):
+        """Validar formato de teléfono"""
+        # Eliminar espacios y guiones
+        phone_clean = phone.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+        
+        # Verificar que solo contiene números y tiene longitud adecuada
+        return phone_clean.isdigit() and 10 <= len(phone_clean) <= 15
 
 if __name__ == "__main__":
     app = MedisyncApp()
