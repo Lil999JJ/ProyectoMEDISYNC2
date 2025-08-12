@@ -6,8 +6,8 @@ Interfaz completa y amigable para registro de nuevos pacientes
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, date
-import hashlib
 import re
+import hashlib
 from PIL import Image, ImageTk
 import os
 
@@ -27,7 +27,7 @@ def create_patient_registration_form(parent, db_manager):
     register_window.update_idletasks()
     x = (register_window.winfo_screenwidth() // 2) - (900 // 2)
     y = (register_window.winfo_screenheight() // 2) - (800 // 2)
-    register_window.geometry(f"900x800+{x}+{y}")
+    register_window.geometry(f"700x800+{x}+{y}")
     
     # ==================== HEADER MODERNO ====================
     header_frame = tk.Frame(register_window, bg='#2c3e50', height=80)
@@ -224,28 +224,15 @@ def create_patient_registration_form(parent, db_manager):
     # ==================== SECCIÓN 2: INFORMACIÓN MÉDICA ====================
     medical_section = create_section(scrollable_frame, "🏥 Información Médica", "#e74c3c")
     
-    # Fila 1: Tipo de sangre y Género
-    med_row1 = tk.Frame(medical_section, bg='white')
-    med_row1.pack(fill='x', pady=5)
-    
     # Tipo de sangre
-    blood_frame = tk.Frame(med_row1, bg='white')
-    blood_frame.pack(side='left', fill='x', expand=True, padx=(0, 10))
+    blood_frame = tk.Frame(medical_section, bg='white')
+    blood_frame.pack(fill='x', pady=5)
     
     tk.Label(blood_frame, text="Tipo de Sangre", font=('Arial', 10, 'bold'), bg='white', fg='#2c3e50').pack(anchor='w')
     fields['tipo_sangre'] = ttk.Combobox(blood_frame, font=('Arial', 11), state="readonly",
                                         values=['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Desconocido'])
     fields['tipo_sangre'].pack(fill='x', ipady=5)
     fields['tipo_sangre'].set('Desconocido')
-    
-    # Género
-    gender_frame = tk.Frame(med_row1, bg='white')
-    gender_frame.pack(side='left', fill='x', expand=True)
-    
-    tk.Label(gender_frame, text="Género", font=('Arial', 10, 'bold'), bg='white', fg='#2c3e50').pack(anchor='w')
-    fields['genero'] = ttk.Combobox(gender_frame, font=('Arial', 11), state="readonly",
-                                   values=['Masculino', 'Femenino', 'Otro', 'Prefiero no decir'])
-    fields['genero'].pack(fill='x', ipady=5)
     
     # Alergias
     allergies_frame = tk.Frame(medical_section, bg='white')
@@ -291,16 +278,6 @@ def create_patient_registration_form(parent, db_manager):
     fields['contacto_emergencia'] = tk.Entry(emerg_name_frame, font=('Arial', 11), relief='solid', bd=1,
                                            bg='#ffffff', fg='#2c3e50', insertbackground='#2c3e50')
     fields['contacto_emergencia'].pack(fill='x', ipady=8)
-    
-    # Relación
-    relation_frame = tk.Frame(emerg_row1, bg='white')
-    relation_frame.pack(side='left', fill='x', expand=True)
-    
-    tk.Label(relation_frame, text="Relación", font=('Arial', 10, 'bold'), bg='white', fg='#2c3e50').pack(anchor='w')
-    fields['relacion_contacto'] = ttk.Combobox(relation_frame, font=('Arial', 11), state="readonly",
-                                              values=['Padre/Madre', 'Esposo/Esposa', 'Hermano/Hermana', 
-                                                     'Hijo/Hija', 'Amigo/Amiga', 'Otro'])
-    fields['relacion_contacto'].pack(fill='x', ipady=5)
     
     # Teléfono de emergencia
     emerg_phone_frame = tk.Frame(emergency_section, bg='white')
@@ -419,10 +396,8 @@ Sus datos están protegidos y serán utilizados únicamente para fines médicos.
             # Preparar datos del paciente
             patient_data = {
                 'tipo_sangre': fields['tipo_sangre'].get(),
-                'genero': fields['genero'].get(),
                 'alergias': fields['alergias'].get('1.0', tk.END).strip(),
                 'contacto_emergencia': fields['contacto_emergencia'].get().strip(),
-                'relacion_contacto': fields['relacion_contacto'].get(),
                 'telefono_emergencia': fields['telefono_emergencia'].get().strip(),
                 'seguro_medico': fields['seguro_medico'].get()
             }
@@ -525,7 +500,7 @@ def create_patient_user(db_manager, user_data, patient_data):
         cursor.execute("""
             INSERT INTO usuarios 
             (nombre, apellido, email, telefono, direccion, fecha_nacimiento, 
-             tipo_usuario, password_hash, activo, fecha_registro)
+             tipo_usuario, password_hash, activo, fecha_creacion)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             user_data['nombre'], user_data['apellido'], user_data['email'],
@@ -545,13 +520,13 @@ def create_patient_user(db_manager, user_data, patient_data):
         # Insertar datos del paciente
         cursor.execute("""
             INSERT INTO pacientes 
-            (id, numero_expediente, tipo_sangre, genero, alergias, contacto_emergencia, 
-             relacion_contacto, telefono_emergencia, seguro_medico, seguro_medico_id, tiene_seguro)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (id, numero_expediente, tipo_sangre, alergias, contacto_emergencia, 
+             telefono_emergencia, seguro_medico, seguro_medico_id, tiene_seguro)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            user_id, expediente, patient_data['tipo_sangre'], patient_data.get('genero', ''),
+            user_id, expediente, patient_data['tipo_sangre'],
             patient_data['alergias'], patient_data['contacto_emergencia'],
-            patient_data.get('relacion_contacto', ''), patient_data['telefono_emergencia'],
+            patient_data['telefono_emergencia'],
             patient_data.get('seguro_medico', ''), seguro_id,
             1 if patient_data.get('seguro_medico') and patient_data.get('seguro_medico') != 'Sin Seguro' else 0
         ))

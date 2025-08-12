@@ -24566,7 +24566,7 @@ La cita ha sido guardada en el sistema."""
             
             # Nuevos pacientes este mes
             first_day_month = datetime.now().replace(day=1).strftime('%Y-%m-%d')
-            cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo = 'paciente' AND DATE(fecha_registro) >= ?", (first_day_month,))
+            cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo_usuario = 'paciente' AND DATE(fecha_creacion) >= ?", (first_day_month,))
             stats['new_patients_month'] = cur.fetchone()[0]
             
             # Contactos pendientes (aproximación)
