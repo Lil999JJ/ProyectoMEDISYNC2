@@ -14370,6 +14370,10 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                     except Exception as e:
                         messagebox.showerror("Error", f"Error guardando cambios: {str(e)}")
                 
+                # Pack del canvas y scrollbar
+                canvas.pack(side="left", fill="both", expand=True)
+                scrollbar.pack(side="right", fill="y")
+                
                 # Panel de botones rediseñado
                 buttons_frame = tk.Frame(edit_window, bg='#F8FAFC')
                 buttons_frame.pack(fill='x', padx=25, pady=(0, 25))
