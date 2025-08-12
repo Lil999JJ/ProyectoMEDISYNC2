@@ -13989,7 +13989,7 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             messagebox.showerror('Error', f'Error cancelando cita: {str(e)}')
 
     def edit_my_appointment(self):
-        """Permite al paciente editar su cita (solo fecha, hora y motivo)"""
+        """Permite al paciente editar su cita"""
         try:
             sel = self.patient_appointments_tree.selection()
             if not sel:
@@ -14012,90 +14012,184 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                 return
             
             # Obtener detalles actuales de la cita
-            try:
-                conn = self.db_manager.get_connection()
-                cur = conn.cursor()
+            conn = self.db_manager.get_connection()
+            cur = conn.cursor()
+            
+            cur.execute("""
+                SELECT c.id, c.fecha_hora, c.motivo, c.notas, c.doctor_id,
+                       u.nombre || ' ' || u.apellido as doctor_nombre
+                FROM citas c
+                LEFT JOIN usuarios u ON u.id = c.doctor_id
+                WHERE c.id = ?
+            """, (appt_id,))
+            
+            row = cur.fetchone()
+            cur.close()
+            conn.close()
+            
+            if not row:
+                messagebox.showerror("Error", "No se encontraron datos para esta cita")
+                return
+            
+            # Extraer datos actuales
+            fecha_hora_actual = row[1] if row[1] else ""
+            motivo_actual = row[2] if row[2] else ""
+            notas_actual = row[3] if row[3] else ""
+            doctor_nombre = row[5] if len(row) > 5 else ""
+            
+            # Separar fecha y hora
+            fecha_actual = ""
+            hora_actual = ""
+            if fecha_hora_actual:
+                try:
+                    dt = datetime.fromisoformat(fecha_hora_actual)
+                    fecha_actual = dt.strftime('%d/%m/%Y')
+                    hora_actual = dt.strftime('%H:%M')
+                except:
+                    fecha_actual = fecha_hora_actual.split(' ')[0] if ' ' in fecha_hora_actual else fecha_hora_actual
+                    hora_actual = fecha_hora_actual.split(' ')[1] if ' ' in fecha_hora_actual else ""
+            
+            # Crear ventana de edición simplificada
+            edit_window = tk.Toplevel(self.root)
+            edit_window.title("✏️ Editar Mi Cita Médica")
+            edit_window.geometry("500x550")
+            edit_window.configure(bg='#F8FAFC')
+            edit_window.transient(self.root)
+            edit_window.grab_set()
+            
+            # Centrar ventana
+            edit_window.update_idletasks()
+            x = (edit_window.winfo_screenwidth() // 2) - (500 // 2)
+            y = (edit_window.winfo_screenheight() // 2) - (550 // 2)
+            edit_window.geometry(f"500x550+{x}+{y}")
+            
+            # Header
+            header_frame = tk.Frame(edit_window, bg='#E67E22', height=70)
+            header_frame.pack(fill='x')
+            header_frame.pack_propagate(False)
+            
+            tk.Label(header_frame, text="✏️ EDITAR CITA MÉDICA", 
+                    font=('Arial', 16, 'bold'), bg='#E67E22', fg='white').pack(expand=True)
+            
+            # Frame principal
+            main_frame = tk.Frame(edit_window, bg='#F8FAFC')
+            main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+            
+            # Variables para el formulario
+            fecha_var = tk.StringVar(value=fecha_actual)
+            hora_var = tk.StringVar(value=hora_actual)
+            motivo_var = tk.StringVar(value=motivo_actual)
+            notas_var = tk.StringVar(value=notas_actual)
+            
+            # Doctor (no editable)
+            tk.Label(main_frame, text="👨‍⚕️ Doctor Asignado:", 
+                    font=('Arial', 10, 'bold'), bg='#F8FAFC').pack(anchor='w', pady=(0, 5))
+            tk.Label(main_frame, text=doctor_nombre, 
+                    font=('Arial', 11), bg='#F8FAFC', fg='#0B5394').pack(anchor='w', pady=(0, 15))
+            
+            # Fecha actual
+            tk.Label(main_frame, text=f"📅 Fecha Actual: {fecha_actual}", 
+                    font=('Arial', 10), bg='#F8FAFC', fg='#64748B').pack(anchor='w', pady=(0, 5))
+            tk.Label(main_frame, text=f"🕐 Hora Actual: {hora_actual}", 
+                    font=('Arial', 10), bg='#F8FAFC', fg='#64748B').pack(anchor='w', pady=(0, 15))
+            
+            # Nueva fecha
+            tk.Label(main_frame, text="📅 Nueva Fecha (DD/MM/YYYY):", 
+                    font=('Arial', 10, 'bold'), bg='#F8FAFC').pack(anchor='w', pady=(0, 5))
+            fecha_entry = tk.Entry(main_frame, textvariable=fecha_var, font=('Arial', 11))
+            fecha_entry.pack(fill='x', pady=(0, 15))
+            
+            # Nueva hora
+            tk.Label(main_frame, text="🕐 Nueva Hora (HH:MM):", 
+                    font=('Arial', 10, 'bold'), bg='#F8FAFC').pack(anchor='w', pady=(0, 5))
+            hora_entry = tk.Entry(main_frame, textvariable=hora_var, font=('Arial', 11))
+            hora_entry.pack(fill='x', pady=(0, 15))
+            
+            # Motivo
+            tk.Label(main_frame, text="💭 Motivo de la Consulta:", 
+                    font=('Arial', 10, 'bold'), bg='#F8FAFC').pack(anchor='w', pady=(0, 5))
+            motivo_entry = tk.Entry(main_frame, textvariable=motivo_var, font=('Arial', 11))
+            motivo_entry.pack(fill='x', pady=(0, 15))
+            
+            # Notas
+            tk.Label(main_frame, text="📝 Notas Adicionales:", 
+                    font=('Arial', 10, 'bold'), bg='#F8FAFC').pack(anchor='w', pady=(0, 5))
+            notas_entry = tk.Entry(main_frame, textvariable=notas_var, font=('Arial', 11))
+            notas_entry.pack(fill='x', pady=(0, 20))
+            
+            # Función para guardar cambios
+            def save_changes():
+                try:
+                    if not fecha_var.get().strip():
+                        messagebox.showerror("Error", "La fecha es obligatoria")
+                        return
+                    if not hora_var.get().strip():
+                        messagebox.showerror("Error", "La hora es obligatoria")
+                        return
+                    if not motivo_var.get().strip():
+                        messagebox.showerror("Error", "El motivo es obligatorio")
+                        return
+                    
+                    # Construir fecha_hora
+                    fecha_parts = fecha_var.get().strip().split('/')
+                    if len(fecha_parts) != 3:
+                        messagebox.showerror("Error", "Use formato DD/MM/YYYY")
+                        return
+                    
+                    dia, mes, año = fecha_parts
+                    fecha_iso = f"{año}-{mes.zfill(2)}-{dia.zfill(2)}"
+                    
+                    hora = hora_var.get().strip()
+                    if ':' not in hora:
+                        messagebox.showerror("Error", "Use formato HH:MM")
+                        return
+                    
+                    fecha_hora = f"{fecha_iso} {hora}:00"
+                    
+                    # Confirmar cambios
+                    if messagebox.askyesno("Confirmar", "¿Guardar los cambios?"):
+                        conn = self.db_manager.get_connection()
+                        cur = conn.cursor()
+                        
+                        cur.execute("""
+                            UPDATE citas 
+                            SET fecha_hora = ?, motivo = ?, notas = ?
+                            WHERE id = ?
+                        """, (fecha_hora, motivo_var.get().strip(), 
+                             notas_var.get().strip(), appt_id))
+                        
+                        conn.commit()
+                        cur.close()
+                        conn.close()
+                        
+                        messagebox.showinfo("Éxito", "✅ Cita actualizada correctamente")
+                        edit_window.destroy()
+                        self.load_patient_appointments()
+                        
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error guardando: {str(e)}")
+            
+            # Botones
+            buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
+            buttons_frame.pack(fill='x', pady=20)
+            
+            tk.Button(buttons_frame, text="❌ Cancelar", 
+                     command=edit_window.destroy,
+                     bg='#95A5A6', fg='white', font=('Arial', 11, 'bold'),
+                     padx=20, pady=10).pack(side='right', padx=(10, 0))
+            
+            tk.Button(buttons_frame, text="💾 Guardar", 
+                     command=save_changes,
+                     bg='#E67E22', fg='white', font=('Arial', 11, 'bold'),
+                     padx=20, pady=10).pack(side='right')
                 
-                cur.execute("""
-                    SELECT c.id, c.fecha_hora, c.motivo, c.notas, c.doctor_id,
-                           u.nombre || ' ' || u.apellido as doctor_nombre
-                    FROM citas c
-                    LEFT JOIN usuarios u ON u.id = c.doctor_id
-                    WHERE c.id = ?
-                """, (appt_id,))
-                
-                row = cur.fetchone()
-                cur.close()
-                conn.close()
-                
-                if not row:
-                    messagebox.showerror("Error", "No se encontraron datos para esta cita")
-                    return
-                
-                # Extraer datos actuales
-                fecha_hora_actual = row[1] if row[1] else ""
-                motivo_actual = row[2] if row[2] else ""
-                notas_actual = row[4] if row[4] else ""  # Cambié observaciones por notas
-                doctor_id = row[5] if len(row) > 5 else None
-                doctor_nombre = row[6] if len(row) > 6 else ""
-                
-                # Separar fecha y hora
-                fecha_actual = ""
-                hora_actual = ""
-                if fecha_hora_actual:
-                    try:
-                        dt = datetime.fromisoformat(fecha_hora_actual)
-                        fecha_actual = dt.strftime('%d/%m/%Y')
-                        hora_actual = dt.strftime('%H:%M')
-                    except:
-                        fecha_actual = fecha_hora_actual.split(' ')[0] if ' ' in fecha_hora_actual else fecha_hora_actual
-                        hora_actual = fecha_hora_actual.split(' ')[1] if ' ' in fecha_hora_actual else ""
-                
-                # Crear ventana de edición rediseñada
-                edit_window = tk.Toplevel(self.root)
-                edit_window.title("✏️ Editar Mi Cita Médica")
-                edit_window.geometry("650x750")
-                edit_window.configure(bg='#F8FAFC')
-                edit_window.transient(self.root)
-                edit_window.grab_set()
-                edit_window.resizable(False, False)
-                
-                # Centrar ventana
-                edit_window.update_idletasks()
-                x = (edit_window.winfo_screenwidth() // 2) - (650 // 2)
-                y = (edit_window.winfo_screenheight() // 2) - (750 // 2)
-                edit_window.geometry(f"650x750+{x}+{y}")
-                
-                # Header rediseñado con gradiente visual
-                header_frame = tk.Frame(edit_window, bg='#E67E22', height=90)
-                header_frame.pack(fill='x')
-                header_frame.pack_propagate(False)
-                
-                # Contenido del header
-                header_content = tk.Frame(header_frame, bg='#E67E22')
-                header_content.pack(expand=True, fill='both', padx=30, pady=20)
-                
-                tk.Label(header_content, text="✏️ EDITAR CITA MÉDICA", 
-                        font=('Arial', 18, 'bold'), bg='#E67E22', fg='white').pack()
-                tk.Label(header_content, text="Modifique los detalles de su cita médica según sus necesidades", 
-                        font=('Arial', 11), bg='#E67E22', fg='#FDF2E9').pack(pady=(5, 0))
-                
-                # Container principal con scroll
-                main_container = tk.Frame(edit_window, bg='#F8FAFC')
-                main_container.pack(fill='both', expand=True, padx=25, pady=20)
-                
-                # Canvas para scroll
-                canvas = tk.Canvas(main_container, bg='#F8FAFC', highlightthickness=0)
-                scrollbar = ttk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
-                scrollable_frame = tk.Frame(canvas, bg='#F8FAFC')
-                
-                scrollable_frame.bind(
-                    "<Configure>",
-                    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-                )
-                
-                canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-                canvas.configure(yscrollcommand=scrollbar.set)
+        except Exception as e:
+            messagebox.showerror("Error", f"Error editando cita: {str(e)}")
+            print(f"Error en edit_my_appointment: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def cancel_my_appointment(self):
                 
                 # Variables para el formulario
                 fecha_var = tk.StringVar(value=fecha_actual)
@@ -14369,6 +14463,10 @@ Para consultas sobre este reporte, contacte al departamento de administración.
                         
                     except Exception as e:
                         messagebox.showerror("Error", f"Error guardando cambios: {str(e)}")
+                
+                # Pack del canvas y scrollbar
+                canvas.pack(side="left", fill="both", expand=True)
+                scrollbar.pack(side="right", fill="y")
                 
                 # Panel de botones rediseñado
                 buttons_frame = tk.Frame(edit_window, bg='#F8FAFC')
