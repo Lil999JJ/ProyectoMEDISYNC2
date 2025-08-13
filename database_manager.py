@@ -680,14 +680,14 @@ class DatabaseManager:
             cursor = conn.cursor()
             
             try:
-                # Actualizar estado y agregar motivo a observaciones
+                # Actualizar estado y agregar motivo a notas
                 cursor.execute('''
                 UPDATE citas 
                 SET estado = 'cancelada',
-                    observaciones = CASE 
-                        WHEN observaciones IS NULL OR observaciones = '' 
+                    notas = CASE 
+                        WHEN notas IS NULL OR notas = '' 
                         THEN 'CANCELADA: ' || ?
-                        ELSE observaciones || '\n\nCANCELADA: ' || ?
+                        ELSE notas || '\n\nCANCELADA: ' || ?
                     END
                 WHERE id = ?
                 ''', (reason, reason, appointment_id))

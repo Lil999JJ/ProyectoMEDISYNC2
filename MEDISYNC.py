@@ -907,7 +907,7 @@ class MedisyncApp:
         
         tk.Button(action_frame, text="👁️ Ver Detalles", 
                  bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
-                 command=lambda: self.show_appointment_details(), padx=15, pady=8, relief='flat').pack(fill='x', pady=3)
+                 command=self.show_selected_appointment_details, padx=15, pady=8, relief='flat').pack(fill='x', pady=3)
         
         tk.Button(action_frame, text="✅ Confirmar", 
                  bg='#0B5394', fg='white', font=('Arial', 10, 'bold'),
@@ -1039,7 +1039,7 @@ class MedisyncApp:
         
         # Bind para selección
         self.appointments_tree.bind('<<TreeviewSelect>>', self.on_appointment_select)
-        self.appointments_tree.bind('<Double-1>', lambda event: self.show_appointment_details())
+        self.appointments_tree.bind('<Double-1>', self.on_appointment_double_click_admin)
         
         # Panel derecho - Detalles y acciones
         right_panel = tk.Frame(content_frame, bg='white', relief='solid', bd=1, width=350)
@@ -1071,7 +1071,7 @@ class MedisyncApp:
         
         # Bind eventos
         self.appointments_tree.bind('<<TreeviewSelect>>', self.on_appointment_select)
-        self.appointments_tree.bind('<Double-1>', lambda event: self.show_appointment_details())
+        self.appointments_tree.bind('<Double-1>', self.on_appointment_double_click_admin)
         
         # Cargar datos iniciales
         self.load_appointments_data(self.appointments_tree)
@@ -1221,9 +1221,54 @@ class MedisyncApp:
             import traceback
             traceback.print_exc()
     
+    def show_selected_appointment_details(self):
+        """Mostrar detalles de la cita actualmente seleccionada"""
+        try:
+            selection = self.appointments_tree.selection()
+            if not selection:
+                messagebox.showwarning("Advertencia", "Por favor seleccione una cita")
+                return
+            
+            item = self.appointments_tree.item(selection[0])
+            values = item['values']
+            
+            if values:
+                appointment_id = values[0]
+                self.show_appointment_details(appointment_id)
+            else:
+                messagebox.showwarning("Advertencia", "No se pudo obtener el ID de la cita")
+                
+        except Exception as e:
+            print(f"Error mostrando detalles de cita seleccionada: {str(e)}")
+            messagebox.showerror("Error", "Error al mostrar detalles de la cita")
+    
+    def on_appointment_double_click_admin(self, event):
+        """Manejar doble clic en appointments_tree (vista de administrador)"""
+        try:
+            selection = self.appointments_tree.selection()
+            if not selection:
+                return
+            
+            item = self.appointments_tree.item(selection[0])
+            values = item['values']
+            
+            if values:
+                appointment_id = values[0]  # El ID está en la primera columna
+                self.show_appointment_details(appointment_id)
+                
+        except Exception as e:
+            print(f"Error en doble clic de cita: {str(e)}")
+            import traceback
+            traceback.print_exc()
+    
     def show_appointment_details(self, appointment_id):
         """Mostrar detalles de la cita seleccionada"""
         try:
+            # Verificar que el frame de detalles existe
+            if not hasattr(self, 'appointment_details_frame') or not self.appointment_details_frame:
+                print("Error: appointment_details_frame no existe")
+                return
+            
             # Limpiar detalles anteriores
             for widget in self.appointment_details_frame.winfo_children():
                 widget.destroy()
@@ -2477,29 +2522,29 @@ class MedisyncApp:
             # Crear ventana para motivo de cancelación
             reason_window = tk.Toplevel(self.root)
             reason_window.title("❌ Cancelar Cita")
-            reason_window.geometry("500x400")
+            reason_window.geometry("800x900")
             reason_window.configure(bg='#F8FAFC')
             reason_window.transient(self.root)
             reason_window.grab_set()
-            reason_window.resizable(False, False)
+            reason_window.resizable(True, True)
             
             # Centrar ventana
             reason_window.update_idletasks()
-            x = (reason_window.winfo_screenwidth() // 2) - (500 // 2)
-            y = (reason_window.winfo_screenheight() // 2) - (400 // 2)
-            reason_window.geometry(f"500x400+{x}+{y}")
+            x = (reason_window.winfo_screenwidth() // 2) - (800 // 2)
+            y = (reason_window.winfo_screenheight() // 2) - (900 // 2)
+            reason_window.geometry(f"800x900+{x}+{y}")
             
             # Header
-            header_frame = tk.Frame(reason_window, bg='#0B5394', height=80)
+            header_frame = tk.Frame(reason_window, bg='#0B5394', height=100)
             header_frame.pack(fill='x')
             header_frame.pack_propagate(False)
             
             tk.Label(header_frame, text=f"❌ Cancelar Cita #{appointment_id}", 
-                    font=('Arial', 16, 'bold'), bg='#0B5394', fg='white').pack(expand=True)
+                    font=('Arial', 18, 'bold'), bg='#0B5394', fg='white').pack(expand=True)
             
             # Contenido principal
             main_frame = tk.Frame(reason_window, bg='#F8FAFC')
-            main_frame.pack(fill='both', expand=True, padx=30, pady=30)
+            main_frame.pack(fill='both', expand=True, padx=40, pady=(30, 20))
             
             # Información de la cita
             info_frame = tk.LabelFrame(main_frame, text="📋 Información de la Cita", 
@@ -2556,18 +2601,18 @@ class MedisyncApp:
             
             # Campo de texto para motivo personalizado
             custom_frame = tk.Frame(reason_frame, bg='#F8FAFC')
-            custom_frame.pack(fill='x', pady=(10, 0))
+            custom_frame.pack(fill='x', pady=(15, 0))
             
             tk.Label(custom_frame, text="Detalles adicionales:", 
-                    font=('Arial', 10, 'bold'), bg='#F8FAFC', fg='#1E3A8A').pack(anchor='w')
+                    font=('Arial', 11, 'bold'), bg='#F8FAFC', fg='#1E3A8A').pack(anchor='w', pady=(0, 5))
             
-            custom_text = tk.Text(custom_frame, height=4, font=('Arial', 10), 
+            custom_text = tk.Text(custom_frame, height=6, font=('Arial', 11), 
                                  relief='solid', bd=1, wrap='word')
-            custom_text.pack(fill='x', pady=(5, 0))
+            custom_text.pack(fill='both', expand=True, pady=(5, 0))
             
             # Botones
             buttons_frame = tk.Frame(main_frame, bg='#F8FAFC')
-            buttons_frame.pack(fill='x', pady=(20, 0))
+            buttons_frame.pack(fill='x', pady=(25, 0))
             
             def confirm_cancellation():
                 selected_reason = reason_var.get()
@@ -2595,9 +2640,32 @@ class MedisyncApp:
                             f"✅ Cita #{appointment_id} cancelada exitosamente\n\n"
                             f"Motivo: {full_reason}")
                         
-                        # Actualizar interfaz
+                        # Actualizar interfaz - verificar todos los posibles árboles de citas
+                        trees_updated = False
+                        
+                        # Actualizar appointments_tree (vista general de administrador)
                         if hasattr(self, 'load_appointments_data') and hasattr(self, 'appointments_tree'):
-                            self.load_appointments_data(self.appointments_tree)
+                            try:
+                                self.load_appointments_data(self.appointments_tree)
+                                trees_updated = True
+                            except Exception as e:
+                                print(f"Error actualizando appointments_tree: {e}")
+                        
+                        # Actualizar doctor_appointments_tree (vista de doctor)
+                        if hasattr(self, 'load_doctor_appointments') and hasattr(self, 'doctor_appointments_tree'):
+                            try:
+                                self.load_doctor_appointments()
+                                trees_updated = True
+                            except Exception as e:
+                                print(f"Error actualizando doctor_appointments_tree: {e}")
+                        
+                        # Si no se actualizó ningún árbol, intentar refrescar la ventana actual
+                        if not trees_updated:
+                            if hasattr(self, 'refresh_current_view'):
+                                try:
+                                    self.refresh_current_view()
+                                except Exception as e:
+                                    print(f"Error refrescando vista actual: {e}")
                         
                         # Actualizar ventana de detalles si está abierta
                         if details_window and details_window.winfo_exists():
@@ -2609,11 +2677,11 @@ class MedisyncApp:
             
             tk.Button(buttons_frame, text="❌ Cancelar Cita", 
                      bg='#0B5394', fg='white', font=('Arial', 12, 'bold'),
-                     command=confirm_cancellation, padx=20, pady=10, relief='flat', cursor='hand2').pack(side='right', padx=(10, 0))
+                     command=confirm_cancellation, padx=25, pady=12, relief='flat', cursor='hand2').pack(side='right', padx=(15, 5))
             
             tk.Button(buttons_frame, text="🔙 Volver", 
                      bg='#0B5394', fg='white', font=('Arial', 12, 'bold'),
-                     command=reason_window.destroy, padx=20, pady=10, relief='flat', cursor='hand2').pack(side='right')
+                     command=reason_window.destroy, padx=25, pady=12, relief='flat', cursor='hand2').pack(side='right', padx=(5, 0))
             
         except Exception as e:
             messagebox.showerror("Error", f"Error al abrir ventana de cancelación: {str(e)}")
@@ -2857,23 +2925,35 @@ Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}
     def complete_appointment(self):
         """Completar cita seleccionada - método de acceso rápido"""
         try:
-            # Verificar si estamos en la vista de doctor
-            if hasattr(self, 'doctor_appointments_tree'):
-                selection = self.doctor_appointments_tree.selection()
-                tree = self.doctor_appointments_tree
-            elif hasattr(self, 'appointments_tree'):
-                selection = self.appointments_tree.selection()
-                tree = self.appointments_tree
-            else:
-                messagebox.showwarning("Advertencia", "No se encontró la tabla de citas")
-                return
-                
-            if not selection:
+            appointment_id = None
+            selection = None
+            tree = None
+            
+            # Primero intentar con appointments_tree (vista de administrador)
+            if hasattr(self, 'appointments_tree') and self.appointments_tree:
+                try:
+                    selection = self.appointments_tree.selection()
+                    if selection:
+                        tree = self.appointments_tree
+                        item = tree.item(selection[0])
+                        appointment_id = item['values'][0]  # En appointments_tree el ID está en la primera columna
+                except Exception as e:
+                    print(f"Error with admin tree: {e}")
+            
+            # Si no hay selección en appointments_tree, intentar con doctor_appointments_tree
+            if not appointment_id and hasattr(self, 'doctor_appointments_tree') and self.doctor_appointments_tree:
+                try:
+                    selection = self.doctor_appointments_tree.selection()
+                    if selection:
+                        tree = self.doctor_appointments_tree
+                        # Para doctor_appointments_tree, necesitamos obtener el ID de manera especial
+                        appointment_id = self.get_appointment_id_from_selection()
+                except Exception as e:
+                    print(f"Error with doctor tree: {e}")
+            
+            if not appointment_id:
                 messagebox.showwarning("Advertencia", "Seleccione una cita para completar")
                 return
-            
-            item = tree.item(selection[0])
-            appointment_id = item['values'][0]
             
             # Completar la cita
             self.change_appointment_status(appointment_id, 'completada')
@@ -11356,6 +11436,13 @@ Para consultas sobre este reporte, contacte al departamento de administración.
     def on_appointment_select(self, event):
         """Manejar selección de cita para habilitar botones"""
         try:
+            # Verificar que el árbol de citas del doctor existe (solo mostrar error una vez)
+            if not hasattr(self, 'doctor_appointments_tree') or not self.doctor_appointments_tree:
+                # Solo mostrar error si estamos en contexto de doctor
+                if hasattr(self, 'current_user') and self.current_user and hasattr(self.current_user, 'tipo_usuario') and self.current_user.tipo_usuario == 'doctor':
+                    print("Error: doctor_appointments_tree no está disponible en contexto de doctor")
+                return
+                
             selection = self.doctor_appointments_tree.selection()
             if selection:
                 # Solo mostrar que hay una cita seleccionada
@@ -11363,10 +11450,20 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             
         except Exception as e:
             print(f"Error en selección: {e}")
+            import traceback
+            traceback.print_exc()
     
     def on_appointment_double_click(self, event):
         """Manejar doble clic para mostrar detalles completos"""
         try:
+            # Verificar que el árbol de citas del doctor existe (solo mostrar error si es contexto de doctor)
+            # Verificar que el árbol de citas del doctor existe (solo mostrar error si es contexto de doctor)
+            if not hasattr(self, 'doctor_appointments_tree') or not self.doctor_appointments_tree:
+                # Solo mostrar error si estamos en contexto de doctor
+                if hasattr(self, 'current_user') and self.current_user and hasattr(self.current_user, 'tipo_usuario') and self.current_user.tipo_usuario == 'doctor':
+                    print("Error: doctor_appointments_tree no está disponible en contexto de doctor")
+                return
+                
             selection = self.doctor_appointments_tree.selection()
             if not selection:
                 return
@@ -16512,8 +16609,8 @@ Para consultas sobre este reporte, contacte al departamento de administración.
             # Centrar ventana
             cancel_window.update_idletasks()
             x = (cancel_window.winfo_screenwidth() // 2) - (600 // 2)
-            y = (cancel_window.winfo_screenheight() // 2) - (650 // 2)
-            cancel_window.geometry(f"600x650+{x}+{y}")
+            y = (cancel_window.winfo_screenheight() // 2) - (800 // 2)
+            cancel_window.geometry(f"600x800+{x}+{y}")
             
             # Header rediseñado
             header_frame = tk.Frame(cancel_window, bg='#E74C3C', height=90)
@@ -18876,15 +18973,24 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
     def on_appointment_select(self, event):
         """Manejar selección de cita - Panel eliminado, solo doble clic"""
         try:
+            # Verificar que el árbol de citas del doctor existe (solo mostrar error si es contexto de doctor)
+            if not hasattr(self, 'doctor_appointments_tree') or not self.doctor_appointments_tree:
+                # Solo mostrar error si estamos en contexto de doctor
+                if hasattr(self, 'current_user') and self.current_user and hasattr(self.current_user, 'tipo_usuario') and self.current_user.tipo_usuario == 'doctor':
+                    print("Error: doctor_appointments_tree no está disponible en contexto de doctor")
+                return
+                
             selection = self.doctor_appointments_tree.selection()
             if selection:
                 # Panel de detalles eliminado - usar doble clic para ver detalles
                 print("Cita seleccionada - Doble clic para ver detalles")
         except Exception as e:
             print(f"Error en selección: {e}")
+            import traceback
+            traceback.print_exc()
     
-    def show_appointment_details(self, cita_id):
-        """Mostrar detalles completos de una cita"""
+    def show_appointment_details_doctor_view(self, cita_id):
+        """Mostrar detalles completos de una cita - Vista de doctor"""
         try:
             conn = self.db_manager.get_connection()
             cursor = conn.cursor()
@@ -19234,8 +19340,8 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
         except Exception as e:
             messagebox.showerror("Error", f"Error mostrando detalles: {str(e)}")
     
-    def complete_appointment(self):
-        """Marcar cita como completada"""
+    def complete_appointment_doctor_view(self):
+        """Marcar cita como completada - Vista de doctor"""
         try:
             appointment_id = self.get_appointment_id_from_selection()
             if not appointment_id:
@@ -23537,7 +23643,7 @@ consulte con secretaría o use el Sistema Completo de Facturación"""
         # Ventana para cambio de contraseña
         pwd_window = tk.Toplevel()
         pwd_window.title("Cambiar Contraseña - MEDISYNC")
-        pwd_window.geometry("400x250")
+        pwd_window.geometry("400x400")
         pwd_window.configure(bg='#F8FAFC')
         pwd_window.resizable(False, False)
         
@@ -24961,13 +25067,22 @@ Estado de cuenta actualizado al {datetime.now().strftime('%d/%m/%Y')}"""
     def get_appointment_id_from_selection(self):
         """Obtener ID de cita desde la selección actual"""
         try:
+            # Verificar si doctor_appointments_tree existe y tiene selección
+            if not hasattr(self, 'doctor_appointments_tree') or not self.doctor_appointments_tree:
+                return None
+                
             selection = self.doctor_appointments_tree.selection()
             if not selection:
                 return None
             
             item = self.doctor_appointments_tree.item(selection[0])
-            fecha_hora = item['values'][0]
-            paciente_nombre = item['values'][1]
+            values = item['values']
+            
+            if not values or len(values) < 2:
+                return None
+                
+            fecha_hora = values[0]
+            paciente_nombre = values[1]
             
             # Buscar ID de la cita
             conn = self.db_manager.get_connection()
